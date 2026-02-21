@@ -1,0 +1,428 @@
+// prisma/schema.prisma
+// مخطط قاعدة البيانات لنظام إدارة المدرسة - PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== المستخدمون ====================
+enum UserRole {
+  admin
+  reception
+  teacher
+  student
+  parent
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  phone     String?
+  role      UserRole
+  isActive  Boolean   @default(true) @map("is_active")
+  lastLogin DateTime? @map("last_login")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  student       Student?
+  teacher       Teacher?
+  parent        Parent?
+  notifications Notification[]
+  reports       Report[]
+  expenses      Expense[]
+
+  @@map("users")
+}
+
+// ==================== أولياء الأمور ====================
+enum Relationship {
+  father
+  mother
+  guardian
+}
+
+model Parent {
+  id           Int          @id @default(autoincrement())
+  userId       Int?         @unique @map("user_id")
+  firstName    String       @map("first_name")
+  lastName     String       @map("last_name")
+  phone        String
+  email        String?
+  address      String?
+  relationship Relationship
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  students Student[]
+
+  @@map("parents")
+}
+
+// ==================== المعلمون ====================
+enum TeacherStatus {
+  active
+  inactive
+}
+
+model Teacher {
+  id              Int           @id @default(autoincrement())
+  userId          Int?          @unique @map("user_id")
+  firstName       String        @map("first_name")
+  lastName        String        @map("last_name")
+  specialization  String
+  qualifications  String?
+  experienceYears Int?          @map("experience_years")
+  bio             String?
+  salary          Decimal?      @db.Decimal(10, 2)
+  status          TeacherStatus @default(active)
+  hireDate        DateTime?     @map("hire_date") @db.Date
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  gradeSubjects GradeSubject[]
+
+  @@map("teachers")
+}
+
+// ==================== الصفوف ====================
+enum GradeLevel {
+  preparatory @map("اعدادي")
+  secondary   @map("ثانوي")
+}
+
+model Grade {
+  id          Int        @id @default(autoincrement())
+  name        String
+  level       GradeLevel
+  description String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  sections      Section[]
+  gradeSubjects GradeSubject[]
+
+  @@map("grades")
+}
+
+// ==================== الشعب ====================
+enum SectionStatus {
+  active
+  inactive
+}
+
+model Section {
+  id           Int           @id @default(autoincrement())
+  gradeId      Int           @map("grade_id")
+  name         String
+  academicYear String        @map("academic_year")
+  maxStudents  Int?          @map("max_students")
+  status       SectionStatus @default(active)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  grade     Grade      @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  students  Student[]
+  schedules Schedule[]
+
+  @@map("sections")
+}
+
+// ==================== الطلاب ====================
+enum Gender {
+  male
+  female
+}
+
+enum StudentStatus {
+  active
+  inactive
+  graduated
+}
+
+model Student {
+  id               Int           @id @default(autoincrement())
+  userId           Int?          @unique @map("user_id")
+  parentId         Int?          @map("parent_id")
+  sectionId        Int?          @map("section_id")
+  firstName        String        @map("first_name")
+  lastName         String        @map("last_name")
+  dateOfBirth      DateTime      @map("date_of_birth") @db.Date
+  gender           Gender
+  address          String?
+  academicYear     String?       @map("academic_year")
+  registrationDate DateTime      @default(now()) @map("registration_date") @db.Date
+  status           StudentStatus @default(active)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  parent      Parent?      @relation(fields: [parentId], references: [id], onDelete: SetNull)
+  section     Section?     @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  attendances Attendance[]
+  assessments Assessment[]
+  payments    Payment[]
+
+  @@map("students")
+}
+
+// ==================== المواد ====================
+model Subject {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  gradeSubjects GradeSubject[]
+
+  @@map("subjects")
+}
+
+// ==================== مواد الصفوف ====================
+model GradeSubject {
+  id        Int      @id @default(autoincrement())
+  gradeId   Int      @map("grade_id")
+  subjectId Int      @map("subject_id")
+  teacherId Int?     @map("teacher_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  grade       Grade        @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher     Teacher?     @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  schedules   Schedule[]
+  assessments Assessment[]
+
+  @@unique([gradeId, subjectId], name: "unique_grade_subject")
+  @@map("grade_subjects")
+}
+
+// ==================== الجداول الزمنية ====================
+enum DayOfWeek {
+  Sunday
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+}
+
+enum ScheduleStatus {
+  scheduled
+  cancelled
+  completed
+}
+
+model Schedule {
+  id             Int            @id @default(autoincrement())
+  sectionId      Int            @map("section_id")
+  gradeSubjectId Int            @map("grade_subject_id")
+  dayOfWeek      DayOfWeek      @map("day_of_week")
+  startTime      DateTime       @map("start_time") @db.Time(0)
+  endTime        DateTime       @map("end_time") @db.Time(0)
+  room           String?
+  status         ScheduleStatus @default(scheduled)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  section      Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  gradeSubject GradeSubject @relation(fields: [gradeSubjectId], references: [id], onDelete: Cascade)
+  attendances  Attendance[]
+
+  @@map("schedules")
+}
+
+// ==================== الحضور ====================
+enum AttendanceStatus {
+  present
+  absent
+  late
+  excused
+}
+
+model Attendance {
+  id                 Int              @id @default(autoincrement())
+  studentId          Int              @map("student_id")
+  scheduleId         Int              @map("schedule_id")
+  date               DateTime         @db.Date
+  status             AttendanceStatus
+  lateMinutes        Int              @default(0) @map("late_minutes")
+  notes              String?
+  parentNotified     Boolean          @default(false) @map("parent_notified")
+  notificationSentAt DateTime?        @map("notification_sent_at")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  student  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, scheduleId, date], name: "unique_attendance")
+  @@map("attendance")
+}
+
+// ==================== التقييمات ====================
+enum AssessmentType {
+  quiz
+  exam
+  homework
+  midterm
+  final
+}
+
+model Assessment {
+  id             Int            @id @default(autoincrement())
+  studentId      Int            @map("student_id")
+  gradeSubjectId Int            @map("grade_subject_id")
+  type           AssessmentType
+  title          String
+  maxScore       Decimal        @map("max_score") @db.Decimal(5, 2)
+  score          Decimal?       @db.Decimal(5, 2)
+  percentage     Decimal?       @db.Decimal(5, 2)
+  grade          String?
+  feedback       String?
+  assessmentDate DateTime       @map("assessment_date") @db.Date
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  gradeSubject GradeSubject @relation(fields: [gradeSubjectId], references: [id], onDelete: Cascade)
+
+  @@map("assessments")
+}
+
+// ==================== المدفوعات ====================
+enum PaymentStatus {
+  paid
+  pending
+  partial
+}
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  studentId     Int           @map("student_id")
+  academicYear  String        @map("academic_year")
+  amount        Decimal       @db.Decimal(10, 2)
+  discount      Decimal       @default(0) @db.Decimal(10, 2)
+  finalAmount   Decimal?      @map("final_amount") @db.Decimal(10, 2)
+  status        PaymentStatus @default(pending)
+  dueDate       DateTime      @map("due_date") @db.Date
+  paymentDate   DateTime?     @map("payment_date") @db.Date
+  receiptNumber String?       @unique @map("receipt_number")
+  notes         String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+// ==================== المصاريف ====================
+enum ExpenseCategory {
+  salary
+  maintenance
+  supplies
+  utilities
+  other
+}
+
+model Expense {
+  id            Int             @id @default(autoincrement())
+  createdBy     Int?            @map("created_by")
+  category      ExpenseCategory
+  description   String
+  amount        Decimal         @db.Decimal(10, 2)
+  expenseDate   DateTime        @map("expense_date") @db.Date
+  receiptNumber String?         @map("receipt_number")
+  attachments   String?
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  creator User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@map("expenses")
+}
+
+// ==================== الإشعارات ====================
+enum NotificationRelatedType {
+  attendance
+  payment
+  assessment
+  general
+}
+
+enum NotificationType {
+  info
+  warning
+  alert
+  success
+}
+
+enum NotificationChannel {
+  email
+  sms
+  push
+  in_app @map("in-app")
+}
+
+model Notification {
+  id          Int                      @id @default(autoincrement())
+  userId      Int                      @map("user_id")
+  relatedId   Int?                     @map("related_id")
+  relatedType NotificationRelatedType? @map("related_type")
+  title       String
+  message     String
+  type        NotificationType         @default(info)
+  channel     NotificationChannel      @default(in_app)
+  isRead      Boolean                  @default(false) @map("is_read")
+  readAt      DateTime?                @map("read_at")
+  sent        Boolean                  @default(false)
+  sentAt      DateTime?                @map("sent_at")
+  createdAt   DateTime                 @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ==================== التقارير ====================
+enum ReportType {
+  attendance
+  financial
+  performance
+  comparison
+}
+
+enum ReportFormat {
+  pdf
+  excel
+  json
+}
+
+model Report {
+  id          Int          @id @default(autoincrement())
+  generatedBy Int?         @map("generated_by")
+  type        ReportType
+  title       String
+  parameters  Json?
+  data        Json?
+  format      ReportFormat @default(pdf)
+  filePath    String?      @map("file_path")
+  periodStart DateTime?    @map("period_start") @db.Date
+  periodEnd   DateTime?    @map("period_end") @db.Date
+  generatedAt DateTime     @default(now()) @map("generated_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  generator User? @relation(fields: [generatedBy], references: [id], onDelete: SetNull)
+
+  @@map("reports")
+}
