@@ -1,6 +1,3 @@
-// src/attendance/attendance.service.ts
-// خدمة إدارة الحضور مع إشعارات Firebase
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -18,34 +15,19 @@ export class AttendanceService {
     private notificationsService: NotificationsService,
   ) {}
 
-  // تسجيل حضور طالب واحد
   async create(dto: CreateAttendanceDto) {
     const attendance = await this.prisma.attendance.create({
-      data: {
-        ...dto,
-        date: new Date(dto.date),
-      },
+      data: { ...dto, date: new Date(dto.date) },
       include: {
-        student: {
-          include: {
-            parent: { include: { user: true } },
-          },
-        },
-        schedule: {
-          include: { gradeSubject: { include: { subject: true } } },
-        },
+        student: { include: { parent: { include: { user: true } } } },
+        schedule: { include: { gradeSubject: { include: { subject: true } } } },
       },
     });
 
-    // إرسال إشعار لولي الأمر إذا كان الطالب غائباً أو متأخراً
-    if (dto.status === 'absent' || dto.status === 'late') {
-      await this.notifyParentAboutAttendance(attendance);
-    }
-
+    await this.handleAttendanceNotification(attendance);
     return attendance;
   }
 
-  // تسجيل حضور مجموعة طلاب دفعة واحدة
   async bulkCreate(dto: BulkAttendanceDto) {
     const results: any[] = [];
 
@@ -78,11 +60,7 @@ export class AttendanceService {
       });
 
       results.push(attendance);
-
-      // إشعار ولي الأمر بالغياب أو التأخير
-      if (studentData.status === 'absent' || studentData.status === 'late') {
-        await this.notifyParentAboutAttendance(attendance);
-      }
+      await this.handleAttendanceNotification(attendance);
     }
 
     return {
@@ -91,10 +69,8 @@ export class AttendanceService {
     };
   }
 
-  // جلب سجلات الحضور مع الفلترة
   async findAll(filter: AttendanceFilterDto) {
     const where: any = {};
-
     if (filter.studentId) where.studentId = filter.studentId;
     if (filter.scheduleId) where.scheduleId = filter.scheduleId;
     if (filter.status) where.status = filter.status;
@@ -119,7 +95,6 @@ export class AttendanceService {
     });
   }
 
-  // إحصائيات حضور طالب
   async getStudentStats(studentId: number, dateFrom?: string, dateTo?: string) {
     const where: any = { studentId };
     if (dateFrom || dateTo) {
@@ -143,7 +118,7 @@ export class AttendanceService {
       absent,
       late,
       excused,
-      attendanceRate: total > 0 ? ((present + late) / total * 100).toFixed(2) : '0',
+      attendanceRate: total > 0 ? (((present + late) / total) * 100).toFixed(2) : '0',
     };
   }
 
@@ -177,36 +152,30 @@ export class AttendanceService {
     return { message: 'تم حذف سجل الحضور بنجاح' };
   }
 
-  // إرسال إشعار لولي الأمر عن حضور ابنه
-  private async notifyParentAboutAttendance(attendance: any) {
-    const student = attendance.student;
-    const subject = attendance.schedule?.gradeSubject?.subject?.name || '';
+  private async handleAttendanceNotification(attendance: any) {
+    const subjectName = attendance.schedule?.gradeSubject?.subject?.name || '';
 
-    if (!student?.parent?.userId) return;
+    if (attendance.status === 'absent') {
+      await this.notificationsService.notifyAbsence(
+        attendance.studentId,
+        subjectName,
+        attendance.id,
+      );
+    } else if (attendance.status === 'late') {
+      await this.notificationsService.notifyLate(
+        attendance.studentId,
+        subjectName,
+        attendance.lateMinutes,
+        attendance.id,
+      );
+    }
 
-    const title = `تنبيه حضور - ${student.firstName} ${student.lastName}`;
-    const message =
-      attendance.status === 'absent'
-        ? `ابنكم ${student.firstName} غائب اليوم في مادة ${subject}`
-        : `ابنكم ${student.firstName} متأخر ${attendance.lateMinutes} دقيقة في مادة ${subject}`;
-
-    await this.notificationsService.create({
-      userId: student.parent.userId,
-      relatedId: attendance.id,
-      relatedType: 'attendance',
-      title,
-      message,
-      type: 'warning',
-      channel: 'push',
-    });
-
-    // تحديث حالة إرسال الإشعار
-    await this.prisma.attendance.update({
-      where: { id: attendance.id },
-      data: {
-        parentNotified: true,
-        notificationSentAt: new Date(),
-      },
-    });
+    // تحديث حالة الإشعار
+    if (attendance.status === 'absent' || attendance.status === 'late') {
+      await this.prisma.attendance.update({
+        where: { id: attendance.id },
+        data: { parentNotified: true, notificationSentAt: new Date() },
+      });
+    }
   }
 }

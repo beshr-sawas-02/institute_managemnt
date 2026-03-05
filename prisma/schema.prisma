@@ -1,6 +1,3 @@
-// prisma/schema.prisma
-// مخطط قاعدة البيانات لنظام إدارة المدرسة - PostgreSQL
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -128,9 +125,10 @@ model Section {
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
-  grade     Grade      @relation(fields: [gradeId], references: [id], onDelete: Cascade)
-  students  Student[]
-  schedules Schedule[]
+  grade         Grade          @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  students      Student[]
+  schedules     Schedule[]
+  gradeSubjects GradeSubject[]
 
   @@map("sections")
 }
@@ -191,13 +189,15 @@ model GradeSubject {
   id        Int      @id @default(autoincrement())
   gradeId   Int      @map("grade_id")
   subjectId Int      @map("subject_id")
-  teacherId Int?     @map("teacher_id")
+  teacherId Int      @map("teacher_id")
+  sectionId Int?     @map("section_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   grade       Grade        @relation(fields: [gradeId], references: [id], onDelete: Cascade)
   subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  teacher     Teacher?     @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  teacher     Teacher      @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  section     Section?     @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   schedules   Schedule[]
   assessments Assessment[]
 

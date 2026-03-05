@@ -1,4 +1,3 @@
-// src/grade-subjects/dto/grade-subject.dto.ts
 import { IsInt, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
@@ -11,10 +10,14 @@ export class CreateGradeSubjectDto {
   @IsInt()
   subjectId: number;
 
-  @ApiPropertyOptional()
+  @ApiProperty({ description: 'معرف المعلم - إجباري' })
+  @IsInt()
+  teacherId: number;
+
+  @ApiPropertyOptional({ description: 'معرف الشعبة (اختياري)' })
   @IsOptional()
   @IsInt()
-  teacherId?: number;
+  sectionId?: number;
 }
 
 export class UpdateGradeSubjectDto extends PartialType(CreateGradeSubjectDto) {}

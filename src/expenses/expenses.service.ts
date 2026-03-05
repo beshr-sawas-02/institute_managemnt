@@ -1,7 +1,4 @@
-// src/expenses/expenses.service.ts
-// خدمة إدارة المصاريف
-
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
@@ -10,7 +7,33 @@ import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 export class ExpensesService {
   constructor(private prisma: PrismaService) {}
 
+  // حساب الرصيد المتاح (مجموع المدفوعات المقبوضة - مجموع المصاريف)
+  async getAvailableBalance(): Promise<number> {
+    const [totalPaid, totalExpenses] = await Promise.all([
+      this.prisma.payment.aggregate({
+        where: { status: 'paid' },
+        _sum: { finalAmount: true },
+      }),
+      this.prisma.expense.aggregate({
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const paid = Number(totalPaid._sum.finalAmount) || 0;
+    const expenses = Number(totalExpenses._sum.amount) || 0;
+    return paid - expenses;
+  }
+
   async create(userId: number, dto: CreateExpenseDto) {
+    // التحقق من الرصيد المتاح
+    const availableBalance = await this.getAvailableBalance();
+
+    if (dto.amount > availableBalance) {
+      throw new BadRequestException(
+        `لا يمكن إضافة هذا المصروف. الرصيد المتاح: ${availableBalance.toFixed(2)} ليرة سوري، والمبلغ المطلوب: ${dto.amount} ليرة سوري`,
+      );
+    }
+
     return this.prisma.expense.create({
       data: {
         ...dto,
@@ -59,7 +82,13 @@ export class ExpensesService {
       _sum: { amount: true },
     });
 
-    return { total: total._sum.amount || 0, byCategory };
+    const availableBalance = await this.getAvailableBalance();
+
+    return {
+      total: total._sum.amount || 0,
+      byCategory,
+      availableBalance,
+    };
   }
 
   async findOne(id: number) {
@@ -72,7 +101,19 @@ export class ExpensesService {
   }
 
   async update(id: number, dto: UpdateExpenseDto) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
+
+    // إذا تغير المبلغ، تحقق من الرصيد
+    if (dto.amount !== undefined && dto.amount !== Number(existing.amount)) {
+      const availableBalance = await this.getAvailableBalance();
+      const diff = dto.amount - Number(existing.amount);
+      if (diff > availableBalance) {
+        throw new BadRequestException(
+          `لا يمكن تحديث هذا المصروف. الرصيد المتاح: ${availableBalance.toFixed(2)} ليرة سوري`,
+        );
+      }
+    }
+
     const data: any = { ...dto };
     if (dto.expenseDate) data.expenseDate = new Date(dto.expenseDate);
 

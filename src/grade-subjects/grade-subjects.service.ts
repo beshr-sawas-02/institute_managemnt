@@ -1,6 +1,3 @@
-// src/grade-subjects/grade-subjects.service.ts
-// خدمة إدارة مواد الصفوف (ربط المواد بالصفوف والمعلمين)
-
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGradeSubjectDto, UpdateGradeSubjectDto } from './dto/grade-subject.dto';

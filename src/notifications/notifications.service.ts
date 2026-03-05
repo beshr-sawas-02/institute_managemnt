@@ -1,7 +1,3 @@
-
-// src/notifications/notifications.service.ts
-// خدمة إدارة الإشعارات مع Firebase Push Notifications
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FirebaseService } from './firebase.service';
@@ -14,9 +10,7 @@ export class NotificationsService {
     private firebaseService: FirebaseService,
   ) {}
 
-  // إنشاء وإرسال إشعار
   async create(dto: CreateNotificationDto) {
-    // حفظ الإشعار في قاعدة البيانات
     const notification = await this.prisma.notification.create({
       data: {
         userId: dto.userId,
@@ -29,11 +23,8 @@ export class NotificationsService {
       },
     });
 
-    // إرسال إشعار Firebase إذا كانت القناة push
     if (dto.channel === 'push') {
       try {
-        // يمكن تخزين رمز FCM في جدول منفصل أو في جدول المستخدمين
-        // هنا نرسل إلى موضوع المستخدم
         await this.firebaseService.sendToTopic(
           `user_${dto.userId}`,
           dto.title,
@@ -45,7 +36,6 @@ export class NotificationsService {
           },
         );
 
-        // تحديث حالة الإرسال
         await this.prisma.notification.update({
           where: { id: notification.id },
           data: { sent: true, sentAt: new Date() },
@@ -58,7 +48,147 @@ export class NotificationsService {
     return notification;
   }
 
-  // جلب إشعارات مستخدم
+  // ==================== إشعارات الحضور ====================
+  async notifyAbsence(studentId: number, subjectName: string, attendanceId: number) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: { parent: { include: { user: true } } },
+    });
+    if (!student?.parent?.userId) return;
+
+    return this.create({
+      userId: student.parent.userId,
+      relatedId: attendanceId,
+      relatedType: 'attendance',
+      title: `غياب - ${student.firstName} ${student.lastName}`,
+      message: `ابنكم ${student.firstName} غائب اليوم في مادة ${subjectName}`,
+      type: 'warning',
+      channel: 'push',
+    });
+  }
+
+  async notifyLate(studentId: number, subjectName: string, lateMinutes: number, attendanceId: number) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: { parent: { include: { user: true } } },
+    });
+    if (!student?.parent?.userId) return;
+
+    return this.create({
+      userId: student.parent.userId,
+      relatedId: attendanceId,
+      relatedType: 'attendance',
+      title: `تأخير - ${student.firstName} ${student.lastName}`,
+      message: `ابنكم ${student.firstName} متأخر ${lateMinutes} دقيقة في مادة ${subjectName}`,
+      type: 'warning',
+      channel: 'push',
+    });
+  }
+
+  // ==================== إشعارات التقييمات ====================
+  async notifyNewAssessment(studentId: number, assessmentTitle: string, score: number, maxScore: number, subjectName: string, assessmentId: number) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: { parent: { include: { user: true } } },
+    });
+    if (!student?.parent?.userId) return;
+
+    const percentage = (score / maxScore) * 100;
+    const notifType = percentage >= 50 ? 'success' : 'warning';
+
+    return this.create({
+      userId: student.parent.userId,
+      relatedId: assessmentId,
+      relatedType: 'assessment',
+      title: `درجة جديدة - ${student.firstName}`,
+      message: `حصل ${student.firstName} على ${score}/${maxScore} (${percentage.toFixed(0)}%) في ${assessmentTitle} - مادة ${subjectName}`,
+      type: notifType as any,
+      channel: 'push',
+    });
+  }
+
+  // ==================== إشعارات المدفوعات ====================
+  async notifyNewPayment(studentId: number, amount: number, dueDate: string, paymentId: number) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: { parent: { include: { user: true } } },
+    });
+    if (!student?.parent?.userId) return;
+
+    return this.create({
+      userId: student.parent.userId,
+      relatedId: paymentId,
+      relatedType: 'payment',
+      title: `مستحق مالي جديد - ${student.firstName}`,
+      message: `تم إنشاء مستحق مالي بقيمة ${amount} ليرة سوري - تاريخ الاستحقاق: ${dueDate}`,
+      type: 'info',
+      channel: 'push',
+    });
+  }
+
+  async notifyPaymentConfirmed(studentId: number, amount: number, receiptNumber: string, paymentId: number) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: { parent: { include: { user: true } } },
+    });
+    if (!student?.parent?.userId) return;
+
+    return this.create({
+      userId: student.parent.userId,
+      relatedId: paymentId,
+      relatedType: 'payment',
+      title: `تأكيد دفع - ${student.firstName}`,
+      message: `تم تأكيد دفع مبلغ ${amount} ليرة سوري. رقم الإيصال: ${receiptNumber}`,
+      type: 'success',
+      channel: 'push',
+    });
+  }
+
+  async notifyOverduePayment(studentId: number, amount: number, dueDate: string, paymentId: number) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: { parent: { include: { user: true } } },
+    });
+    if (!student?.parent?.userId) return;
+
+    return this.create({
+      userId: student.parent.userId,
+      relatedId: paymentId,
+      relatedType: 'payment',
+      title: `تذكير بمستحق متأخر - ${student.firstName}`,
+      message: `يوجد مستحق مالي متأخر بقيمة ${amount} ليرة سوري  كان مستحقاً في ${dueDate}`,
+      type: 'alert',
+      channel: 'push',
+    });
+  }
+
+  // ==================== إشعارات تسجيل الطالب ====================
+  async notifyStudentRegistered(studentId: number) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: {
+        parent: { include: { user: true } },
+        section: { include: { grade: true } },
+      },
+    });
+    if (!student?.parent?.userId) return;
+
+    const sectionInfo = student.section
+      ? `${student.section.grade?.name} - ${student.section.name}`
+      : 'لم يتم تحديد الشعبة بعد';
+
+    return this.create({
+      userId: student.parent.userId,
+      relatedId: student.id,
+      relatedType: 'general',
+      title: `تم تسجيل الطالب`,
+      message: `تم تسجيل ${student.firstName} ${student.lastName} بنجاح في ${sectionInfo}`,
+      type: 'success',
+      channel: 'push',
+    });
+  }
+
+  // ==================== الدوال العامة ====================
   async findByUser(userId: number) {
     return this.prisma.notification.findMany({
       where: { userId },
@@ -67,7 +197,6 @@ export class NotificationsService {
     });
   }
 
-  // جلب عدد الإشعارات غير المقروءة
   async getUnreadCount(userId: number) {
     const count = await this.prisma.notification.count({
       where: { userId, isRead: false },
@@ -75,7 +204,6 @@ export class NotificationsService {
     return { unreadCount: count };
   }
 
-  // تحديد إشعار كمقروء
   async markAsRead(id: number) {
     const notification = await this.prisma.notification.findUnique({ where: { id } });
     if (!notification) throw new NotFoundException('الإشعار غير موجود');
@@ -86,7 +214,6 @@ export class NotificationsService {
     });
   }
 
-  // تحديد جميع الإشعارات كمقروءة
   async markAllAsRead(userId: number) {
     await this.prisma.notification.updateMany({
       where: { userId, isRead: false },
@@ -95,7 +222,6 @@ export class NotificationsService {
     return { message: 'تم تحديد جميع الإشعارات كمقروءة' };
   }
 
-  // حذف إشعار
   async remove(id: number) {
     const notification = await this.prisma.notification.findUnique({ where: { id } });
     if (!notification) throw new NotFoundException('الإشعار غير موجود');
@@ -104,7 +230,6 @@ export class NotificationsService {
     return { message: 'تم حذف الإشعار بنجاح' };
   }
 
-  // إرسال إشعار جماعي (لكل المستخدمين من دور معين)
   async sendBulkNotification(
     role: string,
     title: string,

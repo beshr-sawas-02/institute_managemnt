@@ -1,14 +1,15 @@
-// src/students/students.service.ts
-// خدمة إدارة الطلاب
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateStudentDto, UpdateStudentDto } from './dto/student.dto';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 
 @Injectable()
 export class StudentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(createStudentDto: CreateStudentDto) {
     const data: any = { ...createStudentDto };
@@ -16,13 +17,20 @@ export class StudentsService {
       data.dateOfBirth = new Date(data.dateOfBirth);
     }
 
-    return this.prisma.student.create({
+    const student = await this.prisma.student.create({
       data,
       include: {
         parent: { select: { id: true, firstName: true, lastName: true } },
         section: { include: { grade: true } },
       },
     });
+
+    // إشعار ولي الأمر بتسجيل الطالب
+    if (student.parentId) {
+      await this.notificationsService.notifyStudentRegistered(student.id);
+    }
+
+    return student;
   }
 
   async findAll(paginationDto: PaginationDto) {
@@ -40,9 +48,7 @@ export class StudentsService {
 
     const [data, total] = await Promise.all([
       this.prisma.student.findMany({
-        where,
-        skip,
-        take: limit,
+        where, skip, take: limit,
         include: {
           parent: { select: { id: true, firstName: true, lastName: true, phone: true } },
           section: { include: { grade: true } },
@@ -63,10 +69,7 @@ export class StudentsService {
         parent: true,
         section: { include: { grade: true } },
         user: { select: { id: true, email: true } },
-        attendances: {
-          take: 10,
-          orderBy: { date: 'desc' },
-        },
+        attendances: { take: 10, orderBy: { date: 'desc' } },
         assessments: {
           take: 10,
           orderBy: { assessmentDate: 'desc' },
@@ -76,9 +79,7 @@ export class StudentsService {
       },
     });
 
-    if (!student) {
-      throw new NotFoundException('الطالب غير موجود');
-    }
+    if (!student) throw new NotFoundException('الطالب غير موجود');
     return student;
   }
 

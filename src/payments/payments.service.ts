@@ -1,6 +1,3 @@
-// src/payments/payments.service.ts
-// خدمة إدارة المدفوعات
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -33,17 +30,14 @@ export class PaymentsService {
       },
     });
 
-    // إشعار ولي الأمر بالدفعة الجديدة
+    // إشعار ولي الأمر بالمستحق الجديد
     if (payment.student?.parent?.userId) {
-      await this.notificationsService.create({
-        userId: payment.student.parent.userId,
-        relatedId: payment.id,
-        relatedType: 'payment',
-        title: `مستحقات مالية - ${payment.student.firstName}`,
-        message: `تم إنشاء مستحق مالي بقيمة ${finalAmount} ريال - تاريخ الاستحقاق: ${dto.dueDate}`,
-        type: 'info',
-        channel: 'push',
-      });
+      await this.notificationsService.notifyNewPayment(
+        dto.studentId,
+        finalAmount,
+        dto.dueDate,
+        payment.id,
+      );
     }
 
     return payment;
@@ -82,7 +76,6 @@ export class PaymentsService {
     });
   }
 
-  // إحصائيات المدفوعات
   async getStats(academicYear?: string) {
     const where = academicYear ? { academicYear } : {};
 
@@ -109,21 +102,35 @@ export class PaymentsService {
   }
 
   async update(id: number, dto: UpdatePaymentDto) {
-    await this.findOne(id);
+    const current = await this.findOne(id);
     const data: any = { ...dto };
     if (dto.dueDate) data.dueDate = new Date(dto.dueDate);
     if (dto.paymentDate) data.paymentDate = new Date(dto.paymentDate);
     if (dto.amount !== undefined || dto.discount !== undefined) {
-      const current = await this.findOne(id);
       const amount = dto.amount ?? Number(current.amount);
       const discount = dto.discount ?? Number(current.discount);
       data.finalAmount = amount - discount;
     }
 
-    return this.prisma.payment.update({
-      where: { id }, data,
-      include: { student: true },
+    const updated = await this.prisma.payment.update({
+      where: { id },
+      data,
+      include: { student: { include: { parent: { include: { user: true } } } } },
     });
+
+    // إشعار عند تأكيد الدفع (تغيير الحالة إلى paid)
+    if (dto.status === 'paid' && current.status !== 'paid') {
+      if (updated.student?.parent?.userId) {
+        await this.notificationsService.notifyPaymentConfirmed(
+          updated.studentId,
+          Number(updated.finalAmount),
+          updated.receiptNumber || '',
+          updated.id,
+        );
+      }
+    }
+
+    return updated;
   }
 
   async remove(id: number) {

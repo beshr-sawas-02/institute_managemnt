@@ -1,6 +1,3 @@
-// src/assessments/assessments.service.ts
-// خدمة إدارة التقييمات والدرجات
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -15,7 +12,6 @@ export class AssessmentsService {
   ) {}
 
   async create(dto: CreateAssessmentDto) {
-    // حساب النسبة المئوية والتقدير
     let percentage: number | null = null;
     let grade: string | null = null;
 
@@ -40,16 +36,14 @@ export class AssessmentsService {
     // إشعار ولي الأمر بالدرجة
     if (dto.score !== undefined && assessment.student?.parent?.userId) {
       const subjectName = assessment.gradeSubject?.subject?.name || '';
-      const notificationType = percentage !== null && percentage >= 50 ? 'success' : 'warning';
-      await this.notificationsService.create({
-        userId: assessment.student.parent.userId,
-        relatedId: assessment.id,
-        relatedType: 'assessment',
-        title: `درجة جديدة - ${assessment.student.firstName}`,
-        message: `حصل ${assessment.student.firstName} على ${dto.score}/${dto.maxScore} في ${dto.title} - مادة ${subjectName}`,
-        type: notificationType as any,
-        channel: 'push',
-      });
+      await this.notificationsService.notifyNewAssessment(
+        dto.studentId,
+        dto.title,
+        dto.score,
+        dto.maxScore,
+        subjectName,
+        assessment.id,
+      );
     }
 
     return assessment;
@@ -61,8 +55,7 @@ export class AssessmentsService {
 
     const [data, total] = await Promise.all([
       this.prisma.assessment.findMany({
-        skip,
-        take: limit,
+        skip, take: limit,
         include: {
           student: { select: { id: true, firstName: true, lastName: true } },
           gradeSubject: { include: { subject: true, grade: true } },
@@ -117,7 +110,6 @@ export class AssessmentsService {
     return { message: 'تم حذف التقييم بنجاح' };
   }
 
-  // حساب التقدير
   private calculateGrade(percentage: number): string {
     if (percentage >= 90) return 'ممتاز';
     if (percentage >= 80) return 'جيد جداً';

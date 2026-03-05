@@ -12,15 +12,12 @@ import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
 export class CreateUserDto {
-  @ApiProperty({ example: 'user@school.com' })
   @IsEmail({}, { message: 'البريد الإلكتروني غير صالح' })
   email: string;
 
-  @ApiProperty({ example: 'password123' })
   @IsString()
   password: string;
 
-  @ApiPropertyOptional({ example: '+966501234567' })
   @IsOptional()
   @IsString()
   phone?: string;
