@@ -10,21 +10,24 @@ export class SchedulesService {
     const startTime = new Date(`1970-01-01T${dto.startTime}:00`);
     const endTime = new Date(`1970-01-01T${dto.endTime}:00`);
 
-    // 1. التحقق من تعارض الشعبة
+    // 1. تحقق من تضارب الشعبة
     const sectionConflict = await this.prisma.schedule.findFirst({
       where: {
         sectionId: dto.sectionId,
         dayOfWeek: dto.dayOfWeek,
         status: 'scheduled',
-        startTime: startTime,
+        AND: [
+          { startTime: { lt: endTime } },
+          { endTime: { gt: startTime } },
+        ],
       },
     });
 
     if (sectionConflict) {
-      throw new BadRequestException('يوجد تعارض في الجدول الزمني لهذه الشعبة في نفس الوقت');
+      throw new BadRequestException('يوجد تضارب في الجدول الزمني لهذه الشعبة في هذا الوقت');
     }
 
-    // 2. التحقق من تعارض المعلم (نفس المعلم + نفس اليوم + نفس وقت البداية)
+    // 2. تحقق من تضارب المعلم
     const gradeSubject = await this.prisma.gradeSubject.findUnique({
       where: { id: dto.gradeSubjectId },
       select: { teacherId: true },
@@ -34,18 +37,17 @@ export class SchedulesService {
       const teacherConflict = await this.prisma.schedule.findFirst({
         where: {
           dayOfWeek: dto.dayOfWeek,
-          startTime: startTime,
           status: 'scheduled',
-          gradeSubject: {
-            teacherId: gradeSubject.teacherId,
-          },
+          gradeSubject: { teacherId: gradeSubject.teacherId },
+          AND: [
+            { startTime: { lt: endTime } },
+            { endTime: { gt: startTime } },
+          ],
         },
       });
 
       if (teacherConflict) {
-        throw new BadRequestException(
-          'المعلم لديه حصة أخرى في نفس اليوم ونفس وقت البداية. يوجد تضارب في جدول المعلم',
-        );
+        throw new BadRequestException('المعلم لديه حصة أخرى تتداخل مع هذا الوقت');
       }
     }
 
@@ -110,7 +112,6 @@ export class SchedulesService {
 
   async update(id: number, dto: UpdateScheduleDto) {
     const existing = await this.findOne(id);
-    const data: any = { ...dto };
 
     const newStartTime = dto.startTime
       ? new Date(`1970-01-01T${dto.startTime}:00`)
@@ -121,7 +122,26 @@ export class SchedulesService {
     const newDayOfWeek = dto.dayOfWeek || existing.dayOfWeek;
     const newGradeSubjectId = dto.gradeSubjectId || existing.gradeSubjectId;
 
-    // التحقق من تعارض المعلم عند التحديث
+    // تحقق من تضارب الشعبة عند التعديل (مع استثناء السجل الحالي)
+    const newSectionId = dto.sectionId || existing.sectionId;
+    const sectionConflict = await this.prisma.schedule.findFirst({
+      where: {
+        id: { not: id },
+        sectionId: newSectionId,
+        dayOfWeek: newDayOfWeek,
+        status: 'scheduled',
+        AND: [
+          { startTime: { lt: newEndTime } },
+          { endTime: { gt: newStartTime } },
+        ],
+      },
+    });
+
+    if (sectionConflict) {
+      throw new BadRequestException('يوجد تضارب في الجدول الزمني لهذه الشعبة في هذا الوقت');
+    }
+
+    // تحقق من تضارب المعلم عند التعديل (مع استثناء السجل الحالي)
     const gradeSubject = await this.prisma.gradeSubject.findUnique({
       where: { id: newGradeSubjectId },
       select: { teacherId: true },
@@ -130,23 +150,23 @@ export class SchedulesService {
     if (gradeSubject?.teacherId) {
       const teacherConflict = await this.prisma.schedule.findFirst({
         where: {
-          id: { not: id }, // استثناء السجل الحالي
+          id: { not: id },
           dayOfWeek: newDayOfWeek,
-          startTime: newStartTime,
           status: 'scheduled',
-          gradeSubject: {
-            teacherId: gradeSubject.teacherId,
-          },
+          gradeSubject: { teacherId: gradeSubject.teacherId },
+          AND: [
+            { startTime: { lt: newEndTime } },
+            { endTime: { gt: newStartTime } },
+          ],
         },
       });
 
       if (teacherConflict) {
-        throw new BadRequestException(
-          'المعلم لديه حصة أخرى في نفس اليوم ونفس وقت البداية. يوجد تضارب في جدول المعلم',
-        );
+        throw new BadRequestException('المعلم لديه حصة أخرى تتداخل مع هذا الوقت');
       }
     }
 
+    const data: any = { ...dto };
     if (dto.startTime) data.startTime = newStartTime;
     if (dto.endTime) data.endTime = newEndTime;
 
