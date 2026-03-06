@@ -9,7 +9,7 @@ export class GradeSubjectsService {
   async create(dto: CreateGradeSubjectDto) {
     // التحقق من عدم وجود نفس الربط مسبقاً
     const existing = await this.prisma.gradeSubject.findFirst({
-      where: { gradeId: dto.gradeId, subjectId: dto.subjectId },
+      where: { gradeId: dto.gradeId, subjectId: dto.subjectId , sectionId: dto.sectionId},
     });
     if (existing) throw new ConflictException('هذه المادة مربوطة بالصف بالفعل');
 

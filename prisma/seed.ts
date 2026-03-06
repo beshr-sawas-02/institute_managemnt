@@ -150,7 +150,7 @@ async function main() {
 
   // ======= ربط المواد بالصفوف =======
   const gradeSubject = await prisma.gradeSubject.upsert({
-    where: { unique_grade_subject: { gradeId: grade1.id, subjectId: math.id } },
+    where: { unique_grade_subject: { gradeId: grade1.id, subjectId: math.id , sectionId:section1.id } },
     update: {},
     create: { gradeId: grade1.id, subjectId: math.id, teacherId: teacher.id },
   });

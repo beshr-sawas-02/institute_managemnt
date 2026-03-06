@@ -201,7 +201,7 @@ model GradeSubject {
   schedules   Schedule[]
   assessments Assessment[]
 
-  @@unique([gradeId, subjectId], name: "unique_grade_subject")
+  @@unique([gradeId, subjectId, sectionId], name: "unique_grade_subject")
   @@map("grade_subjects")
 }
 

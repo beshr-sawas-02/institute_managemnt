@@ -17,7 +17,7 @@ export class CreateGradeSubjectDto {
   @ApiPropertyOptional({ description: 'معرف الشعبة (اختياري)' })
   @IsOptional()
   @IsInt()
-  sectionId?: number;
+  sectionId: number;
 }
 
 export class UpdateGradeSubjectDto extends PartialType(CreateGradeSubjectDto) {}
