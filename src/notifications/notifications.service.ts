@@ -49,41 +49,55 @@ export class NotificationsService {
   }
 
   // ==================== إشعارات الحضور ====================
-  async notifyAbsence(studentId: number, subjectName: string, attendanceId: number) {
+  async notifyAbsence(studentId: number, attendanceId: number) {
+  try {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
       include: { parent: { include: { user: true } } },
     });
-    if (!student?.parent?.userId) return;
 
-    return this.create({
-      userId: student.parent.userId,
+    if (!student?.parent?.user) return;
+
+    await this.create({
+      userId: student.parent.user.id,
       relatedId: attendanceId,
       relatedType: 'attendance',
-      title: `غياب - ${student.firstName} ${student.lastName}`,
-      message: `ابنكم ${student.firstName} غائب اليوم في مادة ${subjectName}`,
+      title: 'غياب طالب',
+      message: `ابنكم ${student.firstName} ${student.lastName} غائب اليوم`,
       type: 'warning',
       channel: 'push',
     });
+  } catch (error) {
+    console.error('خطأ في إشعار الغياب:', error);
   }
+}
 
-  async notifyLate(studentId: number, subjectName: string, lateMinutes: number, attendanceId: number) {
+  async notifyLate(
+  studentId: number,
+  lateMinutes: number,
+  attendanceId: number,
+) {
+  try {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
       include: { parent: { include: { user: true } } },
     });
-    if (!student?.parent?.userId) return;
 
-    return this.create({
-      userId: student.parent.userId,
+    if (!student?.parent?.user) return;
+
+    await this.create({
+      userId: student.parent.user.id,
       relatedId: attendanceId,
       relatedType: 'attendance',
-      title: `تأخير - ${student.firstName} ${student.lastName}`,
-      message: `ابنكم ${student.firstName} متأخر ${lateMinutes} دقيقة في مادة ${subjectName}`,
+      title: 'تأخر طالب',
+      message: `ابنكم ${student.firstName} ${student.lastName} متأخر ${lateMinutes} دقيقة اليوم`,
       type: 'warning',
       channel: 'push',
     });
+  } catch (error) {
+    console.error('خطأ في إشعار التأخير:', error);
   }
+}
 
   // ==================== إشعارات التقييمات ====================
   async notifyNewAssessment(studentId: number, assessmentTitle: string, score: number, maxScore: number, subjectName: string, assessmentId: number) {

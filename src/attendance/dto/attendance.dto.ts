@@ -1,32 +1,34 @@
-// src/attendance/dto/attendance.dto.ts
 import {
-  IsInt, IsNotEmpty, IsEnum, IsOptional, IsString, IsDateString, IsArray, ValidateNested,
+  IsInt,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsArray,
+  ValidateNested,
+  Min,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { AttendanceStatus } from '@prisma/client';
 import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { AttendanceStatus } from '@prisma/client';
 
 export class CreateAttendanceDto {
   @ApiProperty()
   @IsInt()
   studentId: number;
 
-  @ApiProperty()
-  @IsInt()
-  scheduleId: number;
-
-  @ApiProperty({ example: '2024-09-15' })
+  @ApiProperty({ example: '2025-09-14' })
   @IsDateString()
-  @IsNotEmpty({ message: 'التاريخ مطلوب' })
   date: string;
 
   @ApiProperty({ enum: AttendanceStatus })
-  @IsEnum(AttendanceStatus, { message: 'حالة الحضور غير صالحة' })
+  @IsEnum(AttendanceStatus)
   status: AttendanceStatus;
 
-  @ApiPropertyOptional({ example: 10 })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsInt()
+  @Min(0)
   lateMinutes?: number;
 
   @ApiPropertyOptional()
@@ -35,8 +37,7 @@ export class CreateAttendanceDto {
   notes?: string;
 }
 
-// تسجيل حضور مجموعة طلاب دفعة واحدة
-export class BulkAttendanceItemDto {
+export class BulkStudentAttendanceDto {
   @ApiProperty()
   @IsInt()
   studentId: number;
@@ -48,6 +49,7 @@ export class BulkAttendanceItemDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsInt()
+  @Min(0)
   lateMinutes?: number;
 
   @ApiPropertyOptional()
@@ -59,44 +61,71 @@ export class BulkAttendanceItemDto {
 export class BulkAttendanceDto {
   @ApiProperty()
   @IsInt()
-  scheduleId: number;
+  sectionId: number;
 
-  @ApiProperty({ example: '2024-09-15' })
+  @ApiProperty({ example: '2025-09-14' })
   @IsDateString()
   date: string;
 
-  @ApiProperty({ type: [BulkAttendanceItemDto] })
+  @ApiProperty({ type: [BulkStudentAttendanceDto] })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => BulkAttendanceItemDto)
-  students: BulkAttendanceItemDto[];
+  @Type(() => BulkStudentAttendanceDto)
+  students: BulkStudentAttendanceDto[];
 }
 
-export class UpdateAttendanceDto extends PartialType(CreateAttendanceDto) {}
+export class ExceptionStudentDto {
+  @ApiProperty()
+  @IsInt()
+  studentId: number;
 
-export class AttendanceFilterDto {
+  @ApiProperty({ enum: AttendanceStatus })
+  @IsEnum(AttendanceStatus)
+  status: AttendanceStatus;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsInt()
-  studentId?: number;
+  @Min(0)
+  lateMinutes?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
+export class SmartBulkAttendanceDto {
+  @ApiProperty()
   @IsInt()
-  scheduleId?: number;
+  sectionId: number;
 
-  @ApiPropertyOptional()
-  @IsOptional()
+  @ApiProperty({ example: '2025-09-14' })
   @IsDateString()
-  dateFrom?: string;
+  date: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: [ExceptionStudentDto] })
   @IsOptional()
-  @IsDateString()
-  dateTo?: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ExceptionStudentDto)
+  exceptions?: ExceptionStudentDto[];
+}
 
+export class UpdateAttendanceDto {
   @ApiPropertyOptional({ enum: AttendanceStatus })
   @IsOptional()
   @IsEnum(AttendanceStatus)
   status?: AttendanceStatus;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  lateMinutes?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

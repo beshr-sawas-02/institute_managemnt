@@ -236,7 +236,6 @@ model Schedule {
 
   section      Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   gradeSubject GradeSubject @relation(fields: [gradeSubjectId], references: [id], onDelete: Cascade)
-  attendances  Attendance[]
 
   @@map("schedules")
 }
@@ -252,7 +251,6 @@ enum AttendanceStatus {
 model Attendance {
   id                 Int              @id @default(autoincrement())
   studentId          Int              @map("student_id")
-  scheduleId         Int              @map("schedule_id")
   date               DateTime         @db.Date
   status             AttendanceStatus
   lateMinutes        Int              @default(0) @map("late_minutes")
@@ -262,10 +260,9 @@ model Attendance {
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
 
-  student  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  @@unique([studentId, scheduleId, date], name: "unique_attendance")
+  @@unique([studentId, date], name: "unique_attendance")
   @@map("attendance")
 }
 

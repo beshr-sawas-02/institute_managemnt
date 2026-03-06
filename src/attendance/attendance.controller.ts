@@ -1,62 +1,150 @@
-// src/attendance/attendance.controller.ts
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete,
-  Query, UseGuards, ParseIntPipe,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AttendanceService } from './attendance.service';
 import {
-  CreateAttendanceDto, UpdateAttendanceDto, BulkAttendanceDto, AttendanceFilterDto,
+  CreateAttendanceDto,
+  BulkAttendanceDto,
+  SmartBulkAttendanceDto,
+  UpdateAttendanceDto,
 } from './dto/attendance.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { UserRole } from '@prisma/client';
+import { Roles } from '@/common/decorators';
+import { RolesGuard } from '@/common/guards';
 
 @ApiTags('الحضور')
-@Controller('attendance')
-@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('attendance')
 export class AttendanceController {
-  constructor(private readonly service: AttendanceService) {}
+  constructor(private readonly attendanceService: AttendanceService) {}
+
+  // ==================== تسجيل ====================
 
   @Post()
-  @Roles(UserRole.admin, UserRole.teacher)
-  @ApiOperation({ summary: 'تسجيل حضور طالب' })
-  create(@Body() dto: CreateAttendanceDto) { return this.service.create(dto); }
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
+  @ApiOperation({ summary: 'تسجيل حضور طالب واحد' })
+  create(@Body() dto: CreateAttendanceDto) {
+    return this.attendanceService.create(dto);
+  }
 
   @Post('bulk')
-  @Roles(UserRole.admin, UserRole.teacher)
-  @ApiOperation({ summary: 'تسجيل حضور مجموعة طلاب' })
-  bulkCreate(@Body() dto: BulkAttendanceDto) { return this.service.bulkCreate(dto); }
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
+  @ApiOperation({ summary: 'تسجيل حضور جماعي يدوي' })
+  bulkCreate(@Body() dto: BulkAttendanceDto) {
+    return this.attendanceService.bulkCreate(dto);
+  }
+
+  @Post('smart-bulk')
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
+  @ApiOperation({
+    summary: 'تسجيل حضور ذكي - الكل حضور ما عدا الاستثناءات',
+    description:
+      'يسجل حضور لكل طلاب الشعبة تلقائياً، فقط الغائبين والمتأخرين يُذكرون في exceptions',
+  })
+  smartBulkCreate(@Body() dto: SmartBulkAttendanceDto) {
+    return this.attendanceService.smartBulkCreate(dto);
+  }
+
+  // ==================== كشف الحضور ====================
+
+  @Get('section/:sectionId/sheet')
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
+  @ApiOperation({
+    summary: 'كشف حضور الشعبة ليوم معين',
+    description:
+      'يجيب قائمة الطلاب مرتبين أبجدياً مع حالة حضورهم - null إذا لم يُسجَّل بعد',
+  })
+  @ApiQuery({ name: 'date', example: '2025-09-14' })
+  getSectionSheet(
+    @Param('sectionId', ParseIntPipe) sectionId: number,
+    @Query('date') date: string,
+  ) {
+    return this.attendanceService.getSectionAttendanceSheet(sectionId, date);
+  }
+
+  // ==================== جلب السجلات ====================
 
   @Get()
-  @ApiOperation({ summary: 'جلب سجلات الحضور' })
-  findAll(@Query() filter: AttendanceFilterDto) { return this.service.findAll(filter); }
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
+  @ApiOperation({ summary: 'جلب سجلات الحضور مع فلترة' })
+  findAll(
+    @Query('date') date?: string,
+    @Query('sectionId') sectionId?: string,
+  ) {
+    return this.attendanceService.findAll({
+      date,
+      sectionId: sectionId ? parseInt(sectionId) : undefined,
+    });
+  }
 
-  @Get('stats/:studentId')
-  @ApiOperation({ summary: 'إحصائيات حضور طالب' })
-  getStudentStats(
+  @Get('section/:sectionId')
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
+  @ApiOperation({ summary: 'حضور شعبة في يوم معين' })
+  @ApiQuery({ name: 'date', example: '2025-09-14' })
+  findBySection(
+    @Param('sectionId', ParseIntPipe) sectionId: number,
+    @Query('date') date: string,
+  ) {
+    return this.attendanceService.findBySection(sectionId, date);
+  }
+
+  @Get('student/:studentId')
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher, UserRole.parent)
+  @ApiOperation({ summary: 'سجل حضور طالب معين' })
+  findByStudent(
     @Param('studentId', ParseIntPipe) studentId: number,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
-    return this.service.getStudentStats(studentId, dateFrom, dateTo);
+    return this.attendanceService.findByStudent(studentId, dateFrom, dateTo);
+  }
+
+  @Get('stats/:studentId')
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher, UserRole.parent)
+  @ApiOperation({ summary: 'إحصائيات حضور طالب' })
+  getStats(
+    @Param('studentId', ParseIntPipe) studentId: number,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.attendanceService.getStats(studentId, dateFrom, dateTo);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'جلب سجل حضور بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
+  @ApiOperation({ summary: 'تفاصيل سجل حضور' })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.attendanceService.findOne(id);
+  }
+
+  // ==================== تعديل وحذف ====================
 
   @Patch(':id')
-  @Roles(UserRole.admin, UserRole.teacher)
-  @ApiOperation({ summary: 'تحديث سجل حضور' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateAttendanceDto) {
-    return this.service.update(id, dto);
+  @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
+  @ApiOperation({ summary: 'تعديل سجل حضور' })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateAttendanceDto,
+  ) {
+    return this.attendanceService.update(id, dto);
   }
 
   @Delete(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف سجل حضور' })
-  remove(@Param('id', ParseIntPipe) id: number) { return this.service.remove(id); }
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.attendanceService.remove(id);
+  }
 }

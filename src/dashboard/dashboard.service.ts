@@ -91,7 +91,6 @@ export class DashboardService {
       orderBy: { date: 'desc' },
       include: {
         student: { select: { firstName: true, lastName: true } },
-        schedule: { include: { gradeSubject: { include: { subject: true } } } },
       },
     });
 
