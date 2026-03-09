@@ -37,7 +37,6 @@ export class UsersController {
   }
 
   @Post('parent')
-  @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'إنشاء حساب ولي أمر بالتحقق من البريد الإلكتروني' })
   createParentUser(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createParentUser(createUserDto);
