@@ -36,7 +36,7 @@ export class CreateParentDto {
   @ApiPropertyOptional({ description: 'البريد الإلكتروني' })
   @IsOptional()
   @IsEmail()
-  email?: string;
+  email: string;
 
   @ApiPropertyOptional({ description: 'العنوان' })
   @IsOptional()

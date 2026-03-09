@@ -2,7 +2,9 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
@@ -38,6 +40,62 @@ export class UsersService {
         createdAt: true,
       },
     });
+  }
+
+  async createParentUser(createUserDto: CreateUserDto) {
+    if (createUserDto.role !== UserRole.parent) {
+      throw new BadRequestException('Role must be parent');
+    }
+
+    const parent = await this.prisma.parent.findFirst({
+      where: { email: createUserDto.email },
+      select: { id: true, userId: true },
+    });
+
+    if (!parent) {
+      throw new NotFoundException('No parent found with this email');
+    }
+
+    if (parent.userId) {
+      throw new ConflictException('This parent already has a user account');
+    }
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
+
+    const createdUser = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          ...createUserDto,
+          role: UserRole.parent,
+          password: hashedPassword,
+        },
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+        },
+      });
+
+      await tx.parent.update({
+        where: { id: parent.id },
+        data: { userId: user.id },
+      });
+
+      return user;
+    });
+
+    return createdUser;
   }
 
   // جلب جميع المستخدمين مع الترقيم

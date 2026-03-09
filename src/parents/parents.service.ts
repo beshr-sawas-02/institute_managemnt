@@ -11,6 +11,11 @@ export class ParentsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createParentDto: CreateParentDto) {
+
+     const existing = await this.prisma.user.findUnique({
+      where: { email: createParentDto.email },
+    });
+    
     return this.prisma.parent.create({
       data: createParentDto,
       include: { user: { select: { id: true, email: true, role: true } } },
