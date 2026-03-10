@@ -19,14 +19,14 @@ export class NotificationsController {
   constructor(private readonly service: NotificationsService) {}
 
   @Post()
-  @Roles(UserRole.admin)
+  @Roles(UserRole.admin,UserRole.reception)
   @ApiOperation({ summary: 'إنشاء إشعار' })
   create(@Body() dto: CreateNotificationDto) {
     return this.service.create(dto);
   }
 
   @Post('bulk')
-  @Roles(UserRole.admin)
+  @Roles(UserRole.admin,UserRole.reception)
   @ApiOperation({ summary: 'إرسال إشعار جماعي' })
   sendBulk(@Body() body: { role: string; title: string; message: string }) {
     return this.service.sendBulkNotification(body.role, body.title, body.message);
