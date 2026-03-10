@@ -15,7 +15,7 @@ import { Roles, CurrentUser } from '../common/decorators';
 @ApiTags('التقارير')
 @Controller('reports')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.admin)
+@Roles(UserRole.admin,UserRole.reception)
 @ApiBearerAuth()
 export class ReportsController {
   constructor(private readonly service: ReportsService) {}

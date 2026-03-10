@@ -20,7 +20,7 @@ export class AssessmentsController {
   constructor(private readonly service: AssessmentsService) {}
 
   @Post()
-  @Roles(UserRole.admin, UserRole.teacher)
+  @Roles(UserRole.admin, UserRole.teacher,UserRole.reception)
   @ApiOperation({ summary: 'إضافة تقييم جديد' })
   create(@Body() dto: CreateAssessmentDto) { return this.service.create(dto); }
 
@@ -39,14 +39,14 @@ export class AssessmentsController {
   findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
 
   @Patch(':id')
-  @Roles(UserRole.admin, UserRole.teacher)
+  @Roles(UserRole.admin, UserRole.teacher,UserRole.reception)
   @ApiOperation({ summary: 'تحديث تقييم' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateAssessmentDto) {
     return this.service.update(id, dto);
   }
 
   @Delete(':id')
-  @Roles(UserRole.admin)
+  @Roles(UserRole.admin,UserRole.reception)
   @ApiOperation({ summary: 'حذف تقييم' })
   remove(@Param('id', ParseIntPipe) id: number) { return this.service.remove(id); }
 }
