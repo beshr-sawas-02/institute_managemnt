@@ -1,5 +1,4 @@
 // src/common/dto/pagination.dto.ts
-// كائن نقل بيانات الترقيم (الصفحات)
 
 import { IsOptional, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -24,6 +23,18 @@ export class PaginationDto {
   @ApiPropertyOptional({ description: 'كلمة البحث' })
   @IsOptional()
   search?: string;
+
+  @ApiPropertyOptional({ description: 'فلترة بمعرف الشعبة' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  sectionId?: number;
+
+  @ApiPropertyOptional({ description: 'فلترة بمعرف المادة-الصف' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  gradeSubjectId?: number;
 }
 
 export class PaginatedResult<T> {
@@ -33,6 +44,7 @@ export class PaginatedResult<T> {
     page: number;
     limit: number;
     totalPages: number;
+    hasNextPage: boolean;
   };
 
   constructor(data: T[], total: number, page: number, limit: number) {
@@ -42,6 +54,7 @@ export class PaginatedResult<T> {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+      hasNextPage: page < Math.ceil(total / limit),
     };
   }
 }

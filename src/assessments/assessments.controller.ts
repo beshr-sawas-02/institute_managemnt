@@ -20,13 +20,17 @@ export class AssessmentsController {
   constructor(private readonly service: AssessmentsService) {}
 
   @Post()
-  @Roles(UserRole.admin, UserRole.teacher,UserRole.reception)
+  @Roles(UserRole.admin, UserRole.teacher, UserRole.reception)
   @ApiOperation({ summary: 'إضافة تقييم جديد' })
-  create(@Body() dto: CreateAssessmentDto) { return this.service.create(dto); }
+  create(@Body() dto: CreateAssessmentDto) {
+    return this.service.create(dto);
+  }
 
   @Get()
-  @ApiOperation({ summary: 'جلب جميع التقييمات' })
-  findAll(@Query() p: PaginationDto) { return this.service.findAll(p); }
+  @ApiOperation({ summary: 'جلب جميع التقييمات مع فلترة اختيارية' })
+  findAll(@Query() p: PaginationDto) {
+    return this.service.findAll(p);
+  }
 
   @Get('student/:studentId')
   @ApiOperation({ summary: 'جلب تقييمات طالب' })
@@ -36,17 +40,21 @@ export class AssessmentsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'جلب تقييم بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(id);
+  }
 
   @Patch(':id')
-  @Roles(UserRole.admin, UserRole.teacher,UserRole.reception)
+  @Roles(UserRole.admin, UserRole.teacher, UserRole.reception)
   @ApiOperation({ summary: 'تحديث تقييم' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateAssessmentDto) {
     return this.service.update(id, dto);
   }
 
   @Delete(':id')
-  @Roles(UserRole.admin,UserRole.reception)
+  @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'حذف تقييم' })
-  remove(@Param('id', ParseIntPipe) id: number) { return this.service.remove(id); }
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.service.remove(id);
+  }
 }
