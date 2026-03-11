@@ -1,3 +1,4 @@
+// src/assessments/assessments.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -33,7 +34,6 @@ export class AssessmentsService {
       },
     });
 
-    // إشعار ولي الأمر بالدرجة
     if (dto.score !== undefined && assessment.student?.parent?.userId) {
       const subjectName = assessment.gradeSubject?.subject?.name || '';
       await this.notificationsService.notifyNewAssessment(
@@ -50,19 +50,31 @@ export class AssessmentsService {
   }
 
   async findAll(paginationDto: PaginationDto) {
-    const { page, limit } = paginationDto;
+    const { page, limit, sectionId, gradeSubjectId } = paginationDto;
     const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (sectionId) {
+      where.student = { sectionId };
+    }
+
+    if (gradeSubjectId) {
+      where.gradeSubjectId = gradeSubjectId;
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.assessment.findMany({
-        skip, take: limit,
+        skip,
+        take: limit,
+        where,
         include: {
           student: { select: { id: true, firstName: true, lastName: true } },
           gradeSubject: { include: { subject: true, grade: true } },
         },
         orderBy: { assessmentDate: 'desc' },
       }),
-      this.prisma.assessment.count(),
+      this.prisma.assessment.count({ where }),
     ]);
 
     return new PaginatedResult(data, total, page, limit);
