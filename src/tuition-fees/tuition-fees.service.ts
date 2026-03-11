@@ -143,7 +143,7 @@ export class TuitionFeesService {
     const paidAggregate = await this.prisma.payment.aggregate({
       where: {
         studentId,
-        academicYear,
+      
         status: 'paid',
       },
       _sum: { finalAmount: true },
