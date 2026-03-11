@@ -21,7 +21,7 @@ export class DashboardController {
   }
 
   @Get('financial')
-  @Roles(UserRole.admin)
+  @Roles(UserRole.admin,UserRole.reception)
   @ApiOperation({ summary: 'ملخص مالي شهري' })
   getFinancialSummary(
     @Query('month') month?: number,
