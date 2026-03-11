@@ -1,6 +1,9 @@
+// src/payments/payments.service.ts
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { TuitionFeesService } from '../tuition-fees/tuition-fees.service';
 import { CreatePaymentDto, UpdatePaymentDto } from './dto/payment.dto';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 
@@ -9,6 +12,7 @@ export class PaymentsService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private tuitionFeesService: TuitionFeesService,
   ) {}
 
   async create(dto: CreatePaymentDto) {
@@ -30,13 +34,18 @@ export class PaymentsService {
       },
     });
 
-    // إشعار ولي الأمر بالمستحق الجديد
     if (payment.student?.parent?.userId) {
-      await this.notificationsService.notifyNewPayment(
+      const balance = await this.tuitionFeesService.getStudentBalance(
+        dto.studentId,
+        dto.academicYear,
+      );
+
+      await this.notificationsService.notifyNewPaymentWithBalance(
         dto.studentId,
         finalAmount,
         dto.dueDate,
         payment.id,
+        balance,
       );
     }
 
@@ -59,8 +68,12 @@ export class PaymentsService {
 
     const [data, total] = await Promise.all([
       this.prisma.payment.findMany({
-        where, skip, take: limit,
-        include: { student: { select: { id: true, firstName: true, lastName: true } } },
+        where,
+        skip,
+        take: limit,
+        include: {
+          student: { select: { id: true, firstName: true, lastName: true } },
+        },
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.payment.count({ where }),
@@ -69,20 +82,39 @@ export class PaymentsService {
     return new PaginatedResult(data, total, page, limit);
   }
 
-  async findByStudent(studentId: number) {
-    return this.prisma.payment.findMany({
-      where: { studentId },
+  async findByStudent(studentId: number, academicYear?: string) {
+    const payments = await this.prisma.payment.findMany({
+      where: { studentId, ...(academicYear ? { academicYear } : {}) },
       orderBy: { dueDate: 'desc' },
     });
+
+    if (academicYear) {
+      const balance = await this.tuitionFeesService.getStudentBalance(
+        studentId,
+        academicYear,
+      );
+      return { payments, balance: balance ?? null };
+    }
+
+    return { payments, balance: null };
   }
 
   async getStats(academicYear?: string) {
     const where = academicYear ? { academicYear } : {};
 
     const [totalPaid, totalPending, totalPartial] = await Promise.all([
-      this.prisma.payment.aggregate({ where: { ...where, status: 'paid' }, _sum: { finalAmount: true } }),
-      this.prisma.payment.aggregate({ where: { ...where, status: 'pending' }, _sum: { finalAmount: true } }),
-      this.prisma.payment.aggregate({ where: { ...where, status: 'partial' }, _sum: { finalAmount: true } }),
+      this.prisma.payment.aggregate({
+        where: { ...where, status: 'paid' },
+        _sum: { finalAmount: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: { ...where, status: 'pending' },
+        _sum: { finalAmount: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: { ...where, status: 'partial' },
+        _sum: { finalAmount: true },
+      }),
     ]);
 
     return {
@@ -115,17 +147,24 @@ export class PaymentsService {
     const updated = await this.prisma.payment.update({
       where: { id },
       data,
-      include: { student: { include: { parent: { include: { user: true } } } } },
+      include: {
+        student: { include: { parent: { include: { user: true } } } },
+      },
     });
 
-    // إشعار عند تأكيد الدفع (تغيير الحالة إلى paid)
     if (dto.status === 'paid' && current.status !== 'paid') {
       if (updated.student?.parent?.userId) {
-        await this.notificationsService.notifyPaymentConfirmed(
+        const balance = await this.tuitionFeesService.getStudentBalance(
+          updated.studentId,
+          updated.academicYear,
+        );
+
+        await this.notificationsService.notifyPaymentConfirmedWithBalance(
           updated.studentId,
           Number(updated.finalAmount),
           updated.receiptNumber || '',
           updated.id,
+          balance,
         );
       }
     }

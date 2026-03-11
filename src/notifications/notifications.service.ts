@@ -1,7 +1,16 @@
+// src/notifications/notifications.service.ts
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FirebaseService } from './firebase.service';
 import { CreateNotificationDto } from './dto/notification.dto';
+
+type StudentBalance = {
+  annualAmount: number;
+  totalPaid: number;
+  remaining: number;
+  gradeName: string;
+} | null;
 
 @Injectable()
 export class NotificationsService {
@@ -50,57 +59,64 @@ export class NotificationsService {
 
   // ==================== إشعارات الحضور ====================
   async notifyAbsence(studentId: number, attendanceId: number) {
-  try {
-    const student = await this.prisma.student.findUnique({
-      where: { id: studentId },
-      include: { parent: { include: { user: true } } },
-    });
+    try {
+      const student = await this.prisma.student.findUnique({
+        where: { id: studentId },
+        include: { parent: { include: { user: true } } },
+      });
 
-    if (!student?.parent?.user) return;
+      if (!student?.parent?.user) return;
 
-    await this.create({
-      userId: student.parent.user.id,
-      relatedId: attendanceId,
-      relatedType: 'attendance',
-      title: 'غياب طالب',
-      message: `ابنكم ${student.firstName} ${student.lastName} غائب اليوم`,
-      type: 'warning',
-      channel: 'push',
-    });
-  } catch (error) {
-    console.error('خطأ في إشعار الغياب:', error);
+      await this.create({
+        userId: student.parent.user.id,
+        relatedId: attendanceId,
+        relatedType: 'attendance',
+        title: 'غياب طالب',
+        message: `ابنكم ${student.firstName} ${student.lastName} غائب اليوم`,
+        type: 'warning',
+        channel: 'push',
+      });
+    } catch (error) {
+      console.error('خطأ في إشعار الغياب:', error);
+    }
   }
-}
 
   async notifyLate(
-  studentId: number,
-  lateMinutes: number,
-  attendanceId: number,
-) {
-  try {
-    const student = await this.prisma.student.findUnique({
-      where: { id: studentId },
-      include: { parent: { include: { user: true } } },
-    });
+    studentId: number,
+    lateMinutes: number,
+    attendanceId: number,
+  ) {
+    try {
+      const student = await this.prisma.student.findUnique({
+        where: { id: studentId },
+        include: { parent: { include: { user: true } } },
+      });
 
-    if (!student?.parent?.user) return;
+      if (!student?.parent?.user) return;
 
-    await this.create({
-      userId: student.parent.user.id,
-      relatedId: attendanceId,
-      relatedType: 'attendance',
-      title: 'تأخر طالب',
-      message: `ابنكم ${student.firstName} ${student.lastName} متأخر ${lateMinutes} دقيقة اليوم`,
-      type: 'warning',
-      channel: 'push',
-    });
-  } catch (error) {
-    console.error('خطأ في إشعار التأخير:', error);
+      await this.create({
+        userId: student.parent.user.id,
+        relatedId: attendanceId,
+        relatedType: 'attendance',
+        title: 'تأخر طالب',
+        message: `ابنكم ${student.firstName} ${student.lastName} متأخر ${lateMinutes} دقيقة اليوم`,
+        type: 'warning',
+        channel: 'push',
+      });
+    } catch (error) {
+      console.error('خطأ في إشعار التأخير:', error);
+    }
   }
-}
 
   // ==================== إشعارات التقييمات ====================
-  async notifyNewAssessment(studentId: number, assessmentTitle: string, score: number, maxScore: number, subjectName: string, assessmentId: number) {
+  async notifyNewAssessment(
+    studentId: number,
+    assessmentTitle: string,
+    score: number,
+    maxScore: number,
+    subjectName: string,
+    assessmentId: number,
+  ) {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
       include: { parent: { include: { user: true } } },
@@ -122,43 +138,83 @@ export class NotificationsService {
   }
 
   // ==================== إشعارات المدفوعات ====================
-  async notifyNewPayment(studentId: number, amount: number, dueDate: string, paymentId: number) {
+
+  async notifyNewPaymentWithBalance(
+    studentId: number,
+    amount: number,
+    dueDate: string,
+    paymentId: number,
+    balance: StudentBalance,
+  ) {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
       include: { parent: { include: { user: true } } },
     });
     if (!student?.parent?.userId) return;
+
+    let message = `تم إنشاء مستحق مالي بقيمة ${amount.toLocaleString()} ل.س - تاريخ الاستحقاق: ${dueDate}`;
+
+    if (balance) {
+      message += `\n\n📊 ملخص الحساب (${balance.gradeName}):`;
+      message += `\n✅ إجمالي المدفوع: ${balance.totalPaid.toLocaleString()} ل.س`;
+      message += `\n⏳ المتبقي: ${balance.remaining.toLocaleString()} ل.س`;
+      message += `\n📋 القسط السنوي: ${balance.annualAmount.toLocaleString()} ل.س`;
+    }
 
     return this.create({
       userId: student.parent.userId,
       relatedId: paymentId,
       relatedType: 'payment',
       title: `مستحق مالي جديد - ${student.firstName}`,
-      message: `تم إنشاء مستحق مالي بقيمة ${amount} ليرة سوري - تاريخ الاستحقاق: ${dueDate}`,
+      message,
       type: 'info',
       channel: 'push',
     });
   }
 
-  async notifyPaymentConfirmed(studentId: number, amount: number, receiptNumber: string, paymentId: number) {
+  async notifyPaymentConfirmedWithBalance(
+    studentId: number,
+    amount: number,
+    receiptNumber: string,
+    paymentId: number,
+    balance: StudentBalance,
+  ) {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
       include: { parent: { include: { user: true } } },
     });
     if (!student?.parent?.userId) return;
 
+    let message = `تم تأكيد دفع مبلغ ${amount.toLocaleString()} ل.س. رقم الإيصال: ${receiptNumber}`;
+
+    if (balance) {
+      message += `\n\n📊 ملخص الحساب (${balance.gradeName}):`;
+      message += `\n✅ إجمالي المدفوع: ${balance.totalPaid.toLocaleString()} ل.س`;
+      message += `\n⏳ المتبقي: ${balance.remaining.toLocaleString()} ل.س`;
+      message += `\n📋 القسط السنوي: ${balance.annualAmount.toLocaleString()} ل.س`;
+
+      if (balance.remaining <= 0) {
+        message += `\n\n🎉 تم سداد القسط السنوي بالكامل!`;
+      }
+    }
+
     return this.create({
       userId: student.parent.userId,
       relatedId: paymentId,
       relatedType: 'payment',
       title: `تأكيد دفع - ${student.firstName}`,
-      message: `تم تأكيد دفع مبلغ ${amount} ليرة سوري. رقم الإيصال: ${receiptNumber}`,
+      message,
       type: 'success',
       channel: 'push',
     });
   }
 
-  async notifyOverduePayment(studentId: number, amount: number, dueDate: string, paymentId: number) {
+  async notifyOverduePayment(
+    studentId: number,
+    amount: number,
+    dueDate: string,
+    paymentId: number,
+  ) {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
       include: { parent: { include: { user: true } } },
@@ -170,7 +226,7 @@ export class NotificationsService {
       relatedId: paymentId,
       relatedType: 'payment',
       title: `تذكير بمستحق متأخر - ${student.firstName}`,
-      message: `يوجد مستحق مالي متأخر بقيمة ${amount} ليرة سوري  كان مستحقاً في ${dueDate}`,
+      message: `يوجد مستحق مالي متأخر بقيمة ${amount} ل.س كان مستحقاً في ${dueDate}`,
       type: 'alert',
       channel: 'push',
     });
@@ -219,7 +275,9 @@ export class NotificationsService {
   }
 
   async markAsRead(id: number) {
-    const notification = await this.prisma.notification.findUnique({ where: { id } });
+    const notification = await this.prisma.notification.findUnique({
+      where: { id },
+    });
     if (!notification) throw new NotFoundException('الإشعار غير موجود');
 
     return this.prisma.notification.update({
@@ -237,7 +295,9 @@ export class NotificationsService {
   }
 
   async remove(id: number) {
-    const notification = await this.prisma.notification.findUnique({ where: { id } });
+    const notification = await this.prisma.notification.findUnique({
+      where: { id },
+    });
     if (!notification) throw new NotFoundException('الإشعار غير موجود');
 
     await this.prisma.notification.delete({ where: { id } });

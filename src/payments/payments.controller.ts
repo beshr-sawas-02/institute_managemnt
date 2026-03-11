@@ -1,9 +1,18 @@
 // src/payments/payments.controller.ts
+
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete,
-  Query, UseGuards, ParseIntPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, UpdatePaymentDto } from './dto/payment.dto';
@@ -42,9 +51,17 @@ export class PaymentsController {
 
   @Get('student/:studentId')
   @Roles(UserRole.admin, UserRole.reception, UserRole.parent)
-  @ApiOperation({ summary: 'جلب مدفوعات طالب' })
-  findByStudent(@Param('studentId', ParseIntPipe) id: number) {
-    return this.service.findByStudent(id);
+  @ApiOperation({
+    summary: 'جلب مدفوعات طالب مع رصيده',
+    description:
+      'إذا أُرسلت academicYear تظهر معلومات الرصيد: القسط السنوي، المدفوع، المتبقي',
+  })
+  @ApiQuery({ name: 'academicYear', required: false, example: '2024-2025' })
+  findByStudent(
+    @Param('studentId', ParseIntPipe) id: number,
+    @Query('academicYear') academicYear?: string,
+  ) {
+    return this.service.findByStudent(id, academicYear);
   }
 
   @Get(':id')
@@ -56,7 +73,10 @@ export class PaymentsController {
   @Patch(':id')
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'تحديث دفعة' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePaymentDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePaymentDto,
+  ) {
     return this.service.update(id, dto);
   }
 
