@@ -6,8 +6,10 @@ export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
   async getStats() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     const [
       totalStudents,
@@ -38,11 +40,11 @@ export class DashboardService {
       this.prisma.teacher.count({ where: { status: 'active' } }),
       this.prisma.parent.count(),
       this.prisma.section.count({ where: { status: 'active' } }),
-      // حضور اليوم
-      this.prisma.attendance.count({ where: { date: today, status: 'present' } }),
-      this.prisma.attendance.count({ where: { date: today, status: 'absent' } }),
-      this.prisma.attendance.count({ where: { date: today, status: 'late' } }),
-      this.prisma.attendance.count({ where: { date: today, status: 'excused' } }),
+      // حضور اليوم — نستخدم range بدل exact match لتفادي مشاكل الـ timezone
+      this.prisma.attendance.count({ where: { date: { gte: today, lt: tomorrow }, status: 'present' } }),
+      this.prisma.attendance.count({ where: { date: { gte: today, lt: tomorrow }, status: 'absent' } }),
+      this.prisma.attendance.count({ where: { date: { gte: today, lt: tomorrow }, status: 'late' } }),
+      this.prisma.attendance.count({ where: { date: { gte: today, lt: tomorrow }, status: 'excused' } }),
       // مالي
       this.prisma.payment.aggregate({ where: { status: 'paid' }, _sum: { finalAmount: true } }),
       this.prisma.payment.aggregate({ where: { status: 'pending' }, _sum: { finalAmount: true } }),
