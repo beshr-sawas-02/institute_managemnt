@@ -6,10 +6,13 @@ export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
   async getStats() {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const offset = 3 * 60 * 60 * 1000;
+    const nowLocal = new Date(Date.now() + offset);
+    const todayStr = nowLocal.toISOString().slice(0, 10); // "2026-03-11"
+
+    const today = new Date(`${todayStr}T00:00:00.000Z`);
+    const tomorrow = new Date(`${todayStr}T00:00:00.000Z`);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
     const [
       totalStudents,
