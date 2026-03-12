@@ -42,6 +42,12 @@ export class UsersController {
     return this.usersService.createParentUser(createUserDto);
   }
 
+  @Post('reception')
+  @ApiOperation({ summary: 'Create reception account by verifying email' })
+  createReceptionUser(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.createReceptionUser(createUserDto);
+  }
+
   @Get()
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'جلب جميع المستخدمين' })

@@ -147,6 +147,7 @@ export class AuthService {
         student: true,
         teacher: true,
         parent: true,
+        reception:true,
       },
     });
 

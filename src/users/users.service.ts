@@ -97,6 +97,59 @@ export class UsersService {
 
     return createdUser;
   }
+  async createReceptionUser(createUserDto: CreateUserDto) {
+   
+
+    const reception = await this.prisma.reception.findFirst({
+      where: { email: createUserDto.email },
+      select: { id: true, userId: true },
+    });
+
+    if (!reception) {
+      throw new NotFoundException('No reception found with this email');
+    }
+
+    if (reception.userId) {
+      throw new ConflictException('This reception already has a user account');
+    }
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
+
+    const createdUser = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          ...createUserDto,
+          role: UserRole.reception,
+          password: hashedPassword,
+        },
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+        },
+      });
+
+      await tx.reception.update({
+        where: { id: reception.id },
+        data: { userId: user.id },
+      });
+
+      return user;
+    });
+
+    return createdUser;
+  }
 
   // جلب جميع المستخدمين مع الترقيم
   async findAll(paginationDto: PaginationDto) {
@@ -149,6 +202,7 @@ export class UsersService {
         student: true,
         teacher: true,
         parent: true,
+        reception: true,
       },
     });
 
