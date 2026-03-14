@@ -1,4 +1,6 @@
 // src/assessments/assessments.service.ts
+// خدمة التقييمات - محدّثة مع إشعارات فورية محسنة للأهل
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -30,20 +32,63 @@ export class AssessmentsService {
       },
       include: {
         student: { include: { parent: { include: { user: true } } } },
-        gradeSubject: { include: { subject: true } },
+        gradeSubject: { include: { subject: true, teacher: true } },
       },
     });
 
-    if (dto.score !== undefined && assessment.student?.parent?.userId) {
-      const subjectName = assessment.gradeSubject?.subject?.name || '';
-      await this.notificationsService.notifyNewAssessment(
-        dto.studentId,
-        dto.title,
-        dto.score,
-        dto.maxScore,
-        subjectName,
-        assessment.id,
-      );
+    // ======= إشعار فوري لولي الأمر عند إضافة أي تقييم =======
+    if (assessment.student?.parent?.userId) {
+      const subjectName = assessment.gradeSubject?.subject?.name || 'غير محدد';
+      const studentName = `${assessment.student.firstName} ${assessment.student.lastName}`;
+      const teacherName = assessment.gradeSubject?.teacher
+        ? `${assessment.gradeSubject.teacher.firstName} ${assessment.gradeSubject.teacher.lastName}`
+        : '';
+
+      const typeLabel = this.getAssessmentTypeLabel(dto.type);
+
+      if (dto.score !== undefined && dto.score !== null) {
+        // إذا فيه درجة - إشعار مع النتيجة
+        const percentageValue = percentage!;
+        const gradeValue = grade!;
+        const notifType = percentageValue >= 50 ? 'success' : 'warning';
+
+        let message = `حصل ${studentName} على ${dto.score}/${dto.maxScore} (${percentageValue.toFixed(0)}%) في ${typeLabel}: "${dto.title}" - مادة ${subjectName}`;
+        message += `\n📊 التقدير: ${gradeValue}`;
+        if (teacherName) {
+          message += `\n👨‍🏫 المعلم: ${teacherName}`;
+        }
+        if (dto.feedback) {
+          message += `\n💬 ملاحظة: ${dto.feedback}`;
+        }
+
+        await this.notificationsService.create({
+          userId: assessment.student.parent.userId,
+          relatedId: assessment.id,
+          relatedType: 'assessment',
+          title: `نتيجة ${typeLabel} - ${studentName} - ${subjectName}`,
+          message,
+          type: notifType as any,
+          channel: 'push',
+        });
+      } else {
+        // إذا ما فيه درجة بعد - إشعار بإنشاء التقييم
+        let message = `تم إنشاء ${typeLabel} جديد لـ ${studentName} في مادة ${subjectName}: "${dto.title}"`;
+        message += `\n📝 الدرجة العظمى: ${dto.maxScore}`;
+        if (teacherName) {
+          message += `\n👨‍🏫 المعلم: ${teacherName}`;
+        }
+        message += `\n⏳ لم تُسجَّل الدرجة بعد`;
+
+        await this.notificationsService.create({
+          userId: assessment.student.parent.userId,
+          relatedId: assessment.id,
+          relatedType: 'assessment',
+          title: `${typeLabel} جديد - ${studentName} - ${subjectName}`,
+          message,
+          type: 'info',
+          channel: 'push',
+        });
+      }
     }
 
     return assessment;
@@ -101,19 +146,70 @@ export class AssessmentsService {
   }
 
   async update(id: number, dto: UpdateAssessmentDto) {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     const data: any = { ...dto };
     if (dto.assessmentDate) data.assessmentDate = new Date(dto.assessmentDate);
+
+    let newPercentage: number | null = null;
+    let newGrade: string | null = null;
+
     if (dto.score !== undefined && dto.maxScore) {
-      data.percentage = (dto.score / dto.maxScore) * 100;
-      data.grade = this.calculateGrade(data.percentage);
+      newPercentage = (dto.score / dto.maxScore) * 100;
+      newGrade = this.calculateGrade(newPercentage);
+      data.percentage = newPercentage;
+      data.grade = newGrade;
+    } else if (dto.score !== undefined && existing.maxScore) {
+      newPercentage = (dto.score / Number(existing.maxScore)) * 100;
+      newGrade = this.calculateGrade(newPercentage);
+      data.percentage = newPercentage;
+      data.grade = newGrade;
     }
 
-    return this.prisma.assessment.update({
+    const updated = await this.prisma.assessment.update({
       where: { id },
       data,
-      include: { student: true, gradeSubject: { include: { subject: true } } },
+      include: {
+        student: { include: { parent: { include: { user: true } } } },
+        gradeSubject: { include: { subject: true, teacher: true } },
+      },
     });
+
+    // ======= إشعار عند تحديث الدرجة =======
+    // إذا تم تعديل الدرجة وكانت مختلفة عن القديمة
+    if (
+      dto.score !== undefined &&
+      dto.score !== null &&
+      Number(existing.score) !== dto.score &&
+      updated.student?.parent?.userId
+    ) {
+      const subjectName = updated.gradeSubject?.subject?.name || 'غير محدد';
+      const studentName = `${updated.student.firstName} ${updated.student.lastName}`;
+      const typeLabel = this.getAssessmentTypeLabel(updated.type);
+      const percentageValue = newPercentage || Number(updated.percentage);
+      const gradeValue = newGrade || updated.grade;
+      const notifType = percentageValue >= 50 ? 'success' : 'warning';
+
+      const wasUnscored = existing.score === null;
+      const titlePrefix = wasUnscored ? 'نتيجة' : 'تحديث نتيجة';
+
+      let message = wasUnscored
+        ? `حصل ${studentName} على ${dto.score}/${updated.maxScore} (${percentageValue.toFixed(0)}%) في ${typeLabel}: "${updated.title}" - مادة ${subjectName}`
+        : `تم تحديث درجة ${studentName} في ${typeLabel}: "${updated.title}" - مادة ${subjectName}\nالدرجة الجديدة: ${dto.score}/${updated.maxScore} (${percentageValue.toFixed(0)}%)`;
+
+      message += `\n📊 التقدير: ${gradeValue}`;
+
+      await this.notificationsService.create({
+        userId: updated.student.parent.userId,
+        relatedId: updated.id,
+        relatedType: 'assessment',
+        title: `${titlePrefix} ${typeLabel} - ${studentName} - ${subjectName}`,
+        message,
+        type: notifType as any,
+        channel: 'push',
+      });
+    }
+
+    return updated;
   }
 
   async remove(id: number) {
@@ -129,5 +225,16 @@ export class AssessmentsService {
     if (percentage >= 60) return 'مقبول';
     if (percentage >= 50) return 'ضعيف';
     return 'راسب';
+  }
+
+  private getAssessmentTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      quiz: 'اختبار قصير',
+      exam: 'اختبار',
+      homework: 'واجب',
+      midterm: 'مذاكرة',
+      final: 'فحص نهائي',
+    };
+    return labels[type] || type;
   }
 }

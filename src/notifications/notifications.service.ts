@@ -29,6 +29,7 @@ export class NotificationsService {
         message: dto.message,
         type: dto.type || 'info',
         channel: dto.channel || 'in_app',
+        data: dto.data ?? undefined,
       },
     });
 

@@ -1,6 +1,5 @@
-// src/notifications/dto/notification.dto.ts
 import {
-  IsInt, IsNotEmpty, IsOptional, IsString, IsEnum,
+  IsInt, IsNotEmpty, IsOptional, IsString, IsEnum, IsObject,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
@@ -41,4 +40,9 @@ export class CreateNotificationDto {
   @IsOptional()
   @IsEnum(NotificationChannel)
   channel?: NotificationChannel;
+
+  @ApiPropertyOptional()       // ← جديد
+  @IsOptional()
+  @IsObject()
+  data?: Record<string, any>;  // ← جديد
 }

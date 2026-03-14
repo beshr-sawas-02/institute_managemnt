@@ -57,10 +57,10 @@ model Reception {
   updatedAt    DateTime     @updatedAt @map("updated_at")
 
   user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
- 
 
   @@map("reception")
 }
+
 model Parent {
   id           Int          @id @default(autoincrement())
   userId       Int?         @unique @map("user_id")
@@ -373,6 +373,7 @@ enum NotificationRelatedType {
   payment
   assessment
   general
+  monthly_report  // ← جديد
 }
 
 enum NotificationType {
@@ -402,6 +403,7 @@ model Notification {
   readAt      DateTime?                @map("read_at")
   sent        Boolean                  @default(false)
   sentAt      DateTime?                @map("sent_at")
+  data        Json?                    // ← جديد
   createdAt   DateTime                 @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
