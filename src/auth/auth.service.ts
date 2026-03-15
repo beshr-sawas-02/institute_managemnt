@@ -1,5 +1,4 @@
 // src/auth/auth.service.ts
-// خدمة التوثيق - تسجيل الدخول والتسجيل وإدارة التوكنات
 
 import {
   Injectable,
@@ -23,7 +22,6 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
-    // البحث عن المستخدم
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -32,24 +30,20 @@ export class AuthService {
       throw new UnauthorizedException('البريد الإلكتروني أو كلمة المرور غير صحيحة');
     }
 
-    // التحقق من أن الحساب مفعل
     if (!user.isActive) {
       throw new UnauthorizedException('الحساب معطل. تواصل مع الإدارة');
     }
 
-    // التحقق من كلمة المرور
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('البريد الإلكتروني أو كلمة المرور غير صحيحة');
     }
 
-    // تحديث آخر تسجيل دخول
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLogin: new Date() },
     });
 
-    // إنشاء التوكن
     const token = this.generateToken(user.id, user.email, user.role);
 
     return {
@@ -67,7 +61,6 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     const { email, password, phone, role } = registerDto;
 
-    // التحقق من عدم وجود البريد الإلكتروني مسبقاً
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -76,10 +69,8 @@ export class AuthService {
       throw new ConflictException('البريد الإلكتروني مستخدم بالفعل');
     }
 
-    // تشفير كلمة المرور
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // إنشاء المستخدم
     const user = await this.prisma.user.create({
       data: {
         email,
@@ -89,7 +80,6 @@ export class AuthService {
       },
     });
 
-    // إنشاء التوكن
     const token = this.generateToken(user.id, user.email, user.role);
 
     return {
@@ -115,13 +105,11 @@ export class AuthService {
       throw new BadRequestException('المستخدم غير موجود');
     }
 
-    // التحقق من كلمة المرور الحالية
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isPasswordValid) {
       throw new BadRequestException('كلمة المرور الحالية غير صحيحة');
     }
 
-    // تشفير كلمة المرور الجديدة
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
     await this.prisma.user.update({
@@ -147,7 +135,7 @@ export class AuthService {
         student: true,
         teacher: true,
         parent: true,
-        reception:true,
+        reception: true,
       },
     });
 
@@ -155,7 +143,29 @@ export class AuthService {
       throw new BadRequestException('المستخدم غير موجود');
     }
 
-    return user;
+    // استخراج الاسم حسب الدور
+    let firstName: string | null = null;
+    let lastName: string | null = null;
+
+    if (user.role === 'reception' && user.reception) {
+      firstName = user.reception.firstName;
+      lastName = user.reception.lastName;
+    } else if (user.role === 'teacher' && user.teacher) {
+      firstName = user.teacher.firstName;
+      lastName = user.teacher.lastName;
+    } else if (user.role === 'parent' && user.parent) {
+      firstName = user.parent.firstName;
+      lastName = user.parent.lastName;
+    } else if (user.role === 'student' && user.student) {
+      firstName = user.student.firstName;
+      lastName = user.student.lastName;
+    }
+
+    return {
+      ...user,
+      firstName,
+      lastName,
+    };
   }
 
   // ============ إنشاء التوكن ============

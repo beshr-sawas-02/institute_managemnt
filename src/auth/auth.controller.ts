@@ -15,11 +15,16 @@ import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, ChangePasswordDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators';
+import { UsersService } from '../users/users.service';
+import { CreateUserDto } from '../users/dto/user.dto';
 
 @ApiTags('التوثيق')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -32,6 +37,16 @@ export class AuthController {
   @ApiOperation({ summary: 'إنشاء حساب جديد' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @Post('register-reception')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'إنشاء حساب استقبال',
+    description: 'يتحقق أن البريد الإلكتروني موجود في سجل الاستقبال ثم ينشئ حساب دخول',
+  })
+  async registerReception(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.createReceptionUser(createUserDto);
   }
 
   @Post('change-password')
