@@ -41,11 +41,17 @@ async function bootstrap() {
 }
 
 // للتشغيل المحلي
-if (process.env.NODE_ENV !== 'production') {
+if (!process.env.VERCEL) {
   NestFactory.create(AppModule).then(async (app) => {
     app.useGlobalFilters(new AllExceptionsFilter());
     app.useGlobalInterceptors(new ResponseInterceptor());
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     app.enableCors();
     await app.listen(3000);
     console.log('Server running on http://localhost:3000');

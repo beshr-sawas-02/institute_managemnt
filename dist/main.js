@@ -33,11 +33,15 @@ async function bootstrap() {
     cachedServer = app.getHttpAdapter().getInstance();
     return cachedServer;
 }
-if (process.env.NODE_ENV !== 'production') {
+if (!process.env.VERCEL) {
     core_1.NestFactory.create(app_module_1.AppModule).then(async (app) => {
         app.useGlobalFilters(new http_exception_filter_1.AllExceptionsFilter());
         app.useGlobalInterceptors(new response_interceptor_1.ResponseInterceptor());
-        app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+        app.useGlobalPipes(new common_1.ValidationPipe({
+            whitelist: true,
+            forbidNonWhitelisted: true,
+            transform: true,
+        }));
         app.enableCors();
         await app.listen(3000);
         console.log('Server running on http://localhost:3000');
