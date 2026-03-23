@@ -1,5 +1,4 @@
 // src/main.ts
-// نقطة الدخول الرئيسية للتطبيق
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
@@ -8,46 +7,44 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
+let cachedServer;
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  if (!cachedServer) {
+    const app = await NestFactory.create(AppModule);
 
-  // تفعيل فلتر الأخطاء العالمي
-  app.useGlobalFilters(new AllExceptionsFilter());
+    app.useGlobalFilters(new AllExceptionsFilter());
+    app.useGlobalInterceptors(new ResponseInterceptor());
 
-  // تفعيل معترض الاستجابة العالمي
-  app.useGlobalInterceptors(new ResponseInterceptor());
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      }),
+    );
 
-  // تفعيل التحقق من البيانات عالمياً
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
+    app.enableCors();
 
-  // تفعيل CORS
-  app.enableCors();
+    const config = new DocumentBuilder()
+      .setTitle('نظام إدارة المدرسة')
+      .setDescription('واجهة برمجية لنظام إدارة المدرسة الشامل')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
 
-  // إعداد Swagger للتوثيق
-  const config = new DocumentBuilder()
-    .setTitle('نظام إدارة المدرسة')
-    .setDescription('واجهة برمجية لنظام إدارة المدرسة الشامل')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document);
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+    await app.init();
 
-  const port = process.env.APP_PORT || 3000;
-  await app.listen(port);
+    cachedServer = app.getHttpAdapter().getInstance();
+  }
 
-  console.log(`🚀 التطبيق يعمل على المنفذ: ${port}`);
-  console.log(`📚 توثيق Swagger متاح على: http://localhost:${port}/docs`);
+  return cachedServer;
 }
 
-bootstrap();
+export default bootstrap();
