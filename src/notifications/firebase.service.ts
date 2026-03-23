@@ -12,7 +12,13 @@ export class FirebaseService implements OnModuleInit {
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
-    // تهيئة Firebase Admin SDK
+    // تحقق إذا Firebase محضّر من قبل
+    if (admin.apps.length > 0) {
+      this.firebaseApp = admin.apps[0]!;
+      console.log('🔥 Firebase موجود مسبقاً');
+      return;
+    }
+
     const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID');
     const privateKey = this.configService
       .get<string>('FIREBASE_PRIVATE_KEY')

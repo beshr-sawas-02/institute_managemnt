@@ -18,6 +18,11 @@ let FirebaseService = class FirebaseService {
         this.configService = configService;
     }
     onModuleInit() {
+        if (admin.apps.length > 0) {
+            this.firebaseApp = admin.apps[0];
+            console.log('🔥 Firebase موجود مسبقاً');
+            return;
+        }
         const projectId = this.configService.get('FIREBASE_PROJECT_ID');
         const privateKey = this.configService
             .get('FIREBASE_PRIVATE_KEY')
