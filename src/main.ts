@@ -1,5 +1,3 @@
-// src/main.ts
-
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -10,52 +8,54 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 let cachedServer: any;
 
 async function bootstrap() {
-  if (!cachedServer) {
-    const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule);
 
-    // Global Filters
-    app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
-    // Global Interceptors
-    app.useGlobalInterceptors(new ResponseInterceptor());
+  app.enableCors();
 
-    // Global Validation
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-        transformOptions: {
-          enableImplicitConversion: true,
-        },
-      }),
-    );
+  const config = new DocumentBuilder()
+    .setTitle('نظام إدارة المدرسة')
+    .setDescription('واجهة برمجية لنظام إدارة المدرسة الشامل')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
 
-    // Enable CORS
-    app.enableCors();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
 
-    // Swagger configuration
-    const config = new DocumentBuilder()
-      .setTitle('نظام إدارة المدرسة')
-      .setDescription('واجهة برمجية لنظام إدارة المدرسة الشامل')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .build();
-
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('docs', app, document);
-
-    await app.init();
-
-    // تحويل NestJS إلى handler يعمل على Vercel
-    cachedServer = app.getHttpAdapter().getInstance();
-  }
-
+  await app.init();
+  cachedServer = app.getHttpAdapter().getInstance();
   return cachedServer;
 }
 
-// Handler لبيئة Serverless في Vercel
+// للتشغيل المحلي
+if (process.env.NODE_ENV !== 'production') {
+  NestFactory.create(AppModule).then(async (app) => {
+    app.useGlobalFilters(new AllExceptionsFilter());
+    app.useGlobalInterceptors(new ResponseInterceptor());
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    app.enableCors();
+    await app.listen(3000);
+    console.log('Server running on http://localhost:3000');
+  });
+}
+
+// Handler لـ Vercel
 export default async function handler(req: any, res: any) {
   const server = await bootstrap();
   return server(req, res);
 }
+
+module.exports = handler;
