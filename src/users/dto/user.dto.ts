@@ -1,15 +1,15 @@
 // src/users/dto/user.dto.ts
-// كائنات نقل بيانات المستخدمين
+// DTOs for user management
 
 import {
+  IsBoolean,
   IsEmail,
+  IsEnum,
   IsOptional,
   IsString,
-  IsEnum,
-  IsBoolean,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { AppLanguage, UserRole } from '@prisma/client';
 
 export class CreateUserDto {
   @IsEmail({}, { message: 'البريد الإلكتروني غير صالح' })
@@ -21,6 +21,11 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @ApiPropertyOptional({ enum: AppLanguage })
+  @IsOptional()
+  @IsEnum(AppLanguage)
+  preferredLanguage?: AppLanguage;
 
   @ApiProperty({ enum: UserRole })
   @IsEnum(UserRole)

@@ -1,17 +1,43 @@
+import { AppLanguage, NotificationChannel, NotificationRelatedType, NotificationType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { FirebaseService } from './firebase.service';
-import { CreateNotificationDto } from './dto/notification.dto';
-type StudentBalance = {
-    annualAmount: number;
-    totalPaid: number;
-    remaining: number;
-    gradeName: string;
-} | null;
+import { BulkNotificationDto, CreateNotificationDto } from './dto/notification.dto';
+import { LocalizedBalance, LocalizedNotificationContent } from './notification-localization';
+type StudentBalance = LocalizedBalance;
+type CreateNotificationInput = CreateNotificationDto & {
+    preferredLanguage?: AppLanguage;
+};
+type CreateLocalizedNotificationInput = {
+    userId: number;
+    preferredLanguage?: AppLanguage;
+    relatedId?: number;
+    relatedType?: NotificationRelatedType;
+    type?: NotificationType;
+    channel?: NotificationChannel;
+    data?: Record<string, any>;
+    content: LocalizedNotificationContent;
+};
 export declare class NotificationsService {
     private prisma;
     private firebaseService;
     constructor(prisma: PrismaService, firebaseService: FirebaseService);
-    create(dto: CreateNotificationDto): Promise<{
+    create(dto: CreateNotificationInput): Promise<{
+        type: import(".prisma/client").$Enums.NotificationType;
+        title: string;
+        message: string;
+        id: number;
+        createdAt: Date;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
+        userId: number;
+        relatedId: number | null;
+        relatedType: import(".prisma/client").$Enums.NotificationRelatedType | null;
+        channel: import(".prisma/client").$Enums.NotificationChannel;
+        isRead: boolean;
+        readAt: Date | null;
+        sent: boolean;
+        sentAt: Date | null;
+    }>;
+    createLocalizedNotification(dto: CreateLocalizedNotificationInput): Promise<{
         type: import(".prisma/client").$Enums.NotificationType;
         title: string;
         message: string;
@@ -150,9 +176,16 @@ export declare class NotificationsService {
     remove(id: number): Promise<{
         message: string;
     }>;
-    sendBulkNotification(role: string, title: string, message: string, relatedType?: any): Promise<{
+    sendBulkNotification(dto: BulkNotificationDto): Promise<{
         message: string;
         count: number;
     }>;
+    private getUserPreferredLanguage;
+    private buildLocalizedContent;
+    private normalizeLocalizedText;
+    private resolveLocalizedText;
+    private attachLocalizedContent;
+    private extractLocalizedContent;
+    private localizeNotification;
 }
 export {};

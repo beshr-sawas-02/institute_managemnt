@@ -1,6 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, RegisterDto, ChangePasswordDto } from './dto/auth.dto';
+import { ChangePasswordDto, LoginDto, RegisterDto, UpdatePreferredLanguageDto } from './dto/auth.dto';
 export declare class AuthService {
     private prisma;
     private jwtService;
@@ -11,6 +11,7 @@ export declare class AuthService {
             email: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.UserRole;
+            preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         };
         accessToken: string;
     }>;
@@ -20,11 +21,20 @@ export declare class AuthService {
             email: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.UserRole;
+            preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         };
         accessToken: string;
     }>;
     changePassword(userId: number, changePasswordDto: ChangePasswordDto): Promise<{
         message: string;
+    }>;
+    updatePreferredLanguage(userId: number, dto: UpdatePreferredLanguageDto): Promise<{
+        message: string;
+        user: {
+            preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
+            id: number;
+            updatedAt: Date;
+        };
     }>;
     getProfile(userId: number): Promise<{
         firstName: string | null;
@@ -83,6 +93,7 @@ export declare class AuthService {
             registrationDate: Date;
         } | null;
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;

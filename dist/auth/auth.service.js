@@ -20,7 +20,7 @@ let AuthService = class AuthService {
         this.jwtService = jwtService;
     }
     async login(loginDto) {
-        const { email, password } = loginDto;
+        const { email, password, preferredLanguage } = loginDto;
         const user = await this.prisma.user.findUnique({
             where: { email },
         });
@@ -34,23 +34,27 @@ let AuthService = class AuthService {
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('البريد الإلكتروني أو كلمة المرور غير صحيحة');
         }
-        await this.prisma.user.update({
+        const updatedUser = await this.prisma.user.update({
             where: { id: user.id },
-            data: { lastLogin: new Date() },
+            data: {
+                lastLogin: new Date(),
+                ...(preferredLanguage ? { preferredLanguage } : {}),
+            },
         });
-        const token = this.generateToken(user.id, user.email, user.role);
+        const token = this.generateToken(updatedUser.id, updatedUser.email, updatedUser.role);
         return {
             user: {
-                id: user.id,
-                email: user.email,
-                phone: user.phone,
-                role: user.role,
+                id: updatedUser.id,
+                email: updatedUser.email,
+                phone: updatedUser.phone,
+                role: updatedUser.role,
+                preferredLanguage: updatedUser.preferredLanguage,
             },
             accessToken: token,
         };
     }
     async register(registerDto) {
-        const { email, password, phone, role } = registerDto;
+        const { email, password, phone, role, preferredLanguage } = registerDto;
         const existingUser = await this.prisma.user.findUnique({
             where: { email },
         });
@@ -64,6 +68,7 @@ let AuthService = class AuthService {
                 password: hashedPassword,
                 phone,
                 role,
+                preferredLanguage: preferredLanguage ?? 'ar',
             },
         });
         const token = this.generateToken(user.id, user.email, user.role);
@@ -73,6 +78,7 @@ let AuthService = class AuthService {
                 email: user.email,
                 phone: user.phone,
                 role: user.role,
+                preferredLanguage: user.preferredLanguage,
             },
             accessToken: token,
         };
@@ -96,6 +102,28 @@ let AuthService = class AuthService {
         });
         return { message: 'تم تغيير كلمة المرور بنجاح' };
     }
+    async updatePreferredLanguage(userId, dto) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true },
+        });
+        if (!user) {
+            throw new common_1.BadRequestException('المستخدم غير موجود');
+        }
+        const updatedUser = await this.prisma.user.update({
+            where: { id: userId },
+            data: { preferredLanguage: dto.preferredLanguage },
+            select: {
+                id: true,
+                preferredLanguage: true,
+                updatedAt: true,
+            },
+        });
+        return {
+            message: 'تم تحديث لغة التطبيق بنجاح',
+            user: updatedUser,
+        };
+    }
     async getProfile(userId) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
@@ -104,6 +132,7 @@ let AuthService = class AuthService {
                 email: true,
                 phone: true,
                 role: true,
+                preferredLanguage: true,
                 isActive: true,
                 lastLogin: true,
                 createdAt: true,

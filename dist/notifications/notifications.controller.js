@@ -16,11 +16,11 @@ exports.NotificationsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const client_1 = require("@prisma/client");
-const notifications_service_1 = require("./notifications.service");
-const notification_dto_1 = require("./dto/notification.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
-const guards_1 = require("../common/guards");
 const decorators_1 = require("../common/decorators");
+const guards_1 = require("../common/guards");
+const notification_dto_1 = require("./dto/notification.dto");
+const notifications_service_1 = require("./notifications.service");
 let NotificationsController = class NotificationsController {
     constructor(service) {
         this.service = service;
@@ -29,7 +29,7 @@ let NotificationsController = class NotificationsController {
         return this.service.create(dto);
     }
     sendBulk(body) {
-        return this.service.sendBulkNotification(body.role, body.title, body.message);
+        return this.service.sendBulkNotification(body);
     }
     findMyNotifications(userId) {
         return this.service.findByUser(userId);
@@ -51,7 +51,7 @@ exports.NotificationsController = NotificationsController;
 __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
-    (0, swagger_1.ApiOperation)({ summary: 'إنشاء إشعار' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Create a notification' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [notification_dto_1.CreateNotificationDto]),
@@ -60,15 +60,15 @@ __decorate([
 __decorate([
     (0, common_1.Post)('bulk'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
-    (0, swagger_1.ApiOperation)({ summary: 'إرسال إشعار جماعي' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Send a bulk notification' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [notification_dto_1.BulkNotificationDto]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "sendBulk", null);
 __decorate([
     (0, common_1.Get)('my'),
-    (0, swagger_1.ApiOperation)({ summary: 'جلب إشعاراتي' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get my notifications' }),
     __param(0, (0, decorators_1.CurrentUser)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -76,7 +76,7 @@ __decorate([
 ], NotificationsController.prototype, "findMyNotifications", null);
 __decorate([
     (0, common_1.Get)('unread-count'),
-    (0, swagger_1.ApiOperation)({ summary: 'عدد الإشعارات غير المقروءة' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get unread notifications count' }),
     __param(0, (0, decorators_1.CurrentUser)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -84,7 +84,7 @@ __decorate([
 ], NotificationsController.prototype, "getUnreadCount", null);
 __decorate([
     (0, common_1.Patch)(':id/read'),
-    (0, swagger_1.ApiOperation)({ summary: 'تحديد إشعار كمقروء' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Mark a notification as read' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -92,7 +92,7 @@ __decorate([
 ], NotificationsController.prototype, "markAsRead", null);
 __decorate([
     (0, common_1.Patch)('read-all'),
-    (0, swagger_1.ApiOperation)({ summary: 'تحديد جميع الإشعارات كمقروءة' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Mark all notifications as read' }),
     __param(0, (0, decorators_1.CurrentUser)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
@@ -100,14 +100,14 @@ __decorate([
 ], NotificationsController.prototype, "markAllAsRead", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'حذف إشعار' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete a notification' }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "remove", null);
 exports.NotificationsController = NotificationsController = __decorate([
-    (0, swagger_1.ApiTags)('الإشعارات'),
+    (0, swagger_1.ApiTags)('Notifications'),
     (0, common_1.Controller)('notifications'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, guards_1.RolesGuard),
     (0, swagger_1.ApiBearerAuth)(),

@@ -1,20 +1,19 @@
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
-  ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  // إنشاء مستخدم جديد
   async create(createUserDto: CreateUserDto) {
     const existing = await this.prisma.user.findUnique({
       where: { email: createUserDto.email },
@@ -29,6 +28,7 @@ export class UsersService {
     return this.prisma.user.create({
       data: {
         ...createUserDto,
+        preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
         password: hashedPassword,
       },
       select: {
@@ -36,6 +36,7 @@ export class UsersService {
         email: true,
         phone: true,
         role: true,
+        preferredLanguage: true,
         isActive: true,
         createdAt: true,
       },
@@ -70,11 +71,12 @@ export class UsersService {
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
 
-    const createdUser = await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           ...createUserDto,
           role: UserRole.parent,
+          preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
           password: hashedPassword,
         },
         select: {
@@ -82,6 +84,7 @@ export class UsersService {
           email: true,
           phone: true,
           role: true,
+          preferredLanguage: true,
           isActive: true,
           createdAt: true,
         },
@@ -94,12 +97,9 @@ export class UsersService {
 
       return user;
     });
-
-    return createdUser;
   }
-  async createReceptionUser(createUserDto: CreateUserDto) {
-   
 
+  async createReceptionUser(createUserDto: CreateUserDto) {
     const reception = await this.prisma.reception.findFirst({
       where: { email: createUserDto.email },
       select: { id: true, userId: true },
@@ -123,11 +123,12 @@ export class UsersService {
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
 
-    const createdUser = await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           ...createUserDto,
           role: UserRole.reception,
+          preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
           password: hashedPassword,
         },
         select: {
@@ -135,6 +136,7 @@ export class UsersService {
           email: true,
           phone: true,
           role: true,
+          preferredLanguage: true,
           isActive: true,
           createdAt: true,
         },
@@ -147,11 +149,8 @@ export class UsersService {
 
       return user;
     });
-
-    return createdUser;
   }
 
-  // جلب جميع المستخدمين مع الترقيم
   async findAll(paginationDto: PaginationDto) {
     const { page, limit, search } = paginationDto;
     const skip = (page - 1) * limit;
@@ -175,6 +174,7 @@ export class UsersService {
           email: true,
           phone: true,
           role: true,
+          preferredLanguage: true,
           isActive: true,
           lastLogin: true,
           createdAt: true,
@@ -187,7 +187,6 @@ export class UsersService {
     return new PaginatedResult(data, total, page, limit);
   }
 
-  // جلب مستخدم بالمعرف
   async findOne(id: number) {
     const user = await this.prisma.user.findUnique({
       where: { id },
@@ -196,6 +195,7 @@ export class UsersService {
         email: true,
         phone: true,
         role: true,
+        preferredLanguage: true,
         isActive: true,
         lastLogin: true,
         createdAt: true,
@@ -213,7 +213,6 @@ export class UsersService {
     return user;
   }
 
-  // تحديث مستخدم
   async update(id: number, updateUserDto: UpdateUserDto) {
     await this.findOne(id);
 
@@ -231,13 +230,13 @@ export class UsersService {
         email: true,
         phone: true,
         role: true,
+        preferredLanguage: true,
         isActive: true,
         updatedAt: true,
       },
     });
   }
 
-  // حذف مستخدم
   async remove(id: number) {
     await this.findOne(id);
     await this.prisma.user.delete({ where: { id } });

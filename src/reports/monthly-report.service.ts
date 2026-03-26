@@ -1,11 +1,13 @@
 // src/reports/monthly-report.service.ts
-// خدمة التقارير الشهرية للتقييمات
 
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
-
-// ==================== أنواع التقارير ====================
+import { buildMonthlyReportNotification } from '../notifications/notification-localization';
 
 export interface StudentReportAssessment {
   id: number;
@@ -62,12 +64,8 @@ export class MonthlyReportService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
-  /**
-   * إنشاء تقرير شهري لطالب واحد
-   * يشمل فقط: midterm و final (بدون quiz و homework و exam)
-   */
   async generateStudentMonthlyReport(
     studentId: number,
     month: number,
@@ -85,11 +83,9 @@ export class MonthlyReportService {
       throw new NotFoundException('الطالب غير موجود');
     }
 
-    // بداية ونهاية الشهر
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
 
-    // جلب التقييمات (فقط midterm و final)
     const assessments = await this.prisma.assessment.findMany({
       where: {
         studentId,
@@ -110,14 +106,13 @@ export class MonthlyReportService {
       orderBy: { assessmentDate: 'asc' },
     });
 
-    // حساب المعدل العام
-    const scoredAssessments = assessments.filter((a) => a.score !== null);
+    const scoredAssessments = assessments.filter((assessment) => assessment.score !== null);
     const averagePercentage =
       scoredAssessments.length > 0
         ? scoredAssessments.reduce(
-          (sum, a) => sum + Number(a.percentage || 0),
-          0,
-        ) / scoredAssessments.length
+            (sum, assessment) => sum + Number(assessment.percentage || 0),
+            0,
+          ) / scoredAssessments.length
         : null;
 
     return {
@@ -133,37 +128,37 @@ export class MonthlyReportService {
         year,
         monthName: this.getArabicMonthName(month),
       },
-      assessments: assessments.map((a) => ({
-        id: a.id,
-        subject: a.gradeSubject?.subject?.name || 'غير محدد',
-        teacher: a.gradeSubject?.teacher
-          ? `${a.gradeSubject.teacher.firstName} ${a.gradeSubject.teacher.lastName}`
+      assessments: assessments.map((assessment) => ({
+        id: assessment.id,
+        subject: assessment.gradeSubject?.subject?.name || 'غير محدد',
+        teacher: assessment.gradeSubject?.teacher
+          ? `${assessment.gradeSubject.teacher.firstName} ${assessment.gradeSubject.teacher.lastName}`
           : 'غير محدد',
-        type: a.type === 'midterm' ? 'مذاكرة' : 'فحص نهائي',
-        title: a.title,
-        maxScore: Number(a.maxScore),
-        score: a.score !== null ? Number(a.score) : null,
-        percentage: a.percentage !== null ? Number(a.percentage) : null,
-        grade: a.grade,
-        date: a.assessmentDate,
-        feedback: a.feedback,
+        type: assessment.type === 'midterm' ? 'مذاكرة' : 'فحص نهائي',
+        title: assessment.title,
+        maxScore: Number(assessment.maxScore),
+        score: assessment.score !== null ? Number(assessment.score) : null,
+        percentage:
+          assessment.percentage !== null ? Number(assessment.percentage) : null,
+        grade: assessment.grade,
+        date: assessment.assessmentDate,
+        feedback: assessment.feedback,
       })),
       summary: {
         totalAssessments: assessments.length,
         scoredAssessments: scoredAssessments.length,
-        averagePercentage: averagePercentage
-          ? Math.round(averagePercentage * 100) / 100
-          : null,
-        overallGrade: averagePercentage
-          ? this.calculateGrade(averagePercentage)
-          : null,
+        averagePercentage:
+          averagePercentage !== null
+            ? Math.round(averagePercentage * 100) / 100
+            : null,
+        overallGrade:
+          averagePercentage !== null
+            ? this.calculateGrade(averagePercentage)
+            : null,
       },
     };
   }
 
-  /**
-   * إنشاء تقارير شهرية لجميع طلاب شعبة معينة
-   */
   async generateSectionMonthlyReports(
     sectionId: number,
     month: number,
@@ -208,9 +203,6 @@ export class MonthlyReportService {
     };
   }
 
-  /**
-   * إنشاء تقارير شهرية وإرسال إشعارات لأولياء الأمور
-   */
   async generateAndNotifySectionReports(
     sectionId: number,
     month: number,
@@ -236,42 +228,36 @@ export class MonthlyReportService {
         include: { parent: { include: { user: true } } },
       });
 
-      if (student?.parent?.userId && report.assessments.length > 0) {
-        let message = `📋 التقرير الشهري لـ ${report.student.name} - ${monthName} ${year}\n`;
-        message += `📍 ${report.student.section}\n\n`;
+      if (student?.parent?.user && report.assessments.length > 0) {
+        const content = buildMonthlyReportNotification({
+          studentName: report.student.name,
+          sectionName: report.student.section,
+          month,
+          year,
+          assessments: report.assessments.map((assessment) => ({
+            subject: assessment.subject,
+            score: assessment.score,
+            maxScore: assessment.maxScore,
+            percentage: assessment.percentage,
+            grade: assessment.grade,
+          })),
+          averagePercentage: report.summary.averagePercentage,
+          overallGrade: report.summary.overallGrade,
+        });
 
-        if (report.assessments.length > 0) {
-          message += `📝 التقييمات:\n`;
-          for (const assessment of report.assessments) {
-            const scoreText =
-              assessment.score !== null
-                ? `${assessment.score}/${assessment.maxScore} (${assessment.percentage?.toFixed(0)}%)`
-                : 'لم يُقيَّم بعد';
-            message += `• ${assessment.subject} - ${assessment.type}: ${scoreText}`;
-            if (assessment.grade) {
-              message += ` - ${assessment.grade}`;
-            }
-            message += `\n`;
-          }
-        }
-
-        if (report.summary.averagePercentage !== null) {
-          message += `\n📊 المعدل العام: ${report.summary.averagePercentage.toFixed(1)}% - ${report.summary.overallGrade}`;
-        }
-
-        await this.notificationsService.create({
-          userId: student.parent.userId,
+        await this.notificationsService.createLocalizedNotification({
+          userId: student.parent.user.id,
+          preferredLanguage: student.parent.user.preferredLanguage,
           relatedId: report.student.id,
           relatedType: 'assessment',
-          title: `تقرير شهري - ${report.student.name} - ${monthName}`,
-          message,
           type: 'info',
           channel: 'push',
-          data: {                          // ← جديد
+          data: {
             studentId: report.student.id,
             month,
             year,
           },
+          content,
         });
 
         notifiedCount++;
@@ -301,9 +287,6 @@ export class MonthlyReportService {
     };
   }
 
-  /**
-   * إنشاء تقارير شهرية لجميع الشعب وإرسال إشعارات
-   */
   async generateAndNotifyAllSections(
     month: number,
     year: number,
@@ -337,7 +320,10 @@ export class MonthlyReportService {
           error,
         );
         results.push({
-          section: { id: section.id, name: `${section.grade.name} - ${section.name}` },
+          section: {
+            id: section.id,
+            name: `${section.grade.name} - ${section.name}`,
+          },
           error: 'فشل في إنشاء التقرير',
         });
       }
@@ -353,13 +339,22 @@ export class MonthlyReportService {
     };
   }
 
-  // ==================== دوال مساعدة ====================
-
   private getArabicMonthName(month: number): string {
     const months = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر',
     ];
+
     return months[month - 1] || '';
   }
 

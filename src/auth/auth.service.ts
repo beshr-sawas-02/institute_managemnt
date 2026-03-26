@@ -1,15 +1,20 @@
 // src/auth/auth.service.ts
 
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   UnauthorizedException,
-  ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, RegisterDto, ChangePasswordDto } from './dto/auth.dto';
+import {
+  ChangePasswordDto,
+  LoginDto,
+  RegisterDto,
+  UpdatePreferredLanguageDto,
+} from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,16 +23,17 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  // ============ تسجيل الدخول ============
   async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
+    const { email, password, preferredLanguage } = loginDto;
 
     const user = await this.prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      throw new UnauthorizedException('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+      throw new UnauthorizedException(
+        'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+      );
     }
 
     if (!user.isActive) {
@@ -36,30 +42,35 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+      throw new UnauthorizedException(
+        'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+      );
     }
 
-    await this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id: user.id },
-      data: { lastLogin: new Date() },
+      data: {
+        lastLogin: new Date(),
+        ...(preferredLanguage ? { preferredLanguage } : {}),
+      },
     });
 
-    const token = this.generateToken(user.id, user.email, user.role);
+    const token = this.generateToken(updatedUser.id, updatedUser.email, updatedUser.role);
 
     return {
       user: {
-        id: user.id,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
+        id: updatedUser.id,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        role: updatedUser.role,
+        preferredLanguage: updatedUser.preferredLanguage,
       },
       accessToken: token,
     };
   }
 
-  // ============ التسجيل ============
   async register(registerDto: RegisterDto) {
-    const { email, password, phone, role } = registerDto;
+    const { email, password, phone, role, preferredLanguage } = registerDto;
 
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
@@ -77,6 +88,7 @@ export class AuthService {
         password: hashedPassword,
         phone,
         role,
+        preferredLanguage: preferredLanguage ?? 'ar',
       },
     });
 
@@ -88,12 +100,12 @@ export class AuthService {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        preferredLanguage: user.preferredLanguage,
       },
       accessToken: token,
     };
   }
 
-  // ============ تغيير كلمة المرور ============
   async changePassword(userId: number, changePasswordDto: ChangePasswordDto) {
     const { currentPassword, newPassword } = changePasswordDto;
 
@@ -120,7 +132,35 @@ export class AuthService {
     return { message: 'تم تغيير كلمة المرور بنجاح' };
   }
 
-  // ============ الحصول على الملف الشخصي ============
+  async updatePreferredLanguage(
+    userId: number,
+    dto: UpdatePreferredLanguageDto,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException('المستخدم غير موجود');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { preferredLanguage: dto.preferredLanguage },
+      select: {
+        id: true,
+        preferredLanguage: true,
+        updatedAt: true,
+      },
+    });
+
+    return {
+      message: 'تم تحديث لغة التطبيق بنجاح',
+      user: updatedUser,
+    };
+  }
+
   async getProfile(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -129,6 +169,7 @@ export class AuthService {
         email: true,
         phone: true,
         role: true,
+        preferredLanguage: true,
         isActive: true,
         lastLogin: true,
         createdAt: true,
@@ -143,7 +184,6 @@ export class AuthService {
       throw new BadRequestException('المستخدم غير موجود');
     }
 
-    // استخراج الاسم حسب الدور
     let firstName: string | null = null;
     let lastName: string | null = null;
 
@@ -168,7 +208,6 @@ export class AuthService {
     };
   }
 
-  // ============ إنشاء التوكن ============
   private generateToken(userId: number, email: string, role: string): string {
     const payload = {
       sub: userId,

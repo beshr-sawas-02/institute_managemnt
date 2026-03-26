@@ -30,6 +30,7 @@ let UsersService = class UsersService {
         return this.prisma.user.create({
             data: {
                 ...createUserDto,
+                preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
                 password: hashedPassword,
             },
             select: {
@@ -37,6 +38,7 @@ let UsersService = class UsersService {
                 email: true,
                 phone: true,
                 role: true,
+                preferredLanguage: true,
                 isActive: true,
                 createdAt: true,
             },
@@ -63,11 +65,12 @@ let UsersService = class UsersService {
             throw new common_1.ConflictException('Email already exists');
         }
         const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
-        const createdUser = await this.prisma.$transaction(async (tx) => {
+        return this.prisma.$transaction(async (tx) => {
             const user = await tx.user.create({
                 data: {
                     ...createUserDto,
                     role: client_1.UserRole.parent,
+                    preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
                     password: hashedPassword,
                 },
                 select: {
@@ -75,6 +78,7 @@ let UsersService = class UsersService {
                     email: true,
                     phone: true,
                     role: true,
+                    preferredLanguage: true,
                     isActive: true,
                     createdAt: true,
                 },
@@ -85,7 +89,6 @@ let UsersService = class UsersService {
             });
             return user;
         });
-        return createdUser;
     }
     async createReceptionUser(createUserDto) {
         const reception = await this.prisma.reception.findFirst({
@@ -105,11 +108,12 @@ let UsersService = class UsersService {
             throw new common_1.ConflictException('Email already exists');
         }
         const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
-        const createdUser = await this.prisma.$transaction(async (tx) => {
+        return this.prisma.$transaction(async (tx) => {
             const user = await tx.user.create({
                 data: {
                     ...createUserDto,
                     role: client_1.UserRole.reception,
+                    preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
                     password: hashedPassword,
                 },
                 select: {
@@ -117,6 +121,7 @@ let UsersService = class UsersService {
                     email: true,
                     phone: true,
                     role: true,
+                    preferredLanguage: true,
                     isActive: true,
                     createdAt: true,
                 },
@@ -127,7 +132,6 @@ let UsersService = class UsersService {
             });
             return user;
         });
-        return createdUser;
     }
     async findAll(paginationDto) {
         const { page, limit, search } = paginationDto;
@@ -150,6 +154,7 @@ let UsersService = class UsersService {
                     email: true,
                     phone: true,
                     role: true,
+                    preferredLanguage: true,
                     isActive: true,
                     lastLogin: true,
                     createdAt: true,
@@ -168,6 +173,7 @@ let UsersService = class UsersService {
                 email: true,
                 phone: true,
                 role: true,
+                preferredLanguage: true,
                 isActive: true,
                 lastLogin: true,
                 createdAt: true,
@@ -196,6 +202,7 @@ let UsersService = class UsersService {
                 email: true,
                 phone: true,
                 role: true,
+                preferredLanguage: true,
                 isActive: true,
                 updatedAt: true,
             },

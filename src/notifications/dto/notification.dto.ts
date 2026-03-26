@@ -1,9 +1,16 @@
 import {
-  IsInt, IsNotEmpty, IsOptional, IsString, IsEnum, IsObject,
+  IsEnum,
+  IsInt,
+  IsObject,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  NotificationRelatedType, NotificationType, NotificationChannel,
+  NotificationChannel,
+  NotificationRelatedType,
+  NotificationType,
+  UserRole,
 } from '@prisma/client';
 
 export class CreateNotificationDto {
@@ -21,15 +28,35 @@ export class CreateNotificationDto {
   @IsEnum(NotificationRelatedType)
   relatedType?: NotificationRelatedType;
 
-  @ApiProperty({ example: 'تنبيه جديد' })
+  @ApiPropertyOptional({ example: 'تنبيه جديد' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  title: string;
+  title?: string;
 
-  @ApiProperty({ example: 'محتوى الإشعار' })
+  @ApiPropertyOptional({ example: 'New alert' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  message: string;
+  titleEn?: string;
+
+  @ApiPropertyOptional({ example: 'تنبيه جديد' })
+  @IsOptional()
+  @IsString()
+  titleAr?: string;
+
+  @ApiPropertyOptional({ example: 'محتوى الإشعار' })
+  @IsOptional()
+  @IsString()
+  message?: string;
+
+  @ApiPropertyOptional({ example: 'Notification body' })
+  @IsOptional()
+  @IsString()
+  messageEn?: string;
+
+  @ApiPropertyOptional({ example: 'محتوى الإشعار' })
+  @IsOptional()
+  @IsString()
+  messageAr?: string;
 
   @ApiPropertyOptional({ enum: NotificationType })
   @IsOptional()
@@ -41,8 +68,49 @@ export class CreateNotificationDto {
   @IsEnum(NotificationChannel)
   channel?: NotificationChannel;
 
-  @ApiPropertyOptional()       // ← جديد
+  @ApiPropertyOptional()
   @IsOptional()
   @IsObject()
-  data?: Record<string, any>;  // ← جديد
+  data?: Record<string, any>;
+}
+
+export class BulkNotificationDto {
+  @ApiProperty({ enum: UserRole })
+  @IsEnum(UserRole)
+  role: UserRole;
+
+  @ApiPropertyOptional({ example: 'تنبيه عام' })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @ApiPropertyOptional({ example: 'General alert' })
+  @IsOptional()
+  @IsString()
+  titleEn?: string;
+
+  @ApiPropertyOptional({ example: 'تنبيه عام' })
+  @IsOptional()
+  @IsString()
+  titleAr?: string;
+
+  @ApiPropertyOptional({ example: 'هذه رسالة عامة' })
+  @IsOptional()
+  @IsString()
+  message?: string;
+
+  @ApiPropertyOptional({ example: 'This is a general message' })
+  @IsOptional()
+  @IsString()
+  messageEn?: string;
+
+  @ApiPropertyOptional({ example: 'هذه رسالة عامة' })
+  @IsOptional()
+  @IsString()
+  messageAr?: string;
+
+  @ApiPropertyOptional({ enum: NotificationRelatedType })
+  @IsOptional()
+  @IsEnum(NotificationRelatedType)
+  relatedType?: NotificationRelatedType;
 }

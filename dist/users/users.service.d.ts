@@ -1,11 +1,12 @@
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
     create(createUserDto: CreateUserDto): Promise<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -14,6 +15,7 @@ export declare class UsersService {
     }>;
     createParentUser(createUserDto: CreateUserDto): Promise<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -22,6 +24,7 @@ export declare class UsersService {
     }>;
     createReceptionUser(createUserDto: CreateUserDto): Promise<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -30,6 +33,7 @@ export declare class UsersService {
     }>;
     findAll(paginationDto: PaginationDto): Promise<PaginatedResult<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -92,6 +96,7 @@ export declare class UsersService {
             registrationDate: Date;
         } | null;
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -101,6 +106,7 @@ export declare class UsersService {
     }>;
     update(id: number, updateUserDto: UpdateUserDto): Promise<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;

@@ -1,5 +1,5 @@
+import { BulkNotificationDto, CreateNotificationDto } from './dto/notification.dto';
 import { NotificationsService } from './notifications.service';
-import { CreateNotificationDto } from './dto/notification.dto';
 export declare class NotificationsController {
     private readonly service;
     constructor(service: NotificationsService);
@@ -19,11 +19,7 @@ export declare class NotificationsController {
         sent: boolean;
         sentAt: Date | null;
     }>;
-    sendBulk(body: {
-        role: string;
-        title: string;
-        message: string;
-    }): Promise<{
+    sendBulk(body: BulkNotificationDto): Promise<{
         message: string;
         count: number;
     }>;

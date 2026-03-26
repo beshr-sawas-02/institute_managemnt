@@ -1,0 +1,364 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getMonthName = getMonthName;
+exports.getAssessmentTypeLabel = getAssessmentTypeLabel;
+exports.translateGrade = translateGrade;
+exports.buildAbsenceNotification = buildAbsenceNotification;
+exports.buildLateNotification = buildLateNotification;
+exports.buildAssessmentResultNotification = buildAssessmentResultNotification;
+exports.buildAssessmentCreatedNotification = buildAssessmentCreatedNotification;
+exports.buildAssessmentScoreUpdatedNotification = buildAssessmentScoreUpdatedNotification;
+exports.buildNewPaymentNotification = buildNewPaymentNotification;
+exports.buildPaymentConfirmedNotification = buildPaymentConfirmedNotification;
+exports.buildOverduePaymentNotification = buildOverduePaymentNotification;
+exports.buildStudentRegisteredNotification = buildStudentRegisteredNotification;
+exports.buildMonthlyReportNotification = buildMonthlyReportNotification;
+const MONTHS_AR = [
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
+];
+const MONTHS_EN = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+];
+const ASSESSMENT_TYPE_LABELS = {
+    quiz: { ar: 'اختبار قصير', en: 'quiz' },
+    exam: { ar: 'اختبار', en: 'exam' },
+    homework: { ar: 'واجب', en: 'homework' },
+    midterm: { ar: 'مذاكرة', en: 'midterm' },
+    final: { ar: 'فحص نهائي', en: 'final exam' },
+};
+const GRADE_LABELS = {
+    ممتاز: { ar: 'ممتاز', en: 'Excellent' },
+    'جيد جداً': { ar: 'جيد جداً', en: 'Very Good' },
+    جيد: { ar: 'جيد', en: 'Good' },
+    مقبول: { ar: 'مقبول', en: 'Fair' },
+    ضعيف: { ar: 'ضعيف', en: 'Weak' },
+    راسب: { ar: 'راسب', en: 'Fail' },
+    Excellent: { ar: 'ممتاز', en: 'Excellent' },
+    'Very Good': { ar: 'جيد جداً', en: 'Very Good' },
+    Good: { ar: 'جيد', en: 'Good' },
+    Fair: { ar: 'مقبول', en: 'Fair' },
+    Weak: { ar: 'ضعيف', en: 'Weak' },
+    Fail: { ar: 'راسب', en: 'Fail' },
+};
+function getMonthName(month, language) {
+    const months = language === 'en' ? MONTHS_EN : MONTHS_AR;
+    return months[month - 1] || '';
+}
+function getAssessmentTypeLabel(type, language) {
+    const labels = ASSESSMENT_TYPE_LABELS[type];
+    if (!labels) {
+        return type;
+    }
+    return labels[language];
+}
+function translateGrade(grade, language) {
+    if (!grade) {
+        return null;
+    }
+    const translated = GRADE_LABELS[grade];
+    if (!translated) {
+        return grade;
+    }
+    return translated[language];
+}
+function formatNumber(value, language) {
+    return value.toLocaleString(language === 'en' ? 'en-US' : 'ar-SY', {
+        maximumFractionDigits: 2,
+    });
+}
+function buildBalanceLines(balance, language) {
+    if (!balance) {
+        return [];
+    }
+    if (language === 'en') {
+        const lines = [
+            '',
+            `Account summary (${balance.gradeName}):`,
+            `Total paid: SYP ${formatNumber(balance.totalPaid, 'en')}`,
+            `Remaining: SYP ${formatNumber(balance.remaining, 'en')}`,
+            `Annual fee: SYP ${formatNumber(balance.annualAmount, 'en')}`,
+        ];
+        if (balance.remaining <= 0) {
+            lines.push('The annual fee has been fully paid.');
+        }
+        return lines;
+    }
+    const lines = [
+        '',
+        `ملخص الحساب (${balance.gradeName}):`,
+        `إجمالي المدفوع: ${formatNumber(balance.totalPaid, 'ar')} ل.س`,
+        `المتبقي: ${formatNumber(balance.remaining, 'ar')} ل.س`,
+        `القسط السنوي: ${formatNumber(balance.annualAmount, 'ar')} ل.س`,
+    ];
+    if (balance.remaining <= 0) {
+        lines.push('تم سداد القسط السنوي بالكامل.');
+    }
+    return lines;
+}
+function buildAbsenceNotification(studentName) {
+    return {
+        title: {
+            ar: 'غياب طالب',
+            en: 'Student absence',
+        },
+        message: {
+            ar: `ابنكم ${studentName} غائب اليوم`,
+            en: `Your child ${studentName} is absent today.`,
+        },
+    };
+}
+function buildLateNotification(studentName, lateMinutes) {
+    return {
+        title: {
+            ar: 'تأخر طالب',
+            en: 'Student late arrival',
+        },
+        message: {
+            ar: `ابنكم ${studentName} متأخر ${lateMinutes} دقيقة اليوم`,
+            en: `Your child ${studentName} is ${lateMinutes} minutes late today.`,
+        },
+    };
+}
+function buildAssessmentResultNotification(params) {
+    const typeLabelAr = getAssessmentTypeLabel(params.assessmentType, 'ar');
+    const typeLabelEn = getAssessmentTypeLabel(params.assessmentType, 'en');
+    const gradeAr = translateGrade(params.grade, 'ar');
+    const gradeEn = translateGrade(params.grade, 'en');
+    const arLines = [
+        `حصل ${params.studentName} على ${params.score}/${params.maxScore} (${params.percentage.toFixed(0)}%) في ${typeLabelAr}: "${params.assessmentTitle}" - مادة ${params.subjectName}`,
+    ];
+    const enLines = [
+        `${params.studentName} scored ${params.score}/${params.maxScore} (${params.percentage.toFixed(0)}%) in the ${typeLabelEn} "${params.assessmentTitle}" for ${params.subjectName}.`,
+    ];
+    if (gradeAr) {
+        arLines.push(`التقدير: ${gradeAr}`);
+    }
+    if (gradeEn) {
+        enLines.push(`Grade: ${gradeEn}`);
+    }
+    if (params.teacherName) {
+        arLines.push(`المعلم: ${params.teacherName}`);
+        enLines.push(`Teacher: ${params.teacherName}`);
+    }
+    if (params.feedback) {
+        arLines.push(`ملاحظة: ${params.feedback}`);
+        enLines.push(`Feedback: ${params.feedback}`);
+    }
+    return {
+        title: {
+            ar: `نتيجة ${typeLabelAr} - ${params.studentName} - ${params.subjectName}`,
+            en: `${capitalize(typeLabelEn)} result - ${params.studentName} - ${params.subjectName}`,
+        },
+        message: {
+            ar: arLines.join('\n'),
+            en: enLines.join('\n'),
+        },
+    };
+}
+function buildAssessmentCreatedNotification(params) {
+    const typeLabelAr = getAssessmentTypeLabel(params.assessmentType, 'ar');
+    const typeLabelEn = getAssessmentTypeLabel(params.assessmentType, 'en');
+    const arLines = [
+        `تم إنشاء ${typeLabelAr} جديد لـ ${params.studentName} في مادة ${params.subjectName}: "${params.assessmentTitle}"`,
+        `الدرجة العظمى: ${params.maxScore}`,
+    ];
+    const enLines = [
+        `A new ${typeLabelEn} was created for ${params.studentName} in ${params.subjectName}: "${params.assessmentTitle}".`,
+        `Maximum score: ${params.maxScore}`,
+    ];
+    if (params.teacherName) {
+        arLines.push(`المعلم: ${params.teacherName}`);
+        enLines.push(`Teacher: ${params.teacherName}`);
+    }
+    arLines.push('لم تُسجَّل الدرجة بعد');
+    enLines.push('The score has not been recorded yet.');
+    return {
+        title: {
+            ar: `${typeLabelAr} جديد - ${params.studentName} - ${params.subjectName}`,
+            en: `New ${typeLabelEn} - ${params.studentName} - ${params.subjectName}`,
+        },
+        message: {
+            ar: arLines.join('\n'),
+            en: enLines.join('\n'),
+        },
+    };
+}
+function buildAssessmentScoreUpdatedNotification(params) {
+    const typeLabelAr = getAssessmentTypeLabel(params.assessmentType, 'ar');
+    const typeLabelEn = getAssessmentTypeLabel(params.assessmentType, 'en');
+    const gradeAr = translateGrade(params.grade, 'ar');
+    const gradeEn = translateGrade(params.grade, 'en');
+    const arLines = [
+        params.wasUnscored
+            ? `حصل ${params.studentName} على ${params.score}/${params.maxScore} (${params.percentage.toFixed(0)}%) في ${typeLabelAr}: "${params.assessmentTitle}" - مادة ${params.subjectName}`
+            : `تم تحديث درجة ${params.studentName} في ${typeLabelAr}: "${params.assessmentTitle}" - مادة ${params.subjectName}`,
+    ];
+    const enLines = [
+        params.wasUnscored
+            ? `${params.studentName} scored ${params.score}/${params.maxScore} (${params.percentage.toFixed(0)}%) in the ${typeLabelEn} "${params.assessmentTitle}" for ${params.subjectName}.`
+            : `${params.studentName}'s score was updated for the ${typeLabelEn} "${params.assessmentTitle}" in ${params.subjectName}.`,
+    ];
+    if (!params.wasUnscored) {
+        arLines.push(`الدرجة الجديدة: ${params.score}/${params.maxScore} (${params.percentage.toFixed(0)}%)`);
+        enLines.push(`New score: ${params.score}/${params.maxScore} (${params.percentage.toFixed(0)}%)`);
+    }
+    if (gradeAr) {
+        arLines.push(`التقدير: ${gradeAr}`);
+    }
+    if (gradeEn) {
+        enLines.push(`Grade: ${gradeEn}`);
+    }
+    return {
+        title: {
+            ar: `${params.wasUnscored ? 'نتيجة' : 'تحديث نتيجة'} ${typeLabelAr} - ${params.studentName} - ${params.subjectName}`,
+            en: `${params.wasUnscored ? 'Result' : 'Result update'} - ${capitalize(typeLabelEn)} - ${params.studentName} - ${params.subjectName}`,
+        },
+        message: {
+            ar: arLines.join('\n'),
+            en: enLines.join('\n'),
+        },
+    };
+}
+function buildNewPaymentNotification(studentName, amount, dueDate, balance) {
+    const arLines = [
+        `تم إنشاء مستحق مالي جديد لـ ${studentName}.`,
+        `القيمة: ${formatNumber(amount, 'ar')} ل.س`,
+        `تاريخ الاستحقاق: ${dueDate}`,
+        ...buildBalanceLines(balance, 'ar'),
+    ];
+    const enLines = [
+        `A new payment due was created for ${studentName}.`,
+        `Amount: SYP ${formatNumber(amount, 'en')}`,
+        `Due date: ${dueDate}`,
+        ...buildBalanceLines(balance, 'en'),
+    ];
+    return {
+        title: {
+            ar: `مستحق مالي جديد - ${studentName}`,
+            en: `New payment due - ${studentName}`,
+        },
+        message: {
+            ar: arLines.join('\n'),
+            en: enLines.join('\n'),
+        },
+    };
+}
+function buildPaymentConfirmedNotification(studentName, amount, receiptNumber, balance) {
+    const arLines = [
+        `تم تأكيد دفع مبلغ ${formatNumber(amount, 'ar')} ل.س.`,
+        `رقم الإيصال: ${receiptNumber}`,
+        ...buildBalanceLines(balance, 'ar'),
+    ];
+    const enLines = [
+        `A payment of SYP ${formatNumber(amount, 'en')} was confirmed.`,
+        `Receipt number: ${receiptNumber}`,
+        ...buildBalanceLines(balance, 'en'),
+    ];
+    return {
+        title: {
+            ar: `تأكيد دفع - ${studentName}`,
+            en: `Payment confirmed - ${studentName}`,
+        },
+        message: {
+            ar: arLines.join('\n'),
+            en: enLines.join('\n'),
+        },
+    };
+}
+function buildOverduePaymentNotification(studentName, amount, dueDate) {
+    return {
+        title: {
+            ar: `تذكير بمستحق متأخر - ${studentName}`,
+            en: `Overdue payment reminder - ${studentName}`,
+        },
+        message: {
+            ar: `يوجد مستحق مالي متأخر بقيمة ${formatNumber(amount, 'ar')} ل.س كان مستحقاً في ${dueDate}`,
+            en: `There is an overdue payment of SYP ${formatNumber(amount, 'en')} that was due on ${dueDate}.`,
+        },
+    };
+}
+function buildStudentRegisteredNotification(studentName, sectionInfoAr, sectionInfoEn = sectionInfoAr) {
+    return {
+        title: {
+            ar: 'تم تسجيل الطالب',
+            en: 'Student registration completed',
+        },
+        message: {
+            ar: `تم تسجيل ${studentName} بنجاح في ${sectionInfoAr}`,
+            en: `${studentName} was successfully registered in ${sectionInfoEn}.`,
+        },
+    };
+}
+function buildMonthlyReportNotification(params) {
+    const monthAr = getMonthName(params.month, 'ar');
+    const monthEn = getMonthName(params.month, 'en');
+    const arLines = [
+        `التقرير الشهري لـ ${params.studentName} - ${monthAr} ${params.year}`,
+        params.sectionName,
+        '',
+        'التقييمات:',
+    ];
+    const enLines = [
+        `Monthly report for ${params.studentName} - ${monthEn} ${params.year}`,
+        params.sectionName,
+        '',
+        'Assessments:',
+    ];
+    for (const assessment of params.assessments) {
+        const arScoreText = assessment.score !== null
+            ? `${assessment.score}/${assessment.maxScore} (${assessment.percentage?.toFixed(0)}%)`
+            : 'لم يُقيَّم بعد';
+        const enScoreText = assessment.score !== null
+            ? `${assessment.score}/${assessment.maxScore} (${assessment.percentage?.toFixed(0)}%)`
+            : 'Not graded yet';
+        const gradeAr = translateGrade(assessment.grade, 'ar');
+        const gradeEn = translateGrade(assessment.grade, 'en');
+        arLines.push(`• ${assessment.subject}: ${arScoreText}${gradeAr ? ` - ${gradeAr}` : ''}`);
+        enLines.push(`• ${assessment.subject}: ${enScoreText}${gradeEn ? ` - ${gradeEn}` : ''}`);
+    }
+    if (params.averagePercentage !== null) {
+        const overallGradeAr = translateGrade(params.overallGrade, 'ar');
+        const overallGradeEn = translateGrade(params.overallGrade, 'en');
+        arLines.push('', `المعدل العام: ${params.averagePercentage.toFixed(1)}%${overallGradeAr ? ` - ${overallGradeAr}` : ''}`);
+        enLines.push('', `Overall average: ${params.averagePercentage.toFixed(1)}%${overallGradeEn ? ` - ${overallGradeEn}` : ''}`);
+    }
+    return {
+        title: {
+            ar: `تقرير شهري - ${params.studentName} - ${monthAr}`,
+            en: `Monthly report - ${params.studentName} - ${monthEn}`,
+        },
+        message: {
+            ar: arLines.join('\n'),
+            en: enLines.join('\n'),
+        },
+    };
+}
+function capitalize(value) {
+    if (!value) {
+        return value;
+    }
+    return value.charAt(0).toUpperCase() + value.slice(1);
+}
+//# sourceMappingURL=notification-localization.js.map

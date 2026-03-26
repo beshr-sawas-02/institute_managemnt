@@ -13,30 +13,39 @@ exports.NotificationsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const firebase_service_1 = require("./firebase.service");
+const notification_localization_1 = require("./notification-localization");
 let NotificationsService = class NotificationsService {
     constructor(prisma, firebaseService) {
         this.prisma = prisma;
         this.firebaseService = firebaseService;
     }
     async create(dto) {
+        const preferredLanguage = dto.preferredLanguage ?? (await this.getUserPreferredLanguage(dto.userId));
+        const localizedContent = this.buildLocalizedContent(dto);
+        if (!localizedContent) {
+            throw new common_1.BadRequestException('عنوان الإشعار ومحتواه مطلوبان');
+        }
+        const title = this.resolveLocalizedText(localizedContent.title, preferredLanguage);
+        const message = this.resolveLocalizedText(localizedContent.message, preferredLanguage);
+        const channel = dto.channel ?? 'in_app';
         const notification = await this.prisma.notification.create({
             data: {
                 userId: dto.userId,
                 relatedId: dto.relatedId,
                 relatedType: dto.relatedType,
-                title: dto.title,
-                message: dto.message,
-                type: dto.type || 'info',
-                channel: dto.channel || 'in_app',
-                data: dto.data ?? undefined,
+                title,
+                message,
+                type: dto.type ?? 'info',
+                channel,
+                data: this.attachLocalizedContent(dto.data, localizedContent),
             },
         });
-        if (dto.channel === 'push') {
+        if (channel === 'push') {
             try {
-                await this.firebaseService.sendToTopic(`user_${dto.userId}`, dto.title, dto.message, {
+                await this.firebaseService.sendToTopic(`user_${dto.userId}`, title, message, {
                     notificationId: notification.id.toString(),
-                    relatedType: dto.relatedType || 'general',
-                    relatedId: dto.relatedId?.toString() || '',
+                    relatedType: dto.relatedType ?? 'general',
+                    relatedId: dto.relatedId?.toString() ?? '',
                 });
                 await this.prisma.notification.update({
                     where: { id: notification.id },
@@ -44,10 +53,25 @@ let NotificationsService = class NotificationsService {
                 });
             }
             catch (error) {
-                console.error('فشل إرسال إشعار Firebase:', error);
+                console.error('Failed to send Firebase notification:', error);
             }
         }
-        return notification;
+        return this.localizeNotification(notification, preferredLanguage);
+    }
+    async createLocalizedNotification(dto) {
+        return this.create({
+            userId: dto.userId,
+            preferredLanguage: dto.preferredLanguage,
+            relatedId: dto.relatedId,
+            relatedType: dto.relatedType,
+            type: dto.type,
+            channel: dto.channel,
+            data: dto.data,
+            titleAr: dto.content.title.ar,
+            titleEn: dto.content.title.en,
+            messageAr: dto.content.message.ar,
+            messageEn: dto.content.message.en,
+        });
     }
     async notifyAbsence(studentId, attendanceId) {
         try {
@@ -57,18 +81,19 @@ let NotificationsService = class NotificationsService {
             });
             if (!student?.parent?.user)
                 return;
-            await this.create({
+            const content = (0, notification_localization_1.buildAbsenceNotification)(`${student.firstName} ${student.lastName}`);
+            await this.createLocalizedNotification({
                 userId: student.parent.user.id,
+                preferredLanguage: student.parent.user.preferredLanguage,
                 relatedId: attendanceId,
                 relatedType: 'attendance',
-                title: 'غياب طالب',
-                message: `ابنكم ${student.firstName} ${student.lastName} غائب اليوم`,
                 type: 'warning',
                 channel: 'push',
+                content,
             });
         }
         catch (error) {
-            console.error('خطأ في إشعار الغياب:', error);
+            console.error('Attendance absence notification failed:', error);
         }
     }
     async notifyLate(studentId, lateMinutes, attendanceId) {
@@ -79,18 +104,19 @@ let NotificationsService = class NotificationsService {
             });
             if (!student?.parent?.user)
                 return;
-            await this.create({
+            const content = (0, notification_localization_1.buildLateNotification)(`${student.firstName} ${student.lastName}`, lateMinutes);
+            await this.createLocalizedNotification({
                 userId: student.parent.user.id,
+                preferredLanguage: student.parent.user.preferredLanguage,
                 relatedId: attendanceId,
                 relatedType: 'attendance',
-                title: 'تأخر طالب',
-                message: `ابنكم ${student.firstName} ${student.lastName} متأخر ${lateMinutes} دقيقة اليوم`,
                 type: 'warning',
                 channel: 'push',
+                content,
             });
         }
         catch (error) {
-            console.error('خطأ في إشعار التأخير:', error);
+            console.error('Attendance late notification failed:', error);
         }
     }
     async notifyNewAssessment(studentId, assessmentTitle, score, maxScore, subjectName, assessmentId) {
@@ -98,18 +124,28 @@ let NotificationsService = class NotificationsService {
             where: { id: studentId },
             include: { parent: { include: { user: true } } },
         });
-        if (!student?.parent?.userId)
+        if (!student?.parent?.user)
             return;
         const percentage = (score / maxScore) * 100;
         const notifType = percentage >= 50 ? 'success' : 'warning';
-        return this.create({
-            userId: student.parent.userId,
+        const content = (0, notification_localization_1.buildAssessmentResultNotification)({
+            studentName: `${student.firstName} ${student.lastName}`,
+            subjectName,
+            assessmentType: 'exam',
+            assessmentTitle,
+            maxScore,
+            score,
+            percentage,
+            grade: null,
+        });
+        return this.createLocalizedNotification({
+            userId: student.parent.user.id,
+            preferredLanguage: student.parent.user.preferredLanguage,
             relatedId: assessmentId,
             relatedType: 'assessment',
-            title: `درجة جديدة - ${student.firstName}`,
-            message: `حصل ${student.firstName} على ${score}/${maxScore} (${percentage.toFixed(0)}%) في ${assessmentTitle} - مادة ${subjectName}`,
             type: notifType,
             channel: 'push',
+            content,
         });
     }
     async notifyNewPaymentWithBalance(studentId, amount, dueDate, paymentId, balance) {
@@ -117,23 +153,17 @@ let NotificationsService = class NotificationsService {
             where: { id: studentId },
             include: { parent: { include: { user: true } } },
         });
-        if (!student?.parent?.userId)
+        if (!student?.parent?.user)
             return;
-        let message = `تم إنشاء مستحق مالي بقيمة ${amount.toLocaleString()} ل.س - تاريخ الاستحقاق: ${dueDate}`;
-        if (balance) {
-            message += `\n\n📊 ملخص الحساب (${balance.gradeName}):`;
-            message += `\n✅ إجمالي المدفوع: ${balance.totalPaid.toLocaleString()} ل.س`;
-            message += `\n⏳ المتبقي: ${balance.remaining.toLocaleString()} ل.س`;
-            message += `\n📋 القسط السنوي: ${balance.annualAmount.toLocaleString()} ل.س`;
-        }
-        return this.create({
-            userId: student.parent.userId,
+        const content = (0, notification_localization_1.buildNewPaymentNotification)(`${student.firstName} ${student.lastName}`, amount, dueDate, balance);
+        return this.createLocalizedNotification({
+            userId: student.parent.user.id,
+            preferredLanguage: student.parent.user.preferredLanguage,
             relatedId: paymentId,
             relatedType: 'payment',
-            title: `مستحق مالي جديد - ${student.firstName}`,
-            message,
             type: 'info',
             channel: 'push',
+            content,
         });
     }
     async notifyPaymentConfirmedWithBalance(studentId, amount, receiptNumber, paymentId, balance) {
@@ -141,26 +171,17 @@ let NotificationsService = class NotificationsService {
             where: { id: studentId },
             include: { parent: { include: { user: true } } },
         });
-        if (!student?.parent?.userId)
+        if (!student?.parent?.user)
             return;
-        let message = `تم تأكيد دفع مبلغ ${amount.toLocaleString()} ل.س. رقم الإيصال: ${receiptNumber}`;
-        if (balance) {
-            message += `\n\n📊 ملخص الحساب (${balance.gradeName}):`;
-            message += `\n✅ إجمالي المدفوع: ${balance.totalPaid.toLocaleString()} ل.س`;
-            message += `\n⏳ المتبقي: ${balance.remaining.toLocaleString()} ل.س`;
-            message += `\n📋 القسط السنوي: ${balance.annualAmount.toLocaleString()} ل.س`;
-            if (balance.remaining <= 0) {
-                message += `\n\n🎉 تم سداد القسط السنوي بالكامل!`;
-            }
-        }
-        return this.create({
-            userId: student.parent.userId,
+        const content = (0, notification_localization_1.buildPaymentConfirmedNotification)(`${student.firstName} ${student.lastName}`, amount, receiptNumber, balance);
+        return this.createLocalizedNotification({
+            userId: student.parent.user.id,
+            preferredLanguage: student.parent.user.preferredLanguage,
             relatedId: paymentId,
             relatedType: 'payment',
-            title: `تأكيد دفع - ${student.firstName}`,
-            message,
             type: 'success',
             channel: 'push',
+            content,
         });
     }
     async notifyOverduePayment(studentId, amount, dueDate, paymentId) {
@@ -168,16 +189,17 @@ let NotificationsService = class NotificationsService {
             where: { id: studentId },
             include: { parent: { include: { user: true } } },
         });
-        if (!student?.parent?.userId)
+        if (!student?.parent?.user)
             return;
-        return this.create({
-            userId: student.parent.userId,
+        const content = (0, notification_localization_1.buildOverduePaymentNotification)(`${student.firstName} ${student.lastName}`, amount, dueDate);
+        return this.createLocalizedNotification({
+            userId: student.parent.user.id,
+            preferredLanguage: student.parent.user.preferredLanguage,
             relatedId: paymentId,
             relatedType: 'payment',
-            title: `تذكير بمستحق متأخر - ${student.firstName}`,
-            message: `يوجد مستحق مالي متأخر بقيمة ${amount} ل.س كان مستحقاً في ${dueDate}`,
             type: 'alert',
             channel: 'push',
+            content,
         });
     }
     async notifyStudentRegistered(studentId) {
@@ -188,27 +210,35 @@ let NotificationsService = class NotificationsService {
                 section: { include: { grade: true } },
             },
         });
-        if (!student?.parent?.userId)
+        if (!student?.parent?.user)
             return;
         const sectionInfo = student.section
             ? `${student.section.grade?.name} - ${student.section.name}`
-            : 'لم يتم تحديد الشعبة بعد';
-        return this.create({
-            userId: student.parent.userId,
+            : 'غير محدد';
+        const sectionInfoEn = student.section
+            ? `${student.section.grade?.name} - ${student.section.name}`
+            : 'Section not assigned yet';
+        const content = (0, notification_localization_1.buildStudentRegisteredNotification)(`${student.firstName} ${student.lastName}`, sectionInfo, sectionInfoEn);
+        return this.createLocalizedNotification({
+            userId: student.parent.user.id,
+            preferredLanguage: student.parent.user.preferredLanguage,
             relatedId: student.id,
             relatedType: 'general',
-            title: `تم تسجيل الطالب`,
-            message: `تم تسجيل ${student.firstName} ${student.lastName} بنجاح في ${sectionInfo}`,
             type: 'success',
             channel: 'push',
+            content,
         });
     }
     async findByUser(userId) {
-        return this.prisma.notification.findMany({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-            take: 50,
-        });
+        const [preferredLanguage, notifications] = await Promise.all([
+            this.getUserPreferredLanguage(userId),
+            this.prisma.notification.findMany({
+                where: { userId },
+                orderBy: { createdAt: 'desc' },
+                take: 50,
+            }),
+        ]);
+        return notifications.map((notification) => this.localizeNotification(notification, preferredLanguage));
     }
     async getUnreadCount(userId) {
         const count = await this.prisma.notification.count({
@@ -220,12 +250,15 @@ let NotificationsService = class NotificationsService {
         const notification = await this.prisma.notification.findUnique({
             where: { id },
         });
-        if (!notification)
+        if (!notification) {
             throw new common_1.NotFoundException('الإشعار غير موجود');
-        return this.prisma.notification.update({
+        }
+        const updated = await this.prisma.notification.update({
             where: { id },
             data: { isRead: true, readAt: new Date() },
         });
+        const preferredLanguage = await this.getUserPreferredLanguage(updated.userId);
+        return this.localizeNotification(updated, preferredLanguage);
     }
     async markAllAsRead(userId) {
         await this.prisma.notification.updateMany({
@@ -238,27 +271,95 @@ let NotificationsService = class NotificationsService {
         const notification = await this.prisma.notification.findUnique({
             where: { id },
         });
-        if (!notification)
+        if (!notification) {
             throw new common_1.NotFoundException('الإشعار غير موجود');
+        }
         await this.prisma.notification.delete({ where: { id } });
         return { message: 'تم حذف الإشعار بنجاح' };
     }
-    async sendBulkNotification(role, title, message, relatedType) {
+    async sendBulkNotification(dto) {
         const users = await this.prisma.user.findMany({
-            where: { role: role, isActive: true },
-            select: { id: true },
+            where: { role: dto.role, isActive: true },
+            select: { id: true, preferredLanguage: true },
         });
         const notifications = await Promise.all(users.map((user) => this.create({
             userId: user.id,
-            title,
-            message,
+            preferredLanguage: user.preferredLanguage,
+            title: dto.title,
+            titleAr: dto.titleAr,
+            titleEn: dto.titleEn,
+            message: dto.message,
+            messageAr: dto.messageAr,
+            messageEn: dto.messageEn,
             type: 'info',
             channel: 'push',
-            relatedType,
+            relatedType: dto.relatedType,
         })));
         return {
             message: `تم إرسال ${notifications.length} إشعار بنجاح`,
             count: notifications.length,
+        };
+    }
+    async getUserPreferredLanguage(userId) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { preferredLanguage: true },
+        });
+        return user?.preferredLanguage ?? 'ar';
+    }
+    buildLocalizedContent(dto) {
+        const title = this.normalizeLocalizedText(dto.title, dto.titleAr, dto.titleEn);
+        const message = this.normalizeLocalizedText(dto.message, dto.messageAr, dto.messageEn);
+        if (!title || !message) {
+            return null;
+        }
+        return { title, message };
+    }
+    normalizeLocalizedText(fallback, arabic, english) {
+        const defaultValue = fallback?.trim();
+        const ar = arabic?.trim() || defaultValue || english?.trim();
+        const en = english?.trim() || defaultValue || arabic?.trim();
+        if (!ar || !en) {
+            return null;
+        }
+        return { ar, en };
+    }
+    resolveLocalizedText(text, language) {
+        return language === 'en' ? text.en : text.ar;
+    }
+    attachLocalizedContent(data, localizedContent) {
+        return {
+            ...(data ?? {}),
+            localizedContent,
+        };
+    }
+    extractLocalizedContent(data) {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            return null;
+        }
+        const localizedContent = data.localizedContent;
+        if (!localizedContent || typeof localizedContent !== 'object') {
+            return null;
+        }
+        if (!localizedContent.title ||
+            !localizedContent.message ||
+            typeof localizedContent.title.ar !== 'string' ||
+            typeof localizedContent.title.en !== 'string' ||
+            typeof localizedContent.message.ar !== 'string' ||
+            typeof localizedContent.message.en !== 'string') {
+            return null;
+        }
+        return localizedContent;
+    }
+    localizeNotification(notification, preferredLanguage) {
+        const localizedContent = this.extractLocalizedContent(notification.data);
+        if (!localizedContent) {
+            return notification;
+        }
+        return {
+            ...notification,
+            title: this.resolveLocalizedText(localizedContent.title, preferredLanguage),
+            message: this.resolveLocalizedText(localizedContent.message, preferredLanguage),
         };
     }
 };

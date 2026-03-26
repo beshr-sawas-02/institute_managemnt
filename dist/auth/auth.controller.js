@@ -38,6 +38,9 @@ let AuthController = class AuthController {
     async changePassword(userId, changePasswordDto) {
         return this.authService.changePassword(userId, changePasswordDto);
     }
+    async updatePreferredLanguage(userId, dto) {
+        return this.authService.updatePreferredLanguage(userId, dto);
+    }
     async getProfile(userId) {
         return this.authService.getProfile(userId);
     }
@@ -46,7 +49,7 @@ exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'تسجيل الدخول' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Login' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.LoginDto]),
@@ -54,7 +57,7 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('register'),
-    (0, swagger_1.ApiOperation)({ summary: 'إنشاء حساب جديد' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Register a new account' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.RegisterDto]),
@@ -64,8 +67,8 @@ __decorate([
     (0, common_1.Post)('register-reception'),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     (0, swagger_1.ApiOperation)({
-        summary: 'إنشاء حساب استقبال',
-        description: 'يتحقق أن البريد الإلكتروني موجود في سجل الاستقبال ثم ينشئ حساب دخول',
+        summary: 'Create a reception account',
+        description: 'Validates that the email already exists in the reception table, then creates login credentials.',
     }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -77,7 +80,7 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'تغيير كلمة المرور' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Change password' }),
     __param(0, (0, decorators_1.CurrentUser)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -85,17 +88,29 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "changePassword", null);
 __decorate([
+    (0, common_1.Patch)('language'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Update preferred app language' }),
+    __param(0, (0, decorators_1.CurrentUser)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, auth_dto_1.UpdatePreferredLanguageDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "updatePreferredLanguage", null);
+__decorate([
     (0, common_1.Get)('profile'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'الحصول على الملف الشخصي' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get current profile' }),
     __param(0, (0, decorators_1.CurrentUser)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getProfile", null);
 exports.AuthController = AuthController = __decorate([
-    (0, swagger_1.ApiTags)('التوثيق'),
+    (0, swagger_1.ApiTags)('Authentication'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
         users_service_1.UsersService])

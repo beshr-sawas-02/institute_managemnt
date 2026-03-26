@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateFcmTokenDto = exports.ChangePasswordDto = exports.RegisterDto = exports.LoginDto = void 0;
+exports.UpdateFcmTokenDto = exports.UpdatePreferredLanguageDto = exports.ChangePasswordDto = exports.RegisterDto = exports.LoginDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 const client_1 = require("@prisma/client");
@@ -17,43 +17,61 @@ class LoginDto {
 }
 exports.LoginDto = LoginDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'البريد الإلكتروني', example: 'admin@school.com' }),
+    (0, swagger_1.ApiProperty)({ description: 'Email address', example: 'admin@school.com' }),
     (0, class_validator_1.IsEmail)({}, { message: 'البريد الإلكتروني غير صالح' }),
     (0, class_validator_1.IsNotEmpty)({ message: 'البريد الإلكتروني مطلوب' }),
     __metadata("design:type", String)
 ], LoginDto.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'كلمة المرور', example: 'password123' }),
+    (0, swagger_1.ApiProperty)({ description: 'Password', example: 'password123' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: 'كلمة المرور مطلوبة' }),
     (0, class_validator_1.MinLength)(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
     __metadata("design:type", String)
 ], LoginDto.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        enum: client_1.AppLanguage,
+        description: 'Current app language to sync with notification delivery',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.AppLanguage),
+    __metadata("design:type", String)
+], LoginDto.prototype, "preferredLanguage", void 0);
 class RegisterDto {
 }
 exports.RegisterDto = RegisterDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'البريد الإلكتروني', example: 'user@school.com' }),
+    (0, swagger_1.ApiProperty)({ description: 'Email address', example: 'user@school.com' }),
     (0, class_validator_1.IsEmail)({}, { message: 'البريد الإلكتروني غير صالح' }),
     (0, class_validator_1.IsNotEmpty)({ message: 'البريد الإلكتروني مطلوب' }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'كلمة المرور', example: 'password123' }),
+    (0, swagger_1.ApiProperty)({ description: 'Password', example: 'password123' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: 'كلمة المرور مطلوبة' }),
     (0, class_validator_1.MinLength)(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "password", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'رقم الهاتف', example: '+966501234567' }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Phone number', example: '+966501234567' }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "phone", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        enum: client_1.AppLanguage,
+        description: 'Current app language to sync with notification delivery',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.AppLanguage),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "preferredLanguage", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'دور المستخدم',
+        description: 'User role',
         enum: client_1.UserRole,
         example: 'student',
     }),
@@ -65,23 +83,34 @@ class ChangePasswordDto {
 }
 exports.ChangePasswordDto = ChangePasswordDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'كلمة المرور الحالية' }),
+    (0, swagger_1.ApiProperty)({ description: 'Current password' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: 'كلمة المرور الحالية مطلوبة' }),
     __metadata("design:type", String)
 ], ChangePasswordDto.prototype, "currentPassword", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'كلمة المرور الجديدة' }),
+    (0, swagger_1.ApiProperty)({ description: 'New password' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: 'كلمة المرور الجديدة مطلوبة' }),
     (0, class_validator_1.MinLength)(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
     __metadata("design:type", String)
 ], ChangePasswordDto.prototype, "newPassword", void 0);
+class UpdatePreferredLanguageDto {
+}
+exports.UpdatePreferredLanguageDto = UpdatePreferredLanguageDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        enum: client_1.AppLanguage,
+        description: 'Preferred language used for notifications and profile responses',
+    }),
+    (0, class_validator_1.IsEnum)(client_1.AppLanguage),
+    __metadata("design:type", String)
+], UpdatePreferredLanguageDto.prototype, "preferredLanguage", void 0);
 class UpdateFcmTokenDto {
 }
 exports.UpdateFcmTokenDto = UpdateFcmTokenDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'رمز FCM للإشعارات' }),
+    (0, swagger_1.ApiProperty)({ description: 'FCM token for push notifications' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)({ message: 'رمز FCM مطلوب' }),
     __metadata("design:type", String)

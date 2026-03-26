@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateNotificationDto = void 0;
+exports.BulkNotificationDto = exports.CreateNotificationDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 const client_1 = require("@prisma/client");
@@ -34,17 +34,41 @@ __decorate([
     __metadata("design:type", String)
 ], CreateNotificationDto.prototype, "relatedType", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'تنبيه جديد' }),
+    (0, swagger_1.ApiPropertyOptional)({ example: 'تنبيه جديد' }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateNotificationDto.prototype, "title", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'محتوى الإشعار' }),
+    (0, swagger_1.ApiPropertyOptional)({ example: 'New alert' }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateNotificationDto.prototype, "titleEn", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'تنبيه جديد' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateNotificationDto.prototype, "titleAr", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'محتوى الإشعار' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateNotificationDto.prototype, "message", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Notification body' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateNotificationDto.prototype, "messageEn", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'محتوى الإشعار' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateNotificationDto.prototype, "messageAr", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ enum: client_1.NotificationType }),
     (0, class_validator_1.IsOptional)(),
@@ -63,4 +87,54 @@ __decorate([
     (0, class_validator_1.IsObject)(),
     __metadata("design:type", Object)
 ], CreateNotificationDto.prototype, "data", void 0);
+class BulkNotificationDto {
+}
+exports.BulkNotificationDto = BulkNotificationDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: client_1.UserRole }),
+    (0, class_validator_1.IsEnum)(client_1.UserRole),
+    __metadata("design:type", String)
+], BulkNotificationDto.prototype, "role", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'تنبيه عام' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], BulkNotificationDto.prototype, "title", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'General alert' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], BulkNotificationDto.prototype, "titleEn", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'تنبيه عام' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], BulkNotificationDto.prototype, "titleAr", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'هذه رسالة عامة' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], BulkNotificationDto.prototype, "message", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'This is a general message' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], BulkNotificationDto.prototype, "messageEn", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'هذه رسالة عامة' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], BulkNotificationDto.prototype, "messageAr", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: client_1.NotificationRelatedType }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.NotificationRelatedType),
+    __metadata("design:type", String)
+], BulkNotificationDto.prototype, "relatedType", void 0);
 //# sourceMappingURL=notification.dto.js.map

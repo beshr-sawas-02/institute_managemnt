@@ -1,51 +1,65 @@
 // src/auth/dto/auth.dto.ts
-// كائنات نقل بيانات التوثيق
+// DTOs for authentication flows
 
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MinLength,
-  IsEnum,
-  IsOptional,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { AppLanguage, UserRole } from '@prisma/client';
 
-// ============ تسجيل الدخول ============
 export class LoginDto {
-  @ApiProperty({ description: 'البريد الإلكتروني', example: 'admin@school.com' })
+  @ApiProperty({ description: 'Email address', example: 'admin@school.com' })
   @IsEmail({}, { message: 'البريد الإلكتروني غير صالح' })
   @IsNotEmpty({ message: 'البريد الإلكتروني مطلوب' })
   email: string;
 
-  @ApiProperty({ description: 'كلمة المرور', example: 'password123' })
+  @ApiProperty({ description: 'Password', example: 'password123' })
   @IsString()
   @IsNotEmpty({ message: 'كلمة المرور مطلوبة' })
   @MinLength(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' })
   password: string;
+
+  @ApiPropertyOptional({
+    enum: AppLanguage,
+    description: 'Current app language to sync with notification delivery',
+  })
+  @IsOptional()
+  @IsEnum(AppLanguage)
+  preferredLanguage?: AppLanguage;
 }
 
-// ============ التسجيل ============
 export class RegisterDto {
-  @ApiProperty({ description: 'البريد الإلكتروني', example: 'user@school.com' })
+  @ApiProperty({ description: 'Email address', example: 'user@school.com' })
   @IsEmail({}, { message: 'البريد الإلكتروني غير صالح' })
   @IsNotEmpty({ message: 'البريد الإلكتروني مطلوب' })
   email: string;
 
-  @ApiProperty({ description: 'كلمة المرور', example: 'password123' })
+  @ApiProperty({ description: 'Password', example: 'password123' })
   @IsString()
   @IsNotEmpty({ message: 'كلمة المرور مطلوبة' })
   @MinLength(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' })
   password: string;
 
-  @ApiPropertyOptional({ description: 'رقم الهاتف', example: '+966501234567' })
+  @ApiPropertyOptional({ description: 'Phone number', example: '+966501234567' })
   @IsOptional()
   @IsString()
   phone?: string;
 
+  @ApiPropertyOptional({
+    enum: AppLanguage,
+    description: 'Current app language to sync with notification delivery',
+  })
+  @IsOptional()
+  @IsEnum(AppLanguage)
+  preferredLanguage?: AppLanguage;
+
   @ApiProperty({
-    description: 'دور المستخدم',
+    description: 'User role',
     enum: UserRole,
     example: 'student',
   })
@@ -54,23 +68,30 @@ export class RegisterDto {
   role: UserRole;
 }
 
-// ============ تغيير كلمة المرور ============
 export class ChangePasswordDto {
-  @ApiProperty({ description: 'كلمة المرور الحالية' })
+  @ApiProperty({ description: 'Current password' })
   @IsString()
   @IsNotEmpty({ message: 'كلمة المرور الحالية مطلوبة' })
   currentPassword: string;
 
-  @ApiProperty({ description: 'كلمة المرور الجديدة' })
+  @ApiProperty({ description: 'New password' })
   @IsString()
   @IsNotEmpty({ message: 'كلمة المرور الجديدة مطلوبة' })
   @MinLength(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' })
   newPassword: string;
 }
 
-// ============ تحديث رمز FCM ============
+export class UpdatePreferredLanguageDto {
+  @ApiProperty({
+    enum: AppLanguage,
+    description: 'Preferred language used for notifications and profile responses',
+  })
+  @IsEnum(AppLanguage)
+  preferredLanguage: AppLanguage;
+}
+
 export class UpdateFcmTokenDto {
-  @ApiProperty({ description: 'رمز FCM للإشعارات' })
+  @ApiProperty({ description: 'FCM token for push notifications' })
   @IsString()
   @IsNotEmpty({ message: 'رمز FCM مطلوب' })
   fcmToken: string;

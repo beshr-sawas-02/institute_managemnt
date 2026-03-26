@@ -10,6 +10,7 @@ export declare class PaymentsController {
                 user: {
                     email: string;
                     password: string;
+                    preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
                     phone: string | null;
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;
@@ -161,6 +162,7 @@ export declare class PaymentsController {
                 user: {
                     email: string;
                     password: string;
+                    preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
                     phone: string | null;
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;

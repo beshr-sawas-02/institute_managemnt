@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, ChangePasswordDto } from './dto/auth.dto';
+import { ChangePasswordDto, LoginDto, RegisterDto, UpdatePreferredLanguageDto } from './dto/auth.dto';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/user.dto';
 export declare class AuthController {
@@ -12,6 +12,7 @@ export declare class AuthController {
             email: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.UserRole;
+            preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         };
         accessToken: string;
     }>;
@@ -21,11 +22,13 @@ export declare class AuthController {
             email: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.UserRole;
+            preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         };
         accessToken: string;
     }>;
     registerReception(createUserDto: CreateUserDto): Promise<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -34,6 +37,14 @@ export declare class AuthController {
     }>;
     changePassword(userId: number, changePasswordDto: ChangePasswordDto): Promise<{
         message: string;
+    }>;
+    updatePreferredLanguage(userId: number, dto: UpdatePreferredLanguageDto): Promise<{
+        message: string;
+        user: {
+            preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
+            id: number;
+            updatedAt: Date;
+        };
     }>;
     getProfile(userId: number): Promise<{
         firstName: string | null;
@@ -92,6 +103,7 @@ export declare class AuthController {
             registrationDate: Date;
         } | null;
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;

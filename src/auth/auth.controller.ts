@@ -1,24 +1,29 @@
 // src/auth/auth.controller.ts
-// متحكم التوثيق - مسارات تسجيل الدخول والتسجيل
 
 import {
-  Controller,
-  Post,
   Body,
+  Controller,
   Get,
-  UseGuards,
   HttpCode,
   HttpStatus,
+  Patch,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, ChangePasswordDto } from './dto/auth.dto';
+import {
+  ChangePasswordDto,
+  LoginDto,
+  RegisterDto,
+  UpdatePreferredLanguageDto,
+} from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/user.dto';
 
-@ApiTags('التوثيق')
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -28,13 +33,13 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'تسجيل الدخول' })
+  @ApiOperation({ summary: 'Login' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
   @Post('register')
-  @ApiOperation({ summary: 'إنشاء حساب جديد' })
+  @ApiOperation({ summary: 'Register a new account' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
@@ -42,8 +47,9 @@ export class AuthController {
   @Post('register-reception')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: 'إنشاء حساب استقبال',
-    description: 'يتحقق أن البريد الإلكتروني موجود في سجل الاستقبال ثم ينشئ حساب دخول',
+    summary: 'Create a reception account',
+    description:
+      'Validates that the email already exists in the reception table, then creates login credentials.',
   })
   async registerReception(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createReceptionUser(createUserDto);
@@ -53,7 +59,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'تغيير كلمة المرور' })
+  @ApiOperation({ summary: 'Change password' })
   async changePassword(
     @CurrentUser('id') userId: number,
     @Body() changePasswordDto: ChangePasswordDto,
@@ -61,10 +67,22 @@ export class AuthController {
     return this.authService.changePassword(userId, changePasswordDto);
   }
 
+  @Patch('language')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update preferred app language' })
+  async updatePreferredLanguage(
+    @CurrentUser('id') userId: number,
+    @Body() dto: UpdatePreferredLanguageDto,
+  ) {
+    return this.authService.updatePreferredLanguage(userId, dto);
+  }
+
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'الحصول على الملف الشخصي' })
+  @ApiOperation({ summary: 'Get current profile' })
   async getProfile(@CurrentUser('id') userId: number) {
     return this.authService.getProfile(userId);
   }

@@ -6,6 +6,7 @@ export declare class UsersController {
     constructor(usersService: UsersService);
     create(createUserDto: CreateUserDto): Promise<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -14,6 +15,7 @@ export declare class UsersController {
     }>;
     createParentUser(createUserDto: CreateUserDto): Promise<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -22,6 +24,7 @@ export declare class UsersController {
     }>;
     createReceptionUser(createUserDto: CreateUserDto): Promise<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -30,6 +33,7 @@ export declare class UsersController {
     }>;
     findAll(paginationDto: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -92,6 +96,7 @@ export declare class UsersController {
             registrationDate: Date;
         } | null;
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
@@ -101,6 +106,7 @@ export declare class UsersController {
     }>;
     update(id: number, updateUserDto: UpdateUserDto): Promise<{
         email: string;
+        preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;

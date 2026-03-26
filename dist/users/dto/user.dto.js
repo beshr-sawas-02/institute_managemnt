@@ -30,6 +30,12 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "phone", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: client_1.AppLanguage }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(client_1.AppLanguage),
+    __metadata("design:type", String)
+], CreateUserDto.prototype, "preferredLanguage", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ enum: client_1.UserRole }),
     (0, class_validator_1.IsEnum)(client_1.UserRole),
     __metadata("design:type", String)

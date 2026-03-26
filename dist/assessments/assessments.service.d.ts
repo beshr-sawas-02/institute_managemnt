@@ -12,6 +12,7 @@ export declare class AssessmentsService {
                 user: {
                     email: string;
                     password: string;
+                    preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
                     phone: string | null;
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;
@@ -252,6 +253,7 @@ export declare class AssessmentsService {
                 user: {
                     email: string;
                     password: string;
+                    preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
                     phone: string | null;
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;
@@ -339,5 +341,4 @@ export declare class AssessmentsService {
         message: string;
     }>;
     private calculateGrade;
-    private getAssessmentTypeLabel;
 }
