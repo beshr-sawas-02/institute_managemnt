@@ -91,8 +91,8 @@ export declare class AssessmentsController {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        percentage: import("@prisma/client/runtime/library").Decimal | null;
         feedback: string | null;
+        percentage: import("@prisma/client/runtime/library").Decimal | null;
     }>;
     findAll(p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
         student: {
@@ -137,8 +137,8 @@ export declare class AssessmentsController {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        percentage: import("@prisma/client/runtime/library").Decimal | null;
         feedback: string | null;
+        percentage: import("@prisma/client/runtime/library").Decimal | null;
     }>>;
     findByStudent(id: number): Promise<({
         gradeSubject: {
@@ -170,8 +170,8 @@ export declare class AssessmentsController {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        percentage: import("@prisma/client/runtime/library").Decimal | null;
         feedback: string | null;
+        percentage: import("@prisma/client/runtime/library").Decimal | null;
     })[]>;
     findOne(id: number): Promise<{
         student: {
@@ -242,8 +242,8 @@ export declare class AssessmentsController {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        percentage: import("@prisma/client/runtime/library").Decimal | null;
         feedback: string | null;
+        percentage: import("@prisma/client/runtime/library").Decimal | null;
     }>;
     update(id: number, dto: UpdateAssessmentDto): Promise<{
         student: {
@@ -332,8 +332,8 @@ export declare class AssessmentsController {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        percentage: import("@prisma/client/runtime/library").Decimal | null;
         feedback: string | null;
+        percentage: import("@prisma/client/runtime/library").Decimal | null;
     }>;
     remove(id: number): Promise<{
         message: string;

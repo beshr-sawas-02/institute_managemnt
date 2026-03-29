@@ -14,9 +14,9 @@ export declare class ExpensesController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
-        createdBy: number | null;
         category: import(".prisma/client").$Enums.ExpenseCategory;
         expenseDate: Date;
         attachments: string | null;
@@ -31,9 +31,9 @@ export declare class ExpensesController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
-        createdBy: number | null;
         category: import(".prisma/client").$Enums.ExpenseCategory;
         expenseDate: Date;
         attachments: string | null;
@@ -58,9 +58,9 @@ export declare class ExpensesController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
-        createdBy: number | null;
         category: import(".prisma/client").$Enums.ExpenseCategory;
         expenseDate: Date;
         attachments: string | null;
@@ -75,9 +75,9 @@ export declare class ExpensesController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
-        createdBy: number | null;
         category: import(".prisma/client").$Enums.ExpenseCategory;
         expenseDate: Date;
         attachments: string | null;
