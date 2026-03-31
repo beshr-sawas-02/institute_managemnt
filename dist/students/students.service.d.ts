@@ -171,8 +171,8 @@ export declare class StudentsService {
             studentId: number;
             maxScore: import("@prisma/client/runtime/library").Decimal;
             score: import("@prisma/client/runtime/library").Decimal | null;
-            feedback: string | null;
             percentage: import("@prisma/client/runtime/library").Decimal | null;
+            feedback: string | null;
         })[];
         payments: {
             id: number;
@@ -183,9 +183,9 @@ export declare class StudentsService {
             dueDate: Date;
             studentId: number;
             notes: string | null;
-            finalAmount: import("@prisma/client/runtime/library").Decimal | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
+            finalAmount: import("@prisma/client/runtime/library").Decimal | null;
             paymentDate: Date | null;
             receiptNumber: string | null;
         }[];

@@ -93,8 +93,8 @@ export declare class AssessmentsService {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
+        feedback: string | null;
     }>;
     findAll(paginationDto: PaginationDto): Promise<PaginatedResult<{
         student: {
@@ -139,8 +139,8 @@ export declare class AssessmentsService {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
+        feedback: string | null;
     }>>;
     findByStudent(studentId: number): Promise<({
         gradeSubject: {
@@ -172,8 +172,8 @@ export declare class AssessmentsService {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
+        feedback: string | null;
     })[]>;
     findOne(id: number): Promise<{
         student: {
@@ -244,8 +244,8 @@ export declare class AssessmentsService {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
+        feedback: string | null;
     }>;
     update(id: number, dto: UpdateAssessmentDto): Promise<{
         student: {
@@ -334,8 +334,8 @@ export declare class AssessmentsService {
         studentId: number;
         maxScore: import("@prisma/client/runtime/library").Decimal;
         score: import("@prisma/client/runtime/library").Decimal | null;
-        feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
+        feedback: string | null;
     }>;
     remove(id: number): Promise<{
         message: string;
