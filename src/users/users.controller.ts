@@ -24,12 +24,12 @@ import { Roles } from '../common/decorators';
 
 @ApiTags('المستخدمون')
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'إنشاء مستخدم جديد' })
   create(@Body() createUserDto: CreateUserDto) {
@@ -49,6 +49,7 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'جلب جميع المستخدمين' })
   findAll(@Query() paginationDto: PaginationDto) {
@@ -56,6 +57,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'جلب مستخدم بالمعرف' })
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -63,6 +65,7 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'تحديث مستخدم' })
   update(
@@ -73,6 +76,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف مستخدم' })
   remove(@Param('id', ParseIntPipe) id: number) {
