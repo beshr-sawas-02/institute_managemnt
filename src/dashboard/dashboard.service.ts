@@ -5,14 +5,15 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
-  async getStats() {
+  async getOrgStats(orgId: number) {
     const offset = 3 * 60 * 60 * 1000;
     const nowLocal = new Date(Date.now() + offset);
-    const todayStr = nowLocal.toISOString().slice(0, 10); 
-
+    const todayStr = nowLocal.toISOString().slice(0, 10);
     const today = new Date(`${todayStr}T00:00:00.000Z`);
     const tomorrow = new Date(`${todayStr}T00:00:00.000Z`);
     tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+
+    const where = { organizationId: orgId };
 
     const [
       totalStudents,
@@ -21,87 +22,113 @@ export class DashboardService {
       activeTeachers,
       totalParents,
       totalSections,
-      // حضور اليوم
       todayPresent,
       todayAbsent,
       todayLate,
       todayExcused,
-      // مالي
       totalPaidPayments,
       totalPendingPayments,
       totalPartialPayments,
       totalExpenses,
-      // تقييمات
       totalAssessments,
       avgPercentage,
-      // إشعارات
       unreadNotifications,
     ] = await Promise.all([
-      this.prisma.student.count(),
-      this.prisma.student.count({ where: { status: 'active' } }),
-      this.prisma.teacher.count(),
-      this.prisma.teacher.count({ where: { status: 'active' } }),
-      this.prisma.parent.count(),
-      this.prisma.section.count({ where: { status: 'active' } }),
-      // حضور اليوم — نستخدم range بدل exact match لتفادي مشاكل الـ timezone
-      this.prisma.attendance.count({ where: { date: { gte: today, lt: tomorrow }, status: 'present' } }),
-      this.prisma.attendance.count({ where: { date: { gte: today, lt: tomorrow }, status: 'absent' } }),
-      this.prisma.attendance.count({ where: { date: { gte: today, lt: tomorrow }, status: 'late' } }),
-      this.prisma.attendance.count({ where: { date: { gte: today, lt: tomorrow }, status: 'excused' } }),
-      // مالي
-      this.prisma.payment.aggregate({ where: { status: 'paid' }, _sum: { finalAmount: true } }),
-      this.prisma.payment.aggregate({ where: { status: 'pending' }, _sum: { finalAmount: true } }),
-      this.prisma.payment.aggregate({ where: { status: 'partial' }, _sum: { finalAmount: true } }),
-      this.prisma.expense.aggregate({ _sum: { amount: true } }),
-      // تقييمات
-      this.prisma.assessment.count(),
-      this.prisma.assessment.aggregate({ _avg: { percentage: true } }),
-      // إشعارات
-      this.prisma.notification.count({ where: { isRead: false } }),
+      this.prisma.student.count({ where }),
+      this.prisma.student.count({ where: { ...where, status: 'active' } }),
+      this.prisma.teacher.count({ where }),
+      this.prisma.teacher.count({ where: { ...where, status: 'active' } }),
+      this.prisma.parent.count({ where }),
+      this.prisma.section.count({ where: { ...where, status: 'active' } }),
+      this.prisma.attendance.count({
+        where: {
+          student: { organizationId: orgId },
+          date: { gte: today, lt: tomorrow },
+          status: 'present',
+        },
+      }),
+      this.prisma.attendance.count({
+        where: {
+          student: { organizationId: orgId },
+          date: { gte: today, lt: tomorrow },
+          status: 'absent',
+        },
+      }),
+      this.prisma.attendance.count({
+        where: {
+          student: { organizationId: orgId },
+          date: { gte: today, lt: tomorrow },
+          status: 'late',
+        },
+      }),
+      this.prisma.attendance.count({
+        where: {
+          student: { organizationId: orgId },
+          date: { gte: today, lt: tomorrow },
+          status: 'excused',
+        },
+      }),
+      this.prisma.payment.aggregate({
+        where: { ...where, status: 'paid' },
+        _sum: { finalAmount: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: { ...where, status: 'pending' },
+        _sum: { finalAmount: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: { ...where, status: 'partial' },
+        _sum: { finalAmount: true },
+      }),
+      this.prisma.expense.aggregate({ where, _sum: { amount: true } }),
+      this.prisma.assessment.count({
+        where: { student: { organizationId: orgId } },
+      }),
+      this.prisma.assessment.aggregate({
+        where: { student: { organizationId: orgId } },
+        _avg: { percentage: true },
+      }),
+      this.prisma.notification.count({ where: { ...where, isRead: false } }),
     ]);
 
     const totalPaid = Number(totalPaidPayments._sum.finalAmount) || 0;
     const totalExp = Number(totalExpenses._sum.amount) || 0;
 
-    // توزيع الطلاب على الصفوف
     const studentsByGrade = await this.prisma.grade.findMany({
+      where,
       include: {
         sections: {
-          include: {
-            _count: { select: { students: true } },
-          },
           where: { status: 'active' },
+          include: { _count: { select: { students: true } } },
         },
       },
     });
 
     const gradeDistribution = studentsByGrade.map((grade) => ({
       gradeName: grade.name,
-      studentCount: grade.sections.reduce((sum, s) => sum + s._count.students, 0),
+      studentCount: grade.sections.reduce(
+        (sum, s) => sum + s._count.students,
+        0,
+      ),
     }));
 
-    // آخر 5 مدفوعات
     const recentPayments = await this.prisma.payment.findMany({
+      where,
       take: 5,
       orderBy: { createdAt: 'desc' },
-      include: {
-        student: { select: { firstName: true, lastName: true } },
-      },
+      include: { student: { select: { firstName: true, lastName: true } } },
     });
 
-    // آخر 5 غيابات
     const recentAbsences = await this.prisma.attendance.findMany({
+      where: { student: { organizationId: orgId }, status: 'absent' },
       take: 5,
-      where: { status: 'absent' },
       orderBy: { date: 'desc' },
-      include: {
-        student: { select: { firstName: true, lastName: true } },
-      },
+      include: { student: { select: { firstName: true, lastName: true } } },
     });
 
-    // إحصائيات الدرجات
     const gradeStats = await this.prisma.assessment.groupBy({
       by: ['grade'],
+      where: { student: { organizationId: orgId } },
       _count: true,
     });
 
@@ -125,32 +152,99 @@ export class DashboardService {
         totalPartial: Number(totalPartialPayments._sum.finalAmount) || 0,
         totalExpenses: totalExp,
         netBalance: totalPaid - totalExp,
-        budgetUsedPercentage: totalPaid > 0 ? ((totalExp / totalPaid) * 100).toFixed(2) : '0',
+        budgetUsedPercentage:
+          totalPaid > 0 ? ((totalExp / totalPaid) * 100).toFixed(2) : '0',
       },
       assessments: {
         total: totalAssessments,
-        averagePercentage: Number(avgPercentage._avg.percentage)?.toFixed(2) || '0',
+        averagePercentage:
+          Number(avgPercentage._avg.percentage)?.toFixed(2) || '0',
         gradeDistribution: gradeStats,
       },
-      notifications: {
-        unread: unreadNotifications,
-      },
+      notifications: { unread: unreadNotifications },
       gradeDistribution,
       recentPayments,
       recentAbsences,
     };
   }
 
-  async getFinancialSummary(month?: number, year?: number) {
+  async getPlatformStats() {
+    const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const [
+      orgCount,
+      activeOrgCount,
+      subCount,
+      activeSubCount,
+      expiredSubCount,
+      totalRevenue,
+    ] = await Promise.all([
+      this.prisma.organization.count(),
+      this.prisma.organization.count({ where: { isActive: true } }),
+      this.prisma.subscription.count(),
+      this.prisma.subscription.count({ where: { status: 'active' } }),
+      this.prisma.subscription.count({ where: { status: 'expired' } }),
+      this.prisma.subscription.aggregate({
+        where: { status: 'active' },
+        _sum: { price: true },
+      }),
+    ]);
+
+    // Monthly breakdown — last 6 months
+    const monthlyBreakdown = await Promise.all(
+      Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const start = new Date(d.getFullYear(), d.getMonth(), 1);
+        const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+
+        return this.prisma.subscription
+          .aggregate({
+            where: { createdAt: { gte: start, lte: end } },
+            _sum: { price: true },
+            _count: true,
+          })
+          .then((result) => ({
+            month: d.toLocaleString('en', { month: 'short' }),
+            year: d.getFullYear(),
+            revenue: Number(result._sum.price) || 0,
+            newSubs: result._count,
+          }));
+      }),
+    );
+
+    const recentOrgs = await this.prisma.organization.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        subscriptions: { orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+    });
+
+    return {
+      overview: {
+        orgCount,
+        activeOrgCount,
+        subCount,
+        activeSubCount,
+        expiredSubCount,
+        totalRevenue: Number(totalRevenue._sum.price) || 0,
+      },
+      monthlyBreakdown: monthlyBreakdown.reverse(),
+      recentOrgs,
+    };
+  }
+
+  async getFinancialSummary(orgId: number, month?: number, year?: number) {
     const targetYear = year || new Date().getFullYear();
     const targetMonth = month || new Date().getMonth() + 1;
-
     const startDate = new Date(targetYear, targetMonth - 1, 1);
     const endDate = new Date(targetYear, targetMonth, 0);
 
     const [monthlyPayments, monthlyExpenses] = await Promise.all([
       this.prisma.payment.aggregate({
         where: {
+          organizationId: orgId,
           status: 'paid',
           paymentDate: { gte: startDate, lte: endDate },
         },
@@ -158,6 +252,7 @@ export class DashboardService {
       }),
       this.prisma.expense.aggregate({
         where: {
+          organizationId: orgId,
           expenseDate: { gte: startDate, lte: endDate },
         },
         _sum: { amount: true },
@@ -166,7 +261,10 @@ export class DashboardService {
 
     const expensesByCategory = await this.prisma.expense.groupBy({
       by: ['category'],
-      where: { expenseDate: { gte: startDate, lte: endDate } },
+      where: {
+        organizationId: orgId,
+        expenseDate: { gte: startDate, lte: endDate },
+      },
       _sum: { amount: true },
     });
 
@@ -182,8 +280,13 @@ export class DashboardService {
     };
   }
 
-  async getAttendanceSummary(dateFrom?: string, dateTo?: string) {
-    const where: any = {};
+  async getAttendanceSummary(
+    orgId: number,
+    dateFrom?: string,
+    dateTo?: string,
+  ) {
+    const studentWhere: any = { organizationId: orgId };
+    const where: any = { student: studentWhere };
     if (dateFrom) where.date = { gte: new Date(dateFrom) };
     if (dateTo) where.date = { ...where.date, lte: new Date(dateTo) };
 
@@ -195,7 +298,6 @@ export class DashboardService {
       this.prisma.attendance.count({ where: { ...where, status: 'excused' } }),
     ]);
 
-    // الطلاب الأكثر غياباً
     const topAbsentees = await this.prisma.attendance.groupBy({
       by: ['studentId'],
       where: { ...where, status: 'absent' },
@@ -206,7 +308,7 @@ export class DashboardService {
 
     const studentIds = topAbsentees.map((a) => a.studentId);
     const students = await this.prisma.student.findMany({
-      where: { id: { in: studentIds } },
+      where: { id: { in: studentIds }, organizationId: orgId },
       select: { id: true, firstName: true, lastName: true },
     });
 
@@ -221,7 +323,8 @@ export class DashboardService {
       absent,
       late,
       excused,
-      attendanceRate: total > 0 ? (((present + late) / total) * 100).toFixed(2) : '0',
+      attendanceRate:
+        total > 0 ? (((present + late) / total) * 100).toFixed(2) : '0',
       topAbsentees: absenteesWithNames,
     };
   }

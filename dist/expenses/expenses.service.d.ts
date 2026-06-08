@@ -4,8 +4,8 @@ import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 export declare class ExpensesService {
     private prisma;
     constructor(prisma: PrismaService);
-    getAvailableBalance(): Promise<number>;
-    create(userId: number, dto: CreateExpenseDto): Promise<{
+    getAvailableBalance(orgId: number): Promise<number>;
+    create(orgId: number, userId: number, dto: CreateExpenseDto): Promise<{
         creator: {
             email: string;
             id: number;
@@ -15,6 +15,7 @@ export declare class ExpensesService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -22,7 +23,7 @@ export declare class ExpensesService {
         expenseDate: Date;
         attachments: string | null;
     }>;
-    findAll(paginationDto: PaginationDto): Promise<PaginatedResult<{
+    findAll(orgId: number, paginationDto: PaginationDto): Promise<PaginatedResult<{
         creator: {
             email: string;
             id: number;
@@ -32,6 +33,7 @@ export declare class ExpensesService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -39,7 +41,7 @@ export declare class ExpensesService {
         expenseDate: Date;
         attachments: string | null;
     }>>;
-    getStats(dateFrom?: string, dateTo?: string): Promise<{
+    getStats(orgId: number, dateFrom?: string, dateTo?: string): Promise<{
         total: number | import("@prisma/client/runtime/library").Decimal;
         byCategory: (import(".prisma/client").Prisma.PickEnumerable<import(".prisma/client").Prisma.ExpenseGroupByOutputType, "category"[]> & {
             _count: number;
@@ -49,7 +51,7 @@ export declare class ExpensesService {
         })[];
         availableBalance: number;
     }>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         creator: {
             email: string;
             id: number;
@@ -59,6 +61,7 @@ export declare class ExpensesService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -66,7 +69,7 @@ export declare class ExpensesService {
         expenseDate: Date;
         attachments: string | null;
     }>;
-    update(id: number, dto: UpdateExpenseDto): Promise<{
+    update(orgId: number, id: number, dto: UpdateExpenseDto): Promise<{
         creator: {
             email: string;
             id: number;
@@ -76,6 +79,7 @@ export declare class ExpensesService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -83,7 +87,7 @@ export declare class ExpensesService {
         expenseDate: Date;
         attachments: string | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

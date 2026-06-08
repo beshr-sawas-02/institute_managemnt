@@ -12,7 +12,7 @@ export declare class AttendanceService {
     private prisma;
     private notificationsService;
     constructor(prisma: PrismaService, notificationsService: NotificationsService);
-    create(dto: CreateAttendanceDto): Promise<{
+    create(orgId: number, dto: CreateAttendanceDto): Promise<{
         student: {
             parent: ({
                 user: {
@@ -24,23 +24,25 @@ export declare class AttendanceService {
                 email: string | null;
                 phone: string;
                 id: number;
+                address: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
-                address: string | null;
                 relationship: import(".prisma/client").$Enums.Relationship;
             }) | null;
         } & {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -60,11 +62,11 @@ export declare class AttendanceService {
         parentNotified: boolean;
         notificationSentAt: Date | null;
     }>;
-    bulkCreate(dto: BulkAttendanceDto): Promise<{
+    bulkCreate(orgId: number, dto: BulkAttendanceDto): Promise<{
         message: string;
         data: any[];
     }>;
-    getSectionAttendanceSheet(sectionId: number, date: string): Promise<{
+    getSectionAttendanceSheet(orgId: number, sectionId: number, date: string): Promise<{
         sectionId: number;
         date: string;
         totalStudents: number;
@@ -88,7 +90,7 @@ export declare class AttendanceService {
             } | null;
         }[];
     }>;
-    smartBulkCreate(dto: SmartBulkAttendanceDto): Promise<{
+    smartBulkCreate(orgId: number, dto: SmartBulkAttendanceDto): Promise<{
         message: string;
         date: string;
         sectionId: number;
@@ -101,18 +103,19 @@ export declare class AttendanceService {
         };
         data: AttendanceResult[];
     }>;
-    findAll(filters?: {
+    findAll(orgId: number, filters?: {
         date?: string;
         sectionId?: number;
     }): Promise<({
         student: {
             section: ({
                 grade: {
-                    description: string | null;
                     name: string;
+                    description: string | null;
                     id: number;
                     createdAt: Date;
                     updatedAt: Date;
+                    organizationId: number;
                     level: import(".prisma/client").$Enums.GradeLevel;
                 };
             } & {
@@ -120,6 +123,7 @@ export declare class AttendanceService {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 status: import(".prisma/client").$Enums.SectionStatus;
                 academicYear: string;
                 gradeId: number;
@@ -141,7 +145,7 @@ export declare class AttendanceService {
         parentNotified: boolean;
         notificationSentAt: Date | null;
     })[]>;
-    findByStudent(studentId: number, dateFrom?: string, dateTo?: string): Promise<{
+    findByStudent(orgId: number, studentId: number, dateFrom?: string, dateTo?: string): Promise<{
         id: number;
         createdAt: Date;
         updatedAt: Date;
@@ -153,7 +157,7 @@ export declare class AttendanceService {
         parentNotified: boolean;
         notificationSentAt: Date | null;
     }[]>;
-    findBySection(sectionId: number, date: string): Promise<({
+    findBySection(orgId: number, sectionId: number, date: string): Promise<({
         student: {
             id: number;
             firstName: string;
@@ -171,7 +175,7 @@ export declare class AttendanceService {
         parentNotified: boolean;
         notificationSentAt: Date | null;
     })[]>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         student: {
             id: number;
             firstName: string;
@@ -189,7 +193,7 @@ export declare class AttendanceService {
         parentNotified: boolean;
         notificationSentAt: Date | null;
     }>;
-    update(id: number, dto: UpdateAttendanceDto): Promise<{
+    update(orgId: number, id: number, dto: UpdateAttendanceDto): Promise<{
         student: {
             id: number;
             firstName: string;
@@ -207,10 +211,10 @@ export declare class AttendanceService {
         parentNotified: boolean;
         notificationSentAt: Date | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
-    getStats(studentId: number, dateFrom?: string, dateTo?: string): Promise<{
+    getStats(orgId: number, studentId: number, dateFrom?: string, dateTo?: string): Promise<{
         studentId: number;
         total: number;
         present: number;

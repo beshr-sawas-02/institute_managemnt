@@ -25,26 +25,26 @@ let TuitionFeesController = class TuitionFeesController {
     constructor(service) {
         this.service = service;
     }
-    create(userId, dto) {
-        return this.service.create(userId, dto);
+    create(orgId, userId, dto) {
+        return this.service.create(orgId, userId, dto);
     }
-    findAll(academicYear) {
-        return this.service.findAll(academicYear);
+    findAll(orgId, academicYear) {
+        return this.service.findAll(orgId, academicYear);
     }
-    findByGrade(gradeId, academicYear) {
-        return this.service.findByGrade(gradeId, academicYear);
+    findByGrade(orgId, gradeId, academicYear) {
+        return this.service.findByGrade(orgId, gradeId, academicYear);
     }
     getStudentBalance(studentId, academicYear) {
         return this.service.getStudentBalance(studentId, academicYear);
     }
-    findOne(id) {
-        return this.service.findOne(id);
+    findOne(orgId, id) {
+        return this.service.findOne(orgId, id);
     }
-    update(id, dto) {
-        return this.service.update(id, dto);
+    update(orgId, id, dto) {
+        return this.service.update(orgId, id, dto);
     }
-    remove(id) {
-        return this.service.remove(id);
+    remove(orgId, id) {
+        return this.service.remove(orgId, id);
     }
 };
 exports.TuitionFeesController = TuitionFeesController;
@@ -52,41 +52,41 @@ __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'تحديد قسط سنوي لصف' }),
-    __param(0, (0, decorators_1.CurrentUser)('id')),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, decorators_1.CurrentUser)('id')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, tuition_fee_dto_1.CreateTuitionFeeDto]),
+    __metadata("design:paramtypes", [Number, Number, tuition_fee_dto_1.CreateTuitionFeeDto]),
     __metadata("design:returntype", void 0)
 ], TuitionFeesController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع أقساط الصفوف' }),
-    (0, swagger_1.ApiQuery)({ name: 'academicYear', required: false, example: '2024-2025' }),
-    __param(0, (0, common_1.Query)('academicYear')),
+    (0, swagger_1.ApiQuery)({ name: 'academicYear', required: false }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)('academicYear')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Number, String]),
     __metadata("design:returntype", void 0)
 ], TuitionFeesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('grade/:gradeId'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'جلب قسط صف معين لسنة دراسية' }),
-    (0, swagger_1.ApiQuery)({ name: 'academicYear', required: true, example: '2024-2025' }),
-    __param(0, (0, common_1.Param)('gradeId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('academicYear')),
+    (0, swagger_1.ApiQuery)({ name: 'academicYear', required: true }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('gradeId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Query)('academicYear')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, Number, String]),
     __metadata("design:returntype", void 0)
 ], TuitionFeesController.prototype, "findByGrade", null);
 __decorate([
     (0, common_1.Get)('student/:studentId/balance'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.parent),
-    (0, swagger_1.ApiOperation)({
-        summary: 'رصيد الطالب - القسط السنوي والمدفوع والمتبقي',
-        description: 'يعرض القسط السنوي للصف، إجمالي المبلغ المدفوع، والمبلغ المتبقي للطالب في سنة دراسية معينة',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'academicYear', required: true, example: '2024-2025' }),
+    (0, swagger_1.ApiOperation)({ summary: 'رصيد الطالب' }),
+    (0, swagger_1.ApiQuery)({ name: 'academicYear', required: true }),
     __param(0, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Query)('academicYear')),
     __metadata("design:type", Function),
@@ -97,28 +97,31 @@ __decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'جلب قسط بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], TuitionFeesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث قسط' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, tuition_fee_dto_1.UpdateTuitionFeeDto]),
+    __metadata("design:paramtypes", [Number, Number, tuition_fee_dto_1.UpdateTuitionFeeDto]),
     __metadata("design:returntype", void 0)
 ], TuitionFeesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف قسط' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], TuitionFeesController.prototype, "remove", null);
 exports.TuitionFeesController = TuitionFeesController = __decorate([

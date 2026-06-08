@@ -1,6 +1,3 @@
-// src/sections/sections.service.ts
-// خدمة إدارة الشعب
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSectionDto, UpdateSectionDto } from './dto/section.dto';
@@ -10,18 +7,19 @@ import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 export class SectionsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createSectionDto: CreateSectionDto) {
+  async create(orgId: number, createSectionDto: CreateSectionDto) {
     return this.prisma.section.create({
-      data: createSectionDto,
+      data: { ...createSectionDto, organizationId: orgId },
       include: { grade: true },
     });
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(orgId: number, paginationDto: PaginationDto) {
     const { page, limit, search } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const where = search ? { name: { contains: search } } : {};
+    const where: any = { organizationId: orgId };
+    if (search) where.name = { contains: search };
 
     const [data, total] = await Promise.all([
       this.prisma.section.findMany({
@@ -40,9 +38,9 @@ export class SectionsService {
     return new PaginatedResult(data, total, page, limit);
   }
 
-  async findOne(id: number) {
-    const section = await this.prisma.section.findUnique({
-      where: { id },
+  async findOne(orgId: number, id: number) {
+    const section = await this.prisma.section.findFirst({
+      where: { id, organizationId: orgId },
       include: {
         grade: true,
         students: { where: { status: 'active' } },
@@ -58,9 +56,9 @@ export class SectionsService {
     return section;
   }
 
-  async findByGrade(gradeId: number) {
+  async findByGrade(orgId: number, gradeId: number) {
     return this.prisma.section.findMany({
-      where: { gradeId, status: 'active' },
+      where: { gradeId, organizationId: orgId, status: 'active' },
       include: {
         grade: true,
         _count: { select: { students: true } },
@@ -68,8 +66,8 @@ export class SectionsService {
     });
   }
 
-  async update(id: number, updateSectionDto: UpdateSectionDto) {
-    await this.findOne(id);
+  async update(orgId: number, id: number, updateSectionDto: UpdateSectionDto) {
+    await this.findOne(orgId, id);
     return this.prisma.section.update({
       where: { id },
       data: updateSectionDto,
@@ -77,8 +75,8 @@ export class SectionsService {
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(orgId: number, id: number) {
+    await this.findOne(orgId, id);
     await this.prisma.section.delete({ where: { id } });
     return { message: 'تم حذف الشعبة بنجاح' };
   }

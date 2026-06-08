@@ -25,78 +25,93 @@ let SchedulesController = class SchedulesController {
     constructor(service) {
         this.service = service;
     }
-    create(dto) { return this.service.create(dto); }
-    findAll() { return this.service.findAll(); }
-    findBySection(id) {
-        return this.service.findBySection(id);
+    create(orgId, dto) {
+        return this.service.create(orgId, dto);
     }
-    findByTeacher(id) {
-        return this.service.findByTeacher(id);
+    findAll(orgId) {
+        return this.service.findAll(orgId);
     }
-    findOne(id) { return this.service.findOne(id); }
-    update(id, dto) {
-        return this.service.update(id, dto);
+    findBySection(orgId, sectionId) {
+        return this.service.findBySection(orgId, sectionId);
     }
-    remove(id) { return this.service.remove(id); }
+    findByTeacher(orgId, teacherId) {
+        return this.service.findByTeacher(orgId, teacherId);
+    }
+    findOne(orgId, id) {
+        return this.service.findOne(orgId, id);
+    }
+    update(orgId, id, dto) {
+        return this.service.update(orgId, id, dto);
+    }
+    remove(orgId, id) {
+        return this.service.remove(orgId, id);
+    }
 };
 exports.SchedulesController = SchedulesController;
 __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'إضافة حصة جديدة' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [schedule_dto_1.CreateScheduleDto]),
+    __metadata("design:paramtypes", [Number, schedule_dto_1.CreateScheduleDto]),
     __metadata("design:returntype", void 0)
 ], SchedulesController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع الحصص' }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], SchedulesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('section/:sectionId'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جدول شعبة' }),
-    __param(0, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], SchedulesController.prototype, "findBySection", null);
 __decorate([
     (0, common_1.Get)('teacher/:teacherId'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جدول معلم' }),
-    __param(0, (0, common_1.Param)('teacherId', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('teacherId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], SchedulesController.prototype, "findByTeacher", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب حصة بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], SchedulesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث حصة' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, schedule_dto_1.UpdateScheduleDto]),
+    __metadata("design:paramtypes", [Number, Number, schedule_dto_1.UpdateScheduleDto]),
     __metadata("design:returntype", void 0)
 ], SchedulesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف حصة' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], SchedulesController.prototype, "remove", null);
 exports.SchedulesController = SchedulesController = __decorate([

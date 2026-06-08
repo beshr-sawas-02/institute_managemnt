@@ -1,5 +1,3 @@
-// src/assessments/assessments.service.ts
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -18,7 +16,12 @@ export class AssessmentsService {
     private notificationsService: NotificationsService,
   ) {}
 
-  async create(dto: CreateAssessmentDto) {
+  async create(orgId: number, dto: CreateAssessmentDto) {
+    const student = await this.prisma.student.findFirst({
+      where: { id: dto.studentId, organizationId: orgId },
+    });
+    if (!student) throw new NotFoundException('الطالب غير موجود');
+
     let percentage: number | null = null;
     let grade: string | null = null;
 
@@ -77,7 +80,9 @@ export class AssessmentsService {
         relatedType: 'assessment',
         type:
           dto.score !== undefined && dto.score !== null && percentage !== null
-            ? (percentage >= 50 ? 'success' : 'warning')
+            ? percentage >= 50
+              ? 'success'
+              : 'warning'
             : 'info',
         channel: 'push',
         content,
@@ -87,14 +92,14 @@ export class AssessmentsService {
     return assessment;
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(orgId: number, paginationDto: PaginationDto) {
     const { page, limit, sectionId, gradeSubjectId } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = { student: { organizationId: orgId } };
 
     if (sectionId) {
-      where.student = { sectionId };
+      where.student = { organizationId: orgId, sectionId };
     }
 
     if (gradeSubjectId) {
@@ -118,7 +123,12 @@ export class AssessmentsService {
     return new PaginatedResult(data, total, page, limit);
   }
 
-  async findByStudent(studentId: number) {
+  async findByStudent(orgId: number, studentId: number) {
+    const student = await this.prisma.student.findFirst({
+      where: { id: studentId, organizationId: orgId },
+    });
+    if (!student) throw new NotFoundException('الطالب غير موجود');
+
     return this.prisma.assessment.findMany({
       where: { studentId },
       include: { gradeSubject: { include: { subject: true } } },
@@ -126,29 +136,25 @@ export class AssessmentsService {
     });
   }
 
-  async findOne(id: number) {
-    const assessment = await this.prisma.assessment.findUnique({
-      where: { id },
+  async findOne(orgId: number, id: number) {
+    const assessment = await this.prisma.assessment.findFirst({
+      where: { id, student: { organizationId: orgId } },
       include: {
         student: true,
-        gradeSubject: { include: { subject: true, grade: true, teacher: true } },
+        gradeSubject: {
+          include: { subject: true, grade: true, teacher: true },
+        },
       },
     });
-
-    if (!assessment) {
-      throw new NotFoundException('التقييم غير موجود');
-    }
-
+    if (!assessment) throw new NotFoundException('التقييم غير موجود');
     return assessment;
   }
 
-  async update(id: number, dto: UpdateAssessmentDto) {
-    const existing = await this.findOne(id);
+  async update(orgId: number, id: number, dto: UpdateAssessmentDto) {
+    const existing = await this.findOne(orgId, id);
     const data: any = { ...dto };
 
-    if (dto.assessmentDate) {
-      data.assessmentDate = new Date(dto.assessmentDate);
-    }
+    if (dto.assessmentDate) data.assessmentDate = new Date(dto.assessmentDate);
 
     let newPercentage: number | null = null;
     let newGrade: string | null = null;
@@ -211,8 +217,8 @@ export class AssessmentsService {
     return updated;
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(orgId: number, id: number) {
+    await this.findOne(orgId, id);
     await this.prisma.assessment.delete({ where: { id } });
     return { message: 'تم حذف التقييم بنجاح' };
   }

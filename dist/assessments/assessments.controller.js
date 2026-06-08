@@ -26,23 +26,23 @@ let AssessmentsController = class AssessmentsController {
     constructor(service) {
         this.service = service;
     }
-    create(dto) {
-        return this.service.create(dto);
+    create(orgId, dto) {
+        return this.service.create(orgId, dto);
     }
-    findAll(p) {
-        return this.service.findAll(p);
+    findAll(orgId, p) {
+        return this.service.findAll(orgId, p);
     }
-    findByStudent(id) {
-        return this.service.findByStudent(id);
+    findByStudent(orgId, studentId) {
+        return this.service.findByStudent(orgId, studentId);
     }
-    findOne(id) {
-        return this.service.findOne(id);
+    findOne(orgId, id) {
+        return this.service.findOne(orgId, id);
     }
-    update(id, dto) {
-        return this.service.update(id, dto);
+    update(orgId, id, dto) {
+        return this.service.update(orgId, id, dto);
     }
-    remove(id) {
-        return this.service.remove(id);
+    remove(orgId, id) {
+        return this.service.remove(orgId, id);
     }
 };
 exports.AssessmentsController = AssessmentsController;
@@ -50,52 +50,58 @@ __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.teacher, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'إضافة تقييم جديد' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [assessment_dto_1.CreateAssessmentDto]),
+    __metadata("design:paramtypes", [Number, assessment_dto_1.CreateAssessmentDto]),
     __metadata("design:returntype", void 0)
 ], AssessmentsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع التقييمات مع فلترة اختيارية' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], AssessmentsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('student/:studentId'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب تقييمات طالب' }),
-    __param(0, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], AssessmentsController.prototype, "findByStudent", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب تقييم بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], AssessmentsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.teacher, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث تقييم' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, assessment_dto_1.UpdateAssessmentDto]),
+    __metadata("design:paramtypes", [Number, Number, assessment_dto_1.UpdateAssessmentDto]),
     __metadata("design:returntype", void 0)
 ], AssessmentsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'حذف تقييم' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], AssessmentsController.prototype, "remove", null);
 exports.AssessmentsController = AssessmentsController = __decorate([

@@ -20,7 +20,8 @@ let NotificationsService = class NotificationsService {
         this.firebaseService = firebaseService;
     }
     async create(dto) {
-        const preferredLanguage = dto.preferredLanguage ?? (await this.getUserPreferredLanguage(dto.userId));
+        const preferredLanguage = dto.preferredLanguage ??
+            (await this.getUserPreferredLanguage(dto.userId));
         const localizedContent = this.buildLocalizedContent(dto);
         if (!localizedContent) {
             throw new common_1.BadRequestException('عنوان الإشعار ومحتواه مطلوبان');
@@ -28,8 +29,10 @@ let NotificationsService = class NotificationsService {
         const title = this.resolveLocalizedText(localizedContent.title, preferredLanguage);
         const message = this.resolveLocalizedText(localizedContent.message, preferredLanguage);
         const channel = dto.channel ?? 'in_app';
+        const orgId = await this.getUserOrgId(dto.userId);
         const notification = await this.prisma.notification.create({
             data: {
+                organizationId: orgId,
                 userId: dto.userId,
                 relatedId: dto.relatedId,
                 relatedType: dto.relatedType,
@@ -238,7 +241,7 @@ let NotificationsService = class NotificationsService {
                 take: 50,
             }),
         ]);
-        return notifications.map((notification) => this.localizeNotification(notification, preferredLanguage));
+        return notifications.map((n) => this.localizeNotification(n, preferredLanguage));
     }
     async getUnreadCount(userId) {
         const count = await this.prisma.notification.count({
@@ -250,9 +253,8 @@ let NotificationsService = class NotificationsService {
         const notification = await this.prisma.notification.findUnique({
             where: { id },
         });
-        if (!notification) {
+        if (!notification)
             throw new common_1.NotFoundException('الإشعار غير موجود');
-        }
         const updated = await this.prisma.notification.update({
             where: { id },
             data: { isRead: true, readAt: new Date() },
@@ -271,9 +273,8 @@ let NotificationsService = class NotificationsService {
         const notification = await this.prisma.notification.findUnique({
             where: { id },
         });
-        if (!notification) {
+        if (!notification)
             throw new common_1.NotFoundException('الإشعار غير موجود');
-        }
         await this.prisma.notification.delete({ where: { id } });
         return { message: 'تم حذف الإشعار بنجاح' };
     }
@@ -307,40 +308,42 @@ let NotificationsService = class NotificationsService {
         });
         return user?.preferredLanguage ?? 'ar';
     }
+    async getUserOrgId(userId) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { organizationId: true },
+        });
+        if (!user)
+            throw new common_1.NotFoundException('المستخدم غير موجود');
+        return user.organizationId;
+    }
     buildLocalizedContent(dto) {
         const title = this.normalizeLocalizedText(dto.title, dto.titleAr, dto.titleEn);
         const message = this.normalizeLocalizedText(dto.message, dto.messageAr, dto.messageEn);
-        if (!title || !message) {
+        if (!title || !message)
             return null;
-        }
         return { title, message };
     }
     normalizeLocalizedText(fallback, arabic, english) {
         const defaultValue = fallback?.trim();
         const ar = arabic?.trim() || defaultValue || english?.trim();
         const en = english?.trim() || defaultValue || arabic?.trim();
-        if (!ar || !en) {
+        if (!ar || !en)
             return null;
-        }
         return { ar, en };
     }
     resolveLocalizedText(text, language) {
         return language === 'en' ? text.en : text.ar;
     }
     attachLocalizedContent(data, localizedContent) {
-        return {
-            ...(data ?? {}),
-            localizedContent,
-        };
+        return { ...(data ?? {}), localizedContent };
     }
     extractLocalizedContent(data) {
-        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        if (!data || typeof data !== 'object' || Array.isArray(data))
             return null;
-        }
         const localizedContent = data.localizedContent;
-        if (!localizedContent || typeof localizedContent !== 'object') {
+        if (!localizedContent || typeof localizedContent !== 'object')
             return null;
-        }
         if (!localizedContent.title ||
             !localizedContent.message ||
             typeof localizedContent.title.ar !== 'string' ||
@@ -353,9 +356,8 @@ let NotificationsService = class NotificationsService {
     }
     localizeNotification(notification, preferredLanguage) {
         const localizedContent = this.extractLocalizedContent(notification.data);
-        if (!localizedContent) {
+        if (!localizedContent)
             return notification;
-        }
         return {
             ...notification,
             title: this.resolveLocalizedText(localizedContent.title, preferredLanguage),

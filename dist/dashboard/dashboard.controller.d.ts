@@ -2,7 +2,7 @@ import { DashboardService } from './dashboard.service';
 export declare class DashboardController {
     private readonly dashboardService;
     constructor(dashboardService: DashboardService);
-    getStats(): Promise<{
+    getOrgStats(orgId: number): Promise<{
         overview: {
             students: {
                 total: number;
@@ -53,6 +53,7 @@ export declare class DashboardController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             status: import(".prisma/client").$Enums.PaymentStatus;
             academicYear: string;
             dueDate: Date;
@@ -82,7 +83,47 @@ export declare class DashboardController {
             notificationSentAt: Date | null;
         })[];
     }>;
-    getFinancialSummary(month?: number, year?: number): Promise<{
+    getPlatformStats(): Promise<{
+        overview: {
+            orgCount: number;
+            activeOrgCount: number;
+            subCount: number;
+            activeSubCount: number;
+            expiredSubCount: number;
+            totalRevenue: number;
+        };
+        monthlyBreakdown: {
+            month: string;
+            year: number;
+            revenue: number;
+            newSubs: number;
+        }[];
+        recentOrgs: ({
+            subscriptions: {
+                id: number;
+                createdAt: Date;
+                organizationId: number;
+                status: string;
+                plan: string;
+                price: import("@prisma/client/runtime/library").Decimal;
+                startDate: Date;
+                endDate: Date;
+            }[];
+        } & {
+            name: string;
+            type: string;
+            email: string;
+            slug: string;
+            phone: string | null;
+            id: number;
+            address: string | null;
+            logo: string | null;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        })[];
+    }>;
+    getFinancialSummary(orgId: number, month?: number, year?: number): Promise<{
         month: number;
         year: number;
         income: number;
@@ -94,7 +135,7 @@ export declare class DashboardController {
             };
         })[];
     }>;
-    getAttendanceSummary(dateFrom?: string, dateTo?: string): Promise<{
+    getAttendanceSummary(orgId: number, dateFrom?: string, dateTo?: string): Promise<{
         total: number;
         present: number;
         absent: number;

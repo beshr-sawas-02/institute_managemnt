@@ -26,20 +26,20 @@ let ParentsController = class ParentsController {
     constructor(parentsService) {
         this.parentsService = parentsService;
     }
-    create(createParentDto) {
-        return this.parentsService.create(createParentDto);
+    create(orgId, createParentDto) {
+        return this.parentsService.create(orgId, createParentDto);
     }
-    findAll(paginationDto) {
-        return this.parentsService.findAll(paginationDto);
+    findAll(orgId, paginationDto) {
+        return this.parentsService.findAll(orgId, paginationDto);
     }
-    findOne(id) {
-        return this.parentsService.findOne(id);
+    findOne(orgId, id) {
+        return this.parentsService.findOne(orgId, id);
     }
-    update(id, updateParentDto) {
-        return this.parentsService.update(id, updateParentDto);
+    update(orgId, id, updateParentDto) {
+        return this.parentsService.update(orgId, id, updateParentDto);
     }
-    remove(id) {
-        return this.parentsService.remove(id);
+    remove(orgId, id) {
+        return this.parentsService.remove(orgId, id);
     }
 };
 exports.ParentsController = ParentsController;
@@ -47,46 +47,51 @@ __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'إضافة ولي أمر جديد' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [parent_dto_1.CreateParentDto]),
+    __metadata("design:paramtypes", [Number, parent_dto_1.CreateParentDto]),
     __metadata("design:returntype", void 0)
 ], ParentsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع أولياء الأمور' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], ParentsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.parent),
     (0, swagger_1.ApiOperation)({ summary: 'جلب ولي أمر بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], ParentsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث بيانات ولي الأمر' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, parent_dto_1.UpdateParentDto]),
+    __metadata("design:paramtypes", [Number, Number, parent_dto_1.UpdateParentDto]),
     __metadata("design:returntype", void 0)
 ], ParentsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف ولي أمر' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], ParentsController.prototype, "remove", null);
 exports.ParentsController = ParentsController = __decorate([

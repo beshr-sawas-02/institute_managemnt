@@ -27,6 +27,7 @@ export declare class NotificationsService {
         message: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -43,6 +44,7 @@ export declare class NotificationsService {
         message: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -61,6 +63,7 @@ export declare class NotificationsService {
         message: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -77,6 +80,7 @@ export declare class NotificationsService {
         message: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -93,6 +97,7 @@ export declare class NotificationsService {
         message: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -109,6 +114,7 @@ export declare class NotificationsService {
         message: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -125,6 +131,7 @@ export declare class NotificationsService {
         message: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -141,6 +148,7 @@ export declare class NotificationsService {
         message: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -160,6 +168,7 @@ export declare class NotificationsService {
         message: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -181,6 +190,7 @@ export declare class NotificationsService {
         count: number;
     }>;
     private getUserPreferredLanguage;
+    private getUserOrgId;
     private buildLocalizedContent;
     private normalizeLocalizedText;
     private resolveLocalizedText;

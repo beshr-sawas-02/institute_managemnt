@@ -17,25 +17,24 @@ let ReceptionService = class ReceptionService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(createReceptionDto) {
+    async create(orgId, createReceptionDto) {
         return this.prisma.reception.create({
-            data: createReceptionDto,
+            data: { ...createReceptionDto, organizationId: orgId },
             include: { user: { select: { id: true, email: true, role: true } } },
         });
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search
-            ? {
-                OR: [
-                    { firstName: { contains: search } },
-                    { lastName: { contains: search } },
-                    { phone: { contains: search } },
-                    { email: { contains: search } },
-                ],
-            }
-            : {};
+        const where = { organizationId: orgId };
+        if (search) {
+            where.OR = [
+                { firstName: { contains: search } },
+                { lastName: { contains: search } },
+                { phone: { contains: search } },
+                { email: { contains: search } },
+            ];
+        }
         const [data, total] = await Promise.all([
             this.prisma.reception.findMany({
                 where,
@@ -48,26 +47,25 @@ let ReceptionService = class ReceptionService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findOne(id) {
-        const reception = await this.prisma.reception.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const reception = await this.prisma.reception.findFirst({
+            where: { id, organizationId: orgId },
             include: { user: { select: { id: true, email: true, role: true } } },
         });
-        if (!reception) {
+        if (!reception)
             throw new common_1.NotFoundException('Reception not found');
-        }
         return reception;
     }
-    async update(id, updateReceptionDto) {
-        await this.findOne(id);
+    async update(orgId, id, updateReceptionDto) {
+        await this.findOne(orgId, id);
         return this.prisma.reception.update({
             where: { id },
             data: updateReceptionDto,
             include: { user: { select: { id: true, email: true, role: true } } },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.reception.delete({ where: { id } });
         return { message: 'Reception deleted successfully' };
     }

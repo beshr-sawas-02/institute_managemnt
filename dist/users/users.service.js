@@ -19,9 +19,9 @@ let UsersService = class UsersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(createUserDto) {
-        const existing = await this.prisma.user.findUnique({
-            where: { email: createUserDto.email },
+    async create(orgId, createUserDto) {
+        const existing = await this.prisma.user.findFirst({
+            where: { email: createUserDto.email, organizationId: orgId },
         });
         if (existing) {
             throw new common_1.ConflictException('البريد الإلكتروني مستخدم بالفعل');
@@ -30,6 +30,7 @@ let UsersService = class UsersService {
         return this.prisma.user.create({
             data: {
                 ...createUserDto,
+                organizationId: orgId,
                 preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
                 password: hashedPassword,
             },
@@ -44,12 +45,12 @@ let UsersService = class UsersService {
             },
         });
     }
-    async createParentUser(createUserDto) {
+    async createParentUser(orgId, createUserDto) {
         if (createUserDto.role !== client_1.UserRole.parent) {
             throw new common_1.BadRequestException('Role must be parent');
         }
         const parent = await this.prisma.parent.findFirst({
-            where: { email: createUserDto.email },
+            where: { email: createUserDto.email, organizationId: orgId },
             select: { id: true, userId: true },
         });
         if (!parent) {
@@ -58,8 +59,8 @@ let UsersService = class UsersService {
         if (parent.userId) {
             throw new common_1.ConflictException('This parent already has a user account');
         }
-        const existingUser = await this.prisma.user.findUnique({
-            where: { email: createUserDto.email },
+        const existingUser = await this.prisma.user.findFirst({
+            where: { email: createUserDto.email, organizationId: orgId },
         });
         if (existingUser) {
             throw new common_1.ConflictException('Email already exists');
@@ -70,6 +71,7 @@ let UsersService = class UsersService {
                 data: {
                     ...createUserDto,
                     role: client_1.UserRole.parent,
+                    organizationId: orgId,
                     preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
                     password: hashedPassword,
                 },
@@ -90,9 +92,9 @@ let UsersService = class UsersService {
             return user;
         });
     }
-    async createReceptionUser(createUserDto) {
+    async createReceptionUser(orgId, createUserDto) {
         const reception = await this.prisma.reception.findFirst({
-            where: { email: createUserDto.email },
+            where: { email: createUserDto.email, organizationId: orgId },
             select: { id: true, userId: true },
         });
         if (!reception) {
@@ -101,8 +103,8 @@ let UsersService = class UsersService {
         if (reception.userId) {
             throw new common_1.ConflictException('This reception already has a user account');
         }
-        const existingUser = await this.prisma.user.findUnique({
-            where: { email: createUserDto.email },
+        const existingUser = await this.prisma.user.findFirst({
+            where: { email: createUserDto.email, organizationId: orgId },
         });
         if (existingUser) {
             throw new common_1.ConflictException('Email already exists');
@@ -113,6 +115,7 @@ let UsersService = class UsersService {
                 data: {
                     ...createUserDto,
                     role: client_1.UserRole.reception,
+                    organizationId: orgId,
                     preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
                     password: hashedPassword,
                 },
@@ -133,17 +136,16 @@ let UsersService = class UsersService {
             return user;
         });
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search
-            ? {
-                OR: [
-                    { email: { contains: search } },
-                    { phone: { contains: search } },
-                ],
-            }
-            : {};
+        const where = { organizationId: orgId };
+        if (search) {
+            where.OR = [
+                { email: { contains: search } },
+                { phone: { contains: search } },
+            ];
+        }
         const [data, total] = await Promise.all([
             this.prisma.user.findMany({
                 where,
@@ -165,9 +167,9 @@ let UsersService = class UsersService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findOne(id) {
-        const user = await this.prisma.user.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const user = await this.prisma.user.findFirst({
+            where: { id, organizationId: orgId },
             select: {
                 id: true,
                 email: true,
@@ -183,13 +185,12 @@ let UsersService = class UsersService {
                 reception: true,
             },
         });
-        if (!user) {
+        if (!user)
             throw new common_1.NotFoundException('المستخدم غير موجود');
-        }
         return user;
     }
-    async update(id, updateUserDto) {
-        await this.findOne(id);
+    async update(orgId, id, updateUserDto) {
+        await this.findOne(orgId, id);
         const data = { ...updateUserDto };
         if (updateUserDto.password) {
             data.password = await bcrypt.hash(updateUserDto.password, 12);
@@ -208,8 +209,8 @@ let UsersService = class UsersService {
             },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.user.delete({ where: { id } });
         return { message: 'تم حذف المستخدم بنجاح' };
     }

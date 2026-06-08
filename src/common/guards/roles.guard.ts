@@ -1,6 +1,3 @@
-// src/common/guards/roles.guard.ts
-// حارس الأدوار - للتحقق من صلاحيات المستخدم
-
 import {
   Injectable,
   CanActivate,
@@ -8,36 +5,61 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '@prisma/client';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY, PLATFORM_ROLES_KEY } from '../decorators';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    // إذا لم يتم تحديد أدوار، يُسمح للجميع
-    if (!requiredRoles) {
+    const requiredPlatformRoles = this.reflector.getAllAndOverride<string[]>(
+      PLATFORM_ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (!requiredRoles?.length && !requiredPlatformRoles?.length) {
       return true;
     }
 
     const { user } = context.switchToHttp().getRequest();
 
     if (!user) {
-      throw new ForbiddenException('غير مصرح لك بالوصول');
+      throw new ForbiddenException('غير مصرح بالوصول');
     }
 
-    const hasRole = requiredRoles.some((role) => user.role === role);
+    // Platform-only routes — must be source: platform
+    if (requiredPlatformRoles?.length) {
+      if (user.source !== 'platform') {
+        throw new ForbiddenException(
+          'ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد',
+        );
+      }
+      if (!requiredPlatformRoles.includes(user.role)) {
+        throw new ForbiddenException(
+          'ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد',
+        );
+      }
+      return true;
+    }
 
-    if (!hasRole) {
-      throw new ForbiddenException(
-        'ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد',
-      );
+    // Org routes — must be source: org
+    if (requiredRoles?.length) {
+      if (user.source !== 'org') {
+        throw new ForbiddenException(
+          'ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد',
+        );
+      }
+      if (!requiredRoles.includes(user.role)) {
+        throw new ForbiddenException(
+          'ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد',
+        );
+      }
+      return true;
     }
 
     return true;

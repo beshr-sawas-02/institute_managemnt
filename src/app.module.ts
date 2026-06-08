@@ -1,7 +1,18 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './prisma/prisma.module';
+import { PrismaService } from './prisma/prisma.service';
 import { AuthModule } from './auth/auth.module';
+import { PlatformAuthModule } from './platform-auth/platform-auth.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UsersModule } from './users/users.module';
 import { ParentsModule } from './parents/parents.module';
 import { TeachersModule } from './teachers/teachers.module';
@@ -20,18 +31,24 @@ import { ReportsModule } from './reports/reports.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { TuitionFeesModule } from './tuition-fees/tuition-fees.module';
 import { ReceptionModule } from './reception/reception.module';
+import { SubscriptionMiddleware } from './common/middleware/subscription.middleware';
 
 @Module({
   imports: [
-    // تحميل متغيرات البيئة
-    ConfigModule.forRoot({
-      isGlobal: true,
+    ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+      }),
+      inject: [ConfigService],
     }),
-    // وحدة قاعدة البيانات
     PrismaModule,
-    // وحدة التوثيق
     AuthModule,
-    // وحدات النظام
+    PlatformAuthModule,
+    OrganizationsModule,
+    SubscriptionsModule,
     UsersModule,
     ParentsModule,
     TeachersModule,
@@ -52,4 +69,10 @@ import { ReceptionModule } from './reception/reception.module';
     ReceptionModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(SubscriptionMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

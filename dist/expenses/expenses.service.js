@@ -17,13 +17,14 @@ let ExpensesService = class ExpensesService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getAvailableBalance() {
+    async getAvailableBalance(orgId) {
         const [totalPaid, totalExpenses] = await Promise.all([
             this.prisma.payment.aggregate({
-                where: { status: 'paid' },
+                where: { status: 'paid', organizationId: orgId },
                 _sum: { finalAmount: true },
             }),
             this.prisma.expense.aggregate({
+                where: { organizationId: orgId },
                 _sum: { amount: true },
             }),
         ]);
@@ -31,27 +32,32 @@ let ExpensesService = class ExpensesService {
         const expenses = Number(totalExpenses._sum.amount) || 0;
         return paid - expenses;
     }
-    async create(userId, dto) {
-        const availableBalance = await this.getAvailableBalance();
+    async create(orgId, userId, dto) {
+        const availableBalance = await this.getAvailableBalance(orgId);
         if (dto.amount > availableBalance) {
-            throw new common_1.BadRequestException(`لا يمكن إضافة هذا المصروف. الرصيد المتاح: ${availableBalance.toFixed(2)} ليرة سوري، والمبلغ المطلوب: ${dto.amount} ليرة سوري`);
+            throw new common_1.BadRequestException(`لا يمكن إضافة هذا المصروف. الرصيد المتاح: ${availableBalance.toFixed(2)}، والمبلغ المطلوب: ${dto.amount}`);
         }
         return this.prisma.expense.create({
             data: {
                 ...dto,
+                organizationId: orgId,
                 createdBy: userId,
                 expenseDate: new Date(dto.expenseDate),
             },
             include: { creator: { select: { id: true, email: true } } },
         });
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search ? { description: { contains: search } } : {};
+        const where = { organizationId: orgId };
+        if (search)
+            where.description = { contains: search };
         const [data, total] = await Promise.all([
             this.prisma.expense.findMany({
-                where, skip, take: limit,
+                where,
+                skip,
+                take: limit,
                 include: { creator: { select: { id: true, email: true } } },
                 orderBy: { expenseDate: 'desc' },
             }),
@@ -59,8 +65,8 @@ let ExpensesService = class ExpensesService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async getStats(dateFrom, dateTo) {
-        const where = {};
+    async getStats(orgId, dateFrom, dateTo) {
+        const where = { organizationId: orgId };
         if (dateFrom || dateTo) {
             where.expenseDate = {};
             if (dateFrom)
@@ -78,41 +84,42 @@ let ExpensesService = class ExpensesService {
             where,
             _sum: { amount: true },
         });
-        const availableBalance = await this.getAvailableBalance();
+        const availableBalance = await this.getAvailableBalance(orgId);
         return {
             total: total._sum.amount || 0,
             byCategory,
             availableBalance,
         };
     }
-    async findOne(id) {
-        const expense = await this.prisma.expense.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const expense = await this.prisma.expense.findFirst({
+            where: { id, organizationId: orgId },
             include: { creator: { select: { id: true, email: true } } },
         });
         if (!expense)
             throw new common_1.NotFoundException('المصروف غير موجود');
         return expense;
     }
-    async update(id, dto) {
-        const existing = await this.findOne(id);
+    async update(orgId, id, dto) {
+        const existing = await this.findOne(orgId, id);
         if (dto.amount !== undefined && dto.amount !== Number(existing.amount)) {
-            const availableBalance = await this.getAvailableBalance();
+            const availableBalance = await this.getAvailableBalance(orgId);
             const diff = dto.amount - Number(existing.amount);
             if (diff > availableBalance) {
-                throw new common_1.BadRequestException(`لا يمكن تحديث هذا المصروف. الرصيد المتاح: ${availableBalance.toFixed(2)} ليرة سوري`);
+                throw new common_1.BadRequestException(`لا يمكن تحديث هذا المصروف. الرصيد المتاح: ${availableBalance.toFixed(2)}`);
             }
         }
         const data = { ...dto };
         if (dto.expenseDate)
             data.expenseDate = new Date(dto.expenseDate);
         return this.prisma.expense.update({
-            where: { id }, data,
+            where: { id },
+            data,
             include: { creator: { select: { id: true, email: true } } },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.expense.delete({ where: { id } });
         return { message: 'تم حذف المصروف بنجاح' };
     }

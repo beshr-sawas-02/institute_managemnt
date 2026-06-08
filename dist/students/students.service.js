@@ -19,11 +19,10 @@ let StudentsService = class StudentsService {
         this.prisma = prisma;
         this.notificationsService = notificationsService;
     }
-    async create(createStudentDto) {
-        const data = { ...createStudentDto };
-        if (data.dateOfBirth) {
+    async create(orgId, createStudentDto) {
+        const data = { ...createStudentDto, organizationId: orgId };
+        if (data.dateOfBirth)
             data.dateOfBirth = new Date(data.dateOfBirth);
-        }
         const student = await this.prisma.student.create({
             data,
             include: {
@@ -36,22 +35,25 @@ let StudentsService = class StudentsService {
         }
         return student;
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search
-            ? {
-                OR: [
-                    { firstName: { contains: search } },
-                    { lastName: { contains: search } },
-                ],
-            }
-            : {};
+        const where = { organizationId: orgId };
+        if (search) {
+            where.OR = [
+                { firstName: { contains: search } },
+                { lastName: { contains: search } },
+            ];
+        }
         const [data, total] = await Promise.all([
             this.prisma.student.findMany({
-                where, skip, take: limit,
+                where,
+                skip,
+                take: limit,
                 include: {
-                    parent: { select: { id: true, firstName: true, lastName: true, phone: true } },
+                    parent: {
+                        select: { id: true, firstName: true, lastName: true, phone: true },
+                    },
                     section: { include: { grade: true } },
                     user: { select: { id: true, email: true } },
                 },
@@ -61,9 +63,9 @@ let StudentsService = class StudentsService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findOne(id) {
-        const student = await this.prisma.student.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const student = await this.prisma.student.findFirst({
+            where: { id, organizationId: orgId },
             include: {
                 parent: true,
                 section: { include: { grade: true } },
@@ -81,27 +83,28 @@ let StudentsService = class StudentsService {
             throw new common_1.NotFoundException('الطالب غير موجود');
         return student;
     }
-    async findBySection(sectionId) {
+    async findBySection(orgId, sectionId) {
         return this.prisma.student.findMany({
-            where: { sectionId, status: 'active' },
+            where: { sectionId, organizationId: orgId, status: 'active' },
             include: {
-                parent: { select: { id: true, firstName: true, lastName: true, phone: true } },
+                parent: {
+                    select: { id: true, firstName: true, lastName: true, phone: true },
+                },
             },
             orderBy: { firstName: 'asc' },
         });
     }
-    async findByParent(parentId) {
+    async findByParent(orgId, parentId) {
         return this.prisma.student.findMany({
-            where: { parentId },
+            where: { parentId, organizationId: orgId },
             include: { section: { include: { grade: true } } },
         });
     }
-    async update(id, updateStudentDto) {
-        await this.findOne(id);
+    async update(orgId, id, updateStudentDto) {
+        await this.findOne(orgId, id);
         const data = { ...updateStudentDto };
-        if (data.dateOfBirth) {
+        if (data.dateOfBirth)
             data.dateOfBirth = new Date(data.dateOfBirth);
-        }
         return this.prisma.student.update({
             where: { id },
             data,
@@ -111,8 +114,8 @@ let StudentsService = class StudentsService {
             },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.student.delete({ where: { id } });
         return { message: 'تم حذف الطالب بنجاح' };
     }

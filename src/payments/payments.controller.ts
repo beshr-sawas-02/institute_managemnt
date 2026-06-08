@@ -1,5 +1,3 @@
-// src/payments/payments.controller.ts
-
 import {
   Controller,
   Get,
@@ -12,14 +10,19 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, UpdatePaymentDto } from './dto/payment.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 
 @ApiTags('المدفوعات')
 @Controller('payments')
@@ -38,30 +41,30 @@ export class PaymentsController {
   @Get()
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'جلب جميع المدفوعات' })
-  findAll(@Query() p: PaginationDto) {
-    return this.service.findAll(p);
+  findAll(@CurrentUser('orgId') orgId: number, @Query() p: PaginationDto) {
+    return this.service.findAll(orgId, p);
   }
 
   @Get('stats')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'إحصائيات المدفوعات' })
-  getStats(@Query('academicYear') academicYear?: string) {
-    return this.service.getStats(academicYear);
+  getStats(
+    @CurrentUser('orgId') orgId: number,
+    @Query('academicYear') academicYear?: string,
+  ) {
+    return this.service.getStats(orgId, academicYear);
   }
 
   @Get('student/:studentId')
   @Roles(UserRole.admin, UserRole.reception, UserRole.parent)
-  @ApiOperation({
-    summary: 'جلب مدفوعات طالب مع رصيده',
-    description:
-      'إذا أُرسلت academicYear تظهر معلومات الرصيد: القسط السنوي، المدفوع، المتبقي',
-  })
-  @ApiQuery({ name: 'academicYear', required: false, example: '2024-2025' })
+  @ApiOperation({ summary: 'جلب مدفوعات طالب مع رصيده' })
+  @ApiQuery({ name: 'academicYear', required: false })
   findByStudent(
+    @CurrentUser('orgId') orgId: number,
     @Param('studentId', ParseIntPipe) id: number,
     @Query('academicYear') academicYear?: string,
   ) {
-    return this.service.findByStudent(id, academicYear);
+    return this.service.findByStudent(orgId, id, academicYear);
   }
 
   @Get(':id')
@@ -73,10 +76,7 @@ export class PaymentsController {
   @Patch(':id')
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'تحديث دفعة' })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdatePaymentDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePaymentDto) {
     return this.service.update(id, dto);
   }
 

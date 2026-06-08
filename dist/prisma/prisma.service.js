@@ -19,7 +19,9 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
         });
     }
     async onModuleInit() {
+        console.log(process.env.DATABASE_URL);
         await this.$connect();
+        console.log('✅ Connected');
         console.log('✅ تم الاتصال بقاعدة البيانات بنجاح');
     }
     async onModuleDestroy() {

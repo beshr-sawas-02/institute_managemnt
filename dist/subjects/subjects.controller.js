@@ -26,57 +26,70 @@ let SubjectsController = class SubjectsController {
     constructor(subjectsService) {
         this.subjectsService = subjectsService;
     }
-    create(dto) { return this.subjectsService.create(dto); }
-    findAll(p) { return this.subjectsService.findAll(p); }
-    findOne(id) { return this.subjectsService.findOne(id); }
-    update(id, dto) {
-        return this.subjectsService.update(id, dto);
+    create(orgId, dto) {
+        return this.subjectsService.create(orgId, dto);
     }
-    remove(id) { return this.subjectsService.remove(id); }
+    findAll(orgId, p) {
+        return this.subjectsService.findAll(orgId, p);
+    }
+    findOne(orgId, id) {
+        return this.subjectsService.findOne(orgId, id);
+    }
+    update(orgId, id, dto) {
+        return this.subjectsService.update(orgId, id, dto);
+    }
+    remove(orgId, id) {
+        return this.subjectsService.remove(orgId, id);
+    }
 };
 exports.SubjectsController = SubjectsController;
 __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'إضافة مادة جديدة' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [subject_dto_1.CreateSubjectDto]),
+    __metadata("design:paramtypes", [Number, subject_dto_1.CreateSubjectDto]),
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع المواد' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب مادة بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث مادة' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, subject_dto_1.UpdateSubjectDto]),
+    __metadata("design:paramtypes", [Number, Number, subject_dto_1.UpdateSubjectDto]),
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف مادة' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], SubjectsController.prototype, "remove", null);
 exports.SubjectsController = SubjectsController = __decorate([

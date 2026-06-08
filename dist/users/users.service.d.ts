@@ -4,7 +4,7 @@ import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(createUserDto: CreateUserDto): Promise<{
+    create(orgId: number, createUserDto: CreateUserDto): Promise<{
         email: string;
         preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
@@ -13,7 +13,7 @@ export declare class UsersService {
         isActive: boolean;
         createdAt: Date;
     }>;
-    createParentUser(createUserDto: CreateUserDto): Promise<{
+    createParentUser(orgId: number, createUserDto: CreateUserDto): Promise<{
         email: string;
         preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
@@ -22,7 +22,7 @@ export declare class UsersService {
         isActive: boolean;
         createdAt: Date;
     }>;
-    createReceptionUser(createUserDto: CreateUserDto): Promise<{
+    createReceptionUser(orgId: number, createUserDto: CreateUserDto): Promise<{
         email: string;
         preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
@@ -31,23 +31,24 @@ export declare class UsersService {
         isActive: boolean;
         createdAt: Date;
     }>;
-    findAll(paginationDto: PaginationDto): Promise<PaginatedResult<{
+    findAll(orgId: number, paginationDto: PaginationDto): Promise<PaginatedResult<{
         email: string;
         preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
         isActive: boolean;
+        createdAt: Date;
         lastLogin: Date | null;
-        createdAt: Date;
     }>>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         reception: {
             email: string;
             phone: string;
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -56,18 +57,20 @@ export declare class UsersService {
             email: string | null;
             phone: string;
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
-            address: string | null;
             relationship: import(".prisma/client").$Enums.Relationship;
         } | null;
         teacher: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -81,13 +84,14 @@ export declare class UsersService {
         } | null;
         student: {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -101,10 +105,10 @@ export declare class UsersService {
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
         isActive: boolean;
-        lastLogin: Date | null;
         createdAt: Date;
+        lastLogin: Date | null;
     }>;
-    update(id: number, updateUserDto: UpdateUserDto): Promise<{
+    update(orgId: number, id: number, updateUserDto: UpdateUserDto): Promise<{
         email: string;
         preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
@@ -113,7 +117,7 @@ export declare class UsersService {
         isActive: boolean;
         updatedAt: Date;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

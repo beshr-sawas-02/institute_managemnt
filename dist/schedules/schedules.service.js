@@ -16,7 +16,12 @@ let SchedulesService = class SchedulesService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto) {
+    async create(orgId, dto) {
+        const section = await this.prisma.section.findFirst({
+            where: { id: dto.sectionId, organizationId: orgId },
+        });
+        if (!section)
+            throw new common_1.NotFoundException('الشعبة غير موجودة');
         const startTime = new Date(`1970-01-01T${dto.startTime}:00`);
         const endTime = new Date(`1970-01-01T${dto.endTime}:00`);
         const sectionConflict = await this.prisma.schedule.findFirst({
@@ -24,10 +29,7 @@ let SchedulesService = class SchedulesService {
                 sectionId: dto.sectionId,
                 dayOfWeek: dto.dayOfWeek,
                 status: 'scheduled',
-                AND: [
-                    { startTime: { lt: endTime } },
-                    { endTime: { gt: startTime } },
-                ],
+                AND: [{ startTime: { lt: endTime } }, { endTime: { gt: startTime } }],
             },
         });
         if (sectionConflict) {
@@ -43,10 +45,7 @@ let SchedulesService = class SchedulesService {
                     dayOfWeek: dto.dayOfWeek,
                     status: 'scheduled',
                     gradeSubject: { teacherId: gradeSubject.teacherId },
-                    AND: [
-                        { startTime: { lt: endTime } },
-                        { endTime: { gt: startTime } },
-                    ],
+                    AND: [{ startTime: { lt: endTime } }, { endTime: { gt: startTime } }],
                 },
             });
             if (teacherConflict) {
@@ -54,19 +53,16 @@ let SchedulesService = class SchedulesService {
             }
         }
         return this.prisma.schedule.create({
-            data: {
-                ...dto,
-                startTime,
-                endTime,
-            },
+            data: { ...dto, startTime, endTime },
             include: {
                 section: { include: { grade: true } },
                 gradeSubject: { include: { subject: true, teacher: true } },
             },
         });
     }
-    async findAll() {
+    async findAll(orgId) {
         return this.prisma.schedule.findMany({
+            where: { section: { organizationId: orgId } },
             include: {
                 section: { include: { grade: true } },
                 gradeSubject: { include: { subject: true, teacher: true } },
@@ -74,20 +70,25 @@ let SchedulesService = class SchedulesService {
             orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
         });
     }
-    async findBySection(sectionId) {
+    async findBySection(orgId, sectionId) {
         return this.prisma.schedule.findMany({
-            where: { sectionId, status: 'scheduled' },
+            where: {
+                sectionId,
+                status: 'scheduled',
+                section: { organizationId: orgId },
+            },
             include: {
                 gradeSubject: { include: { subject: true, teacher: true } },
             },
             orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
         });
     }
-    async findByTeacher(teacherId) {
+    async findByTeacher(orgId, teacherId) {
         return this.prisma.schedule.findMany({
             where: {
                 gradeSubject: { teacherId },
                 status: 'scheduled',
+                section: { organizationId: orgId },
             },
             include: {
                 section: { include: { grade: true } },
@@ -96,9 +97,9 @@ let SchedulesService = class SchedulesService {
             orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
         });
     }
-    async findOne(id) {
-        const schedule = await this.prisma.schedule.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const schedule = await this.prisma.schedule.findFirst({
+            where: { id, section: { organizationId: orgId } },
             include: {
                 section: { include: { grade: true } },
                 gradeSubject: { include: { subject: true, teacher: true } },
@@ -108,8 +109,8 @@ let SchedulesService = class SchedulesService {
             throw new common_1.NotFoundException('الحصة غير موجودة');
         return schedule;
     }
-    async update(id, dto) {
-        const existing = await this.findOne(id);
+    async update(orgId, id, dto) {
+        const existing = await this.findOne(orgId, id);
         const newStartTime = dto.startTime
             ? new Date(`1970-01-01T${dto.startTime}:00`)
             : existing.startTime;
@@ -169,8 +170,8 @@ let SchedulesService = class SchedulesService {
             },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.schedule.delete({ where: { id } });
         return { message: 'تم حذف الحصة بنجاح' };
     }

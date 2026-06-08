@@ -4,19 +4,21 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 export declare class SubjectsController {
     private readonly subjectsService;
     constructor(subjectsService: SubjectsService);
-    create(dto: CreateSubjectDto): Promise<{
-        description: string | null;
+    create(orgId: number, dto: CreateSubjectDto): Promise<{
         name: string;
+        description: string | null;
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
     }>;
-    findAll(p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
+    findAll(orgId: number, p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
         gradeSubjects: ({
             teacher: {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -29,11 +31,12 @@ export declare class SubjectsController {
                 hireDate: Date | null;
             };
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
@@ -46,18 +49,20 @@ export declare class SubjectsController {
             teacherId: number;
         })[];
     } & {
-        description: string | null;
         name: string;
+        description: string | null;
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
     }>>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         gradeSubjects: ({
             teacher: {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -70,11 +75,12 @@ export declare class SubjectsController {
                 hireDate: Date | null;
             };
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
@@ -87,20 +93,22 @@ export declare class SubjectsController {
             teacherId: number;
         })[];
     } & {
-        description: string | null;
         name: string;
+        description: string | null;
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
     }>;
-    update(id: number, dto: UpdateSubjectDto): Promise<{
-        description: string | null;
+    update(orgId: number, id: number, dto: UpdateSubjectDto): Promise<{
         name: string;
+        description: string | null;
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

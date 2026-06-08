@@ -3,14 +3,15 @@ import { CreateScheduleDto, UpdateScheduleDto } from './dto/schedule.dto';
 export declare class SchedulesController {
     private readonly service;
     constructor(service: SchedulesService);
-    create(dto: CreateScheduleDto): Promise<{
+    create(orgId: number, dto: CreateScheduleDto): Promise<{
         section: {
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
@@ -18,6 +19,7 @@ export declare class SchedulesController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -28,6 +30,7 @@ export declare class SchedulesController {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -40,11 +43,12 @@ export declare class SchedulesController {
                 hireDate: Date | null;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -67,14 +71,15 @@ export declare class SchedulesController {
         endTime: Date;
         room: string | null;
     }>;
-    findAll(): Promise<({
+    findAll(orgId: number): Promise<({
         section: {
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
@@ -82,6 +87,7 @@ export declare class SchedulesController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -92,6 +98,7 @@ export declare class SchedulesController {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -104,11 +111,12 @@ export declare class SchedulesController {
                 hireDate: Date | null;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -131,12 +139,13 @@ export declare class SchedulesController {
         endTime: Date;
         room: string | null;
     })[]>;
-    findBySection(id: number): Promise<({
+    findBySection(orgId: number, sectionId: number): Promise<({
         gradeSubject: {
             teacher: {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -149,11 +158,12 @@ export declare class SchedulesController {
                 hireDate: Date | null;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -176,14 +186,15 @@ export declare class SchedulesController {
         endTime: Date;
         room: string | null;
     })[]>;
-    findByTeacher(id: number): Promise<({
+    findByTeacher(orgId: number, teacherId: number): Promise<({
         section: {
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
@@ -191,6 +202,7 @@ export declare class SchedulesController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -198,11 +210,12 @@ export declare class SchedulesController {
         };
         gradeSubject: {
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -225,14 +238,15 @@ export declare class SchedulesController {
         endTime: Date;
         room: string | null;
     })[]>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         section: {
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
@@ -240,6 +254,7 @@ export declare class SchedulesController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -250,6 +265,7 @@ export declare class SchedulesController {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -262,11 +278,12 @@ export declare class SchedulesController {
                 hireDate: Date | null;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -289,14 +306,15 @@ export declare class SchedulesController {
         endTime: Date;
         room: string | null;
     }>;
-    update(id: number, dto: UpdateScheduleDto): Promise<{
+    update(orgId: number, id: number, dto: UpdateScheduleDto): Promise<{
         section: {
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
@@ -304,6 +322,7 @@ export declare class SchedulesController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -314,6 +333,7 @@ export declare class SchedulesController {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -326,11 +346,12 @@ export declare class SchedulesController {
                 hireDate: Date | null;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -353,7 +374,7 @@ export declare class SchedulesController {
         endTime: Date;
         room: string | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

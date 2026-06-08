@@ -18,7 +18,12 @@ let AttendanceService = class AttendanceService {
         this.prisma = prisma;
         this.notificationsService = notificationsService;
     }
-    async create(dto) {
+    async create(orgId, dto) {
+        const student = await this.prisma.student.findFirst({
+            where: { id: dto.studentId, organizationId: orgId },
+        });
+        if (!student)
+            throw new common_1.NotFoundException('الطالب غير موجود');
         const existing = await this.prisma.attendance.findUnique({
             where: {
                 unique_attendance: {
@@ -27,9 +32,8 @@ let AttendanceService = class AttendanceService {
                 },
             },
         });
-        if (existing) {
+        if (existing)
             throw new common_1.ConflictException('تم تسجيل حضور هذا الطالب لهذا اليوم مسبقاً');
-        }
         const attendance = await this.prisma.attendance.create({
             data: {
                 studentId: dto.studentId,
@@ -53,9 +57,14 @@ let AttendanceService = class AttendanceService {
         await this.handleAttendanceNotification(attendance);
         return attendance;
     }
-    async bulkCreate(dto) {
+    async bulkCreate(orgId, dto) {
         const results = [];
         for (const studentData of dto.students) {
+            const student = await this.prisma.student.findFirst({
+                where: { id: studentData.studentId, organizationId: orgId },
+            });
+            if (!student)
+                continue;
             const attendance = await this.prisma.attendance.upsert({
                 where: {
                     unique_attendance: {
@@ -95,19 +104,14 @@ let AttendanceService = class AttendanceService {
             data: results,
         };
     }
-    async getSectionAttendanceSheet(sectionId, date) {
+    async getSectionAttendanceSheet(orgId, sectionId, date) {
         const students = await this.prisma.student.findMany({
-            where: { sectionId, status: 'active' },
+            where: { sectionId, organizationId: orgId, status: 'active' },
             orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
-            select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-            },
+            select: { id: true, firstName: true, lastName: true },
         });
-        if (students.length === 0) {
+        if (students.length === 0)
             throw new common_1.NotFoundException('لا يوجد طلاب في هذه الشعبة');
-        }
         const existingRecords = await this.prisma.attendance.findMany({
             where: {
                 date: new Date(date),
@@ -129,21 +133,22 @@ let AttendanceService = class AttendanceService {
             })),
         };
     }
-    async smartBulkCreate(dto) {
+    async smartBulkCreate(orgId, dto) {
         const students = await this.prisma.student.findMany({
-            where: { sectionId: dto.sectionId, status: 'active' },
+            where: {
+                sectionId: dto.sectionId,
+                organizationId: orgId,
+                status: 'active',
+            },
             orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
             include: {
                 parent: {
-                    include: {
-                        user: { select: { id: true, email: true, role: true } },
-                    },
+                    include: { user: { select: { id: true, email: true, role: true } } },
                 },
             },
         });
-        if (students.length === 0) {
+        if (students.length === 0)
             throw new common_1.NotFoundException('لا يوجد طلاب في هذه الشعبة');
-        }
         const exceptionsMap = new Map((dto.exceptions || []).map((e) => [e.studentId, e]));
         const results = [];
         for (const student of students) {
@@ -210,13 +215,12 @@ let AttendanceService = class AttendanceService {
             data: results,
         };
     }
-    async findAll(filters) {
-        const where = {};
-        if (filters?.date) {
+    async findAll(orgId, filters) {
+        const where = { student: { organizationId: orgId } };
+        if (filters?.date)
             where.date = new Date(filters.date);
-        }
         if (filters?.sectionId) {
-            where.student = { sectionId: filters.sectionId };
+            where.student = { organizationId: orgId, sectionId: filters.sectionId };
         }
         return this.prisma.attendance.findMany({
             where,
@@ -233,7 +237,12 @@ let AttendanceService = class AttendanceService {
             orderBy: [{ date: 'desc' }, { studentId: 'asc' }],
         });
     }
-    async findByStudent(studentId, dateFrom, dateTo) {
+    async findByStudent(orgId, studentId, dateFrom, dateTo) {
+        const student = await this.prisma.student.findFirst({
+            where: { id: studentId, organizationId: orgId },
+        });
+        if (!student)
+            throw new common_1.NotFoundException('الطالب غير موجود');
         const where = { studentId };
         if (dateFrom || dateTo) {
             where.date = {};
@@ -247,51 +256,50 @@ let AttendanceService = class AttendanceService {
             orderBy: { date: 'desc' },
         });
     }
-    async findBySection(sectionId, date) {
+    async findBySection(orgId, sectionId, date) {
         return this.prisma.attendance.findMany({
             where: {
                 date: new Date(date),
-                student: { sectionId },
+                student: { sectionId, organizationId: orgId },
             },
             include: {
-                student: {
-                    select: { id: true, firstName: true, lastName: true },
-                },
+                student: { select: { id: true, firstName: true, lastName: true } },
             },
             orderBy: { studentId: 'asc' },
         });
     }
-    async findOne(id) {
-        const attendance = await this.prisma.attendance.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const attendance = await this.prisma.attendance.findFirst({
+            where: { id, student: { organizationId: orgId } },
             include: {
-                student: {
-                    select: { id: true, firstName: true, lastName: true },
-                },
+                student: { select: { id: true, firstName: true, lastName: true } },
             },
         });
         if (!attendance)
             throw new common_1.NotFoundException('سجل الحضور غير موجود');
         return attendance;
     }
-    async update(id, dto) {
-        await this.findOne(id);
+    async update(orgId, id, dto) {
+        await this.findOne(orgId, id);
         return this.prisma.attendance.update({
             where: { id },
             data: dto,
             include: {
-                student: {
-                    select: { id: true, firstName: true, lastName: true },
-                },
+                student: { select: { id: true, firstName: true, lastName: true } },
             },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.attendance.delete({ where: { id } });
         return { message: 'تم حذف سجل الحضور بنجاح' };
     }
-    async getStats(studentId, dateFrom, dateTo) {
+    async getStats(orgId, studentId, dateFrom, dateTo) {
+        const student = await this.prisma.student.findFirst({
+            where: { id: studentId, organizationId: orgId },
+        });
+        if (!student)
+            throw new common_1.NotFoundException('الطالب غير موجود');
         const where = { studentId };
         if (dateFrom || dateTo) {
             where.date = {};
@@ -321,8 +329,7 @@ let AttendanceService = class AttendanceService {
         try {
             if (attendance.parentNotified)
                 return;
-            if (attendance.status === 'absent' &&
-                attendance.student?.parent?.user) {
+            if (attendance.status === 'absent' && attendance.student?.parent?.user) {
                 await this.notificationsService.notifyAbsence(attendance.studentId, attendance.id);
                 await this.prisma.attendance.update({
                     where: { id: attendance.id },

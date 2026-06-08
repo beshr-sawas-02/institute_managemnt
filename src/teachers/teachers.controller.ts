@@ -1,6 +1,3 @@
-// src/teachers/teachers.controller.ts
-// متحكم المعلمين
-
 import {
   Controller,
   Get,
@@ -20,7 +17,7 @@ import { CreateTeacherDto, UpdateTeacherDto } from './dto/teacher.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 
 @ApiTags('المعلمون')
 @Controller('teachers')
@@ -32,38 +29,51 @@ export class TeachersController {
   @Post()
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'إضافة معلم جديد' })
-  create(@Body() createTeacherDto: CreateTeacherDto) {
-    return this.teachersService.create(createTeacherDto);
+  create(
+    @CurrentUser('orgId') orgId: number,
+    @Body() createTeacherDto: CreateTeacherDto,
+  ) {
+    return this.teachersService.create(orgId, createTeacherDto);
   }
 
   @Get()
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'جلب جميع المعلمين' })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.teachersService.findAll(paginationDto);
+  findAll(
+    @CurrentUser('orgId') orgId: number,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.teachersService.findAll(orgId, paginationDto);
   }
 
   @Get(':id')
   @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
   @ApiOperation({ summary: 'جلب معلم بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.teachersService.findOne(id);
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.teachersService.findOne(orgId, id);
   }
 
   @Patch(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'تحديث بيانات المعلم' })
   update(
+    @CurrentUser('orgId') orgId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTeacherDto: UpdateTeacherDto,
   ) {
-    return this.teachersService.update(id, updateTeacherDto);
+    return this.teachersService.update(orgId, id, updateTeacherDto);
   }
 
   @Delete(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف معلم' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.teachersService.remove(id);
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.teachersService.remove(orgId, id);
   }
 }

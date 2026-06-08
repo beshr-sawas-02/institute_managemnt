@@ -17,16 +17,22 @@ let SubjectsService = class SubjectsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto) {
-        return this.prisma.subject.create({ data: dto });
+    async create(orgId, dto) {
+        return this.prisma.subject.create({
+            data: { ...dto, organizationId: orgId },
+        });
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search ? { name: { contains: search } } : {};
+        const where = { organizationId: orgId };
+        if (search)
+            where.name = { contains: search };
         const [data, total] = await Promise.all([
             this.prisma.subject.findMany({
-                where, skip, take: limit,
+                where,
+                skip,
+                take: limit,
                 include: { gradeSubjects: { include: { grade: true, teacher: true } } },
                 orderBy: { name: 'asc' },
             }),
@@ -34,21 +40,21 @@ let SubjectsService = class SubjectsService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findOne(id) {
-        const subject = await this.prisma.subject.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const subject = await this.prisma.subject.findFirst({
+            where: { id, organizationId: orgId },
             include: { gradeSubjects: { include: { grade: true, teacher: true } } },
         });
         if (!subject)
             throw new common_1.NotFoundException('المادة غير موجودة');
         return subject;
     }
-    async update(id, dto) {
-        await this.findOne(id);
+    async update(orgId, id, dto) {
+        await this.findOne(orgId, id);
         return this.prisma.subject.update({ where: { id }, data: dto });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.subject.delete({ where: { id } });
         return { message: 'تم حذف المادة بنجاح' };
     }

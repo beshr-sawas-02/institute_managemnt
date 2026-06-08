@@ -29,14 +29,14 @@ let PaymentsController = class PaymentsController {
     create(dto) {
         return this.service.create(dto);
     }
-    findAll(p) {
-        return this.service.findAll(p);
+    findAll(orgId, p) {
+        return this.service.findAll(orgId, p);
     }
-    getStats(academicYear) {
-        return this.service.getStats(academicYear);
+    getStats(orgId, academicYear) {
+        return this.service.getStats(orgId, academicYear);
     }
-    findByStudent(id, academicYear) {
-        return this.service.findByStudent(id, academicYear);
+    findByStudent(orgId, id, academicYear) {
+        return this.service.findByStudent(orgId, id, academicYear);
     }
     findOne(id) {
         return this.service.findOne(id);
@@ -62,32 +62,32 @@ __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع المدفوعات' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], PaymentsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('stats'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'إحصائيات المدفوعات' }),
-    __param(0, (0, common_1.Query)('academicYear')),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)('academicYear')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Number, String]),
     __metadata("design:returntype", void 0)
 ], PaymentsController.prototype, "getStats", null);
 __decorate([
     (0, common_1.Get)('student/:studentId'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.parent),
-    (0, swagger_1.ApiOperation)({
-        summary: 'جلب مدفوعات طالب مع رصيده',
-        description: 'إذا أُرسلت academicYear تظهر معلومات الرصيد: القسط السنوي، المدفوع، المتبقي',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'academicYear', required: false, example: '2024-2025' }),
-    __param(0, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('academicYear')),
+    (0, swagger_1.ApiOperation)({ summary: 'جلب مدفوعات طالب مع رصيده' }),
+    (0, swagger_1.ApiQuery)({ name: 'academicYear', required: false }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Query)('academicYear')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, Number, String]),
     __metadata("design:returntype", void 0)
 ], PaymentsController.prototype, "findByStudent", null);
 __decorate([

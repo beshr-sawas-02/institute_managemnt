@@ -17,16 +17,18 @@ let SectionsService = class SectionsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(createSectionDto) {
+    async create(orgId, createSectionDto) {
         return this.prisma.section.create({
-            data: createSectionDto,
+            data: { ...createSectionDto, organizationId: orgId },
             include: { grade: true },
         });
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search ? { name: { contains: search } } : {};
+        const where = { organizationId: orgId };
+        if (search)
+            where.name = { contains: search };
         const [data, total] = await Promise.all([
             this.prisma.section.findMany({
                 where,
@@ -42,9 +44,9 @@ let SectionsService = class SectionsService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findOne(id) {
-        const section = await this.prisma.section.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const section = await this.prisma.section.findFirst({
+            where: { id, organizationId: orgId },
             include: {
                 grade: true,
                 students: { where: { status: 'active' } },
@@ -59,25 +61,25 @@ let SectionsService = class SectionsService {
             throw new common_1.NotFoundException('الشعبة غير موجودة');
         return section;
     }
-    async findByGrade(gradeId) {
+    async findByGrade(orgId, gradeId) {
         return this.prisma.section.findMany({
-            where: { gradeId, status: 'active' },
+            where: { gradeId, organizationId: orgId, status: 'active' },
             include: {
                 grade: true,
                 _count: { select: { students: true } },
             },
         });
     }
-    async update(id, updateSectionDto) {
-        await this.findOne(id);
+    async update(orgId, id, updateSectionDto) {
+        await this.findOne(orgId, id);
         return this.prisma.section.update({
             where: { id },
             data: updateSectionDto,
             include: { grade: true },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.section.delete({ where: { id } });
         return { message: 'تم حذف الشعبة بنجاح' };
     }

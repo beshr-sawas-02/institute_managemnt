@@ -17,27 +17,23 @@ let ParentsService = class ParentsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(createParentDto) {
-        const existing = await this.prisma.user.findUnique({
-            where: { email: createParentDto.email },
-        });
+    async create(orgId, createParentDto) {
         return this.prisma.parent.create({
-            data: createParentDto,
+            data: { ...createParentDto, organizationId: orgId },
             include: { user: { select: { id: true, email: true, role: true } } },
         });
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search
-            ? {
-                OR: [
-                    { firstName: { contains: search } },
-                    { lastName: { contains: search } },
-                    { phone: { contains: search } },
-                ],
-            }
-            : {};
+        const where = { organizationId: orgId };
+        if (search) {
+            where.OR = [
+                { firstName: { contains: search } },
+                { lastName: { contains: search } },
+                { phone: { contains: search } },
+            ];
+        }
         const [data, total] = await Promise.all([
             this.prisma.parent.findMany({
                 where,
@@ -53,33 +49,30 @@ let ParentsService = class ParentsService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findOne(id) {
-        const parent = await this.prisma.parent.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const parent = await this.prisma.parent.findFirst({
+            where: { id, organizationId: orgId },
             include: {
                 user: { select: { id: true, email: true } },
                 students: {
-                    include: {
-                        section: { include: { grade: true } },
-                    },
+                    include: { section: { include: { grade: true } } },
                 },
             },
         });
-        if (!parent) {
+        if (!parent)
             throw new common_1.NotFoundException('ولي الأمر غير موجود');
-        }
         return parent;
     }
-    async update(id, updateParentDto) {
-        await this.findOne(id);
+    async update(orgId, id, updateParentDto) {
+        await this.findOne(orgId, id);
         return this.prisma.parent.update({
             where: { id },
             data: updateParentDto,
             include: { user: { select: { id: true, email: true } } },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.parent.delete({ where: { id } });
         return { message: 'تم حذف ولي الأمر بنجاح' };
     }

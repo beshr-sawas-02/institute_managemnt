@@ -14,9 +14,9 @@ import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createUserDto: CreateUserDto) {
-    const existing = await this.prisma.user.findUnique({
-      where: { email: createUserDto.email },
+  async create(orgId: number, createUserDto: CreateUserDto) {
+    const existing = await this.prisma.user.findFirst({
+      where: { email: createUserDto.email, organizationId: orgId },
     });
 
     if (existing) {
@@ -28,6 +28,7 @@ export class UsersService {
     return this.prisma.user.create({
       data: {
         ...createUserDto,
+        organizationId: orgId,
         preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
         password: hashedPassword,
       },
@@ -43,13 +44,13 @@ export class UsersService {
     });
   }
 
-  async createParentUser(createUserDto: CreateUserDto) {
+  async createParentUser(orgId: number, createUserDto: CreateUserDto) {
     if (createUserDto.role !== UserRole.parent) {
       throw new BadRequestException('Role must be parent');
     }
 
     const parent = await this.prisma.parent.findFirst({
-      where: { email: createUserDto.email },
+      where: { email: createUserDto.email, organizationId: orgId },
       select: { id: true, userId: true },
     });
 
@@ -61,8 +62,8 @@ export class UsersService {
       throw new ConflictException('This parent already has a user account');
     }
 
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: createUserDto.email },
+    const existingUser = await this.prisma.user.findFirst({
+      where: { email: createUserDto.email, organizationId: orgId },
     });
 
     if (existingUser) {
@@ -76,6 +77,7 @@ export class UsersService {
         data: {
           ...createUserDto,
           role: UserRole.parent,
+          organizationId: orgId,
           preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
           password: hashedPassword,
         },
@@ -99,9 +101,9 @@ export class UsersService {
     });
   }
 
-  async createReceptionUser(createUserDto: CreateUserDto) {
+  async createReceptionUser(orgId: number, createUserDto: CreateUserDto) {
     const reception = await this.prisma.reception.findFirst({
-      where: { email: createUserDto.email },
+      where: { email: createUserDto.email, organizationId: orgId },
       select: { id: true, userId: true },
     });
 
@@ -113,8 +115,8 @@ export class UsersService {
       throw new ConflictException('This reception already has a user account');
     }
 
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: createUserDto.email },
+    const existingUser = await this.prisma.user.findFirst({
+      where: { email: createUserDto.email, organizationId: orgId },
     });
 
     if (existingUser) {
@@ -128,6 +130,7 @@ export class UsersService {
         data: {
           ...createUserDto,
           role: UserRole.reception,
+          organizationId: orgId,
           preferredLanguage: createUserDto.preferredLanguage ?? 'ar',
           password: hashedPassword,
         },
@@ -151,18 +154,17 @@ export class UsersService {
     });
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(orgId: number, paginationDto: PaginationDto) {
     const { page, limit, search } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? {
-          OR: [
-            { email: { contains: search } },
-            { phone: { contains: search } },
-          ],
-        }
-      : {};
+    const where: any = { organizationId: orgId };
+    if (search) {
+      where.OR = [
+        { email: { contains: search } },
+        { phone: { contains: search } },
+      ];
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.user.findMany({
@@ -187,9 +189,9 @@ export class UsersService {
     return new PaginatedResult(data, total, page, limit);
   }
 
-  async findOne(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
+  async findOne(orgId: number, id: number) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, organizationId: orgId },
       select: {
         id: true,
         email: true,
@@ -206,18 +208,14 @@ export class UsersService {
       },
     });
 
-    if (!user) {
-      throw new NotFoundException('المستخدم غير موجود');
-    }
-
+    if (!user) throw new NotFoundException('المستخدم غير موجود');
     return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    await this.findOne(id);
+  async update(orgId: number, id: number, updateUserDto: UpdateUserDto) {
+    await this.findOne(orgId, id);
 
     const data: any = { ...updateUserDto };
-
     if (updateUserDto.password) {
       data.password = await bcrypt.hash(updateUserDto.password, 12);
     }
@@ -237,8 +235,8 @@ export class UsersService {
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(orgId: number, id: number) {
+    await this.findOne(orgId, id);
     await this.prisma.user.delete({ where: { id } });
     return { message: 'تم حذف المستخدم بنجاح' };
   }

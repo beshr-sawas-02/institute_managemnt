@@ -16,7 +16,11 @@ export class PrismaService
   }
 
   async onModuleInit() {
+    console.log(process.env.DATABASE_URL);
+
     await this.$connect();
+      console.log('✅ Connected');
+
     console.log('✅ تم الاتصال بقاعدة البيانات بنجاح');
   }
 

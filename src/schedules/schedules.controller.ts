@@ -1,7 +1,13 @@
-// src/schedules/schedules.controller.ts
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete,
-  UseGuards, ParseIntPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
@@ -9,7 +15,7 @@ import { SchedulesService } from './schedules.service';
 import { CreateScheduleDto, UpdateScheduleDto } from './dto/schedule.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 
 @ApiTags('الجداول الزمنية')
 @Controller('schedules')
@@ -21,37 +27,61 @@ export class SchedulesController {
   @Post()
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'إضافة حصة جديدة' })
-  create(@Body() dto: CreateScheduleDto) { return this.service.create(dto); }
+  create(@CurrentUser('orgId') orgId: number, @Body() dto: CreateScheduleDto) {
+    return this.service.create(orgId, dto);
+  }
 
   @Get()
   @ApiOperation({ summary: 'جلب جميع الحصص' })
-  findAll() { return this.service.findAll(); }
+  findAll(@CurrentUser('orgId') orgId: number) {
+    return this.service.findAll(orgId);
+  }
 
   @Get('section/:sectionId')
   @ApiOperation({ summary: 'جلب جدول شعبة' })
-  findBySection(@Param('sectionId', ParseIntPipe) id: number) {
-    return this.service.findBySection(id);
+  findBySection(
+    @CurrentUser('orgId') orgId: number,
+    @Param('sectionId', ParseIntPipe) sectionId: number,
+  ) {
+    return this.service.findBySection(orgId, sectionId);
   }
 
   @Get('teacher/:teacherId')
   @ApiOperation({ summary: 'جلب جدول معلم' })
-  findByTeacher(@Param('teacherId', ParseIntPipe) id: number) {
-    return this.service.findByTeacher(id);
+  findByTeacher(
+    @CurrentUser('orgId') orgId: number,
+    @Param('teacherId', ParseIntPipe) teacherId: number,
+  ) {
+    return this.service.findByTeacher(orgId, teacherId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'جلب حصة بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.findOne(orgId, id);
+  }
 
   @Patch(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'تحديث حصة' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateScheduleDto) {
-    return this.service.update(id, dto);
+  update(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateScheduleDto,
+  ) {
+    return this.service.update(orgId, id, dto);
   }
 
   @Delete(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف حصة' })
-  remove(@Param('id', ParseIntPipe) id: number) { return this.service.remove(id); }
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.remove(orgId, id);
+  }
 }

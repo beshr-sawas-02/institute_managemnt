@@ -1,7 +1,14 @@
-// src/expenses/expenses.controller.ts
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete,
-  Query, UseGuards, ParseIntPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
@@ -22,31 +29,55 @@ export class ExpensesController {
 
   @Post()
   @ApiOperation({ summary: 'إضافة مصروف جديد' })
-  create(@CurrentUser('id') userId: number, @Body() dto: CreateExpenseDto) {
-    return this.service.create(userId, dto);
+  create(
+    @CurrentUser('orgId') orgId: number,
+    @CurrentUser('id') userId: number,
+    @Body() dto: CreateExpenseDto,
+  ) {
+    return this.service.create(orgId, userId, dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'جلب جميع المصاريف' })
-  findAll(@Query() p: PaginationDto) { return this.service.findAll(p); }
+  findAll(@CurrentUser('orgId') orgId: number, @Query() p: PaginationDto) {
+    return this.service.findAll(orgId, p);
+  }
 
   @Get('stats')
   @ApiOperation({ summary: 'إحصائيات المصاريف' })
-  getStats(@Query('dateFrom') dateFrom?: string, @Query('dateTo') dateTo?: string) {
-    return this.service.getStats(dateFrom, dateTo);
+  getStats(
+    @CurrentUser('orgId') orgId: number,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.service.getStats(orgId, dateFrom, dateTo);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'جلب مصروف بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) { return this.service.findOne(id); }
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.findOne(orgId, id);
+  }
 
   @Patch(':id')
   @ApiOperation({ summary: 'تحديث مصروف' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateExpenseDto) {
-    return this.service.update(id, dto);
+  update(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateExpenseDto,
+  ) {
+    return this.service.update(orgId, id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'حذف مصروف' })
-  remove(@Param('id', ParseIntPipe) id: number) { return this.service.remove(id); }
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.remove(orgId, id);
+  }
 }

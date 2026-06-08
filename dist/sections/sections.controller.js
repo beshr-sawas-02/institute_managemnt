@@ -26,23 +26,23 @@ let SectionsController = class SectionsController {
     constructor(sectionsService) {
         this.sectionsService = sectionsService;
     }
-    create(dto) {
-        return this.sectionsService.create(dto);
+    create(orgId, dto) {
+        return this.sectionsService.create(orgId, dto);
     }
-    findAll(paginationDto) {
-        return this.sectionsService.findAll(paginationDto);
+    findAll(orgId, paginationDto) {
+        return this.sectionsService.findAll(orgId, paginationDto);
     }
-    findByGrade(gradeId) {
-        return this.sectionsService.findByGrade(gradeId);
+    findByGrade(orgId, gradeId) {
+        return this.sectionsService.findByGrade(orgId, gradeId);
     }
-    findOne(id) {
-        return this.sectionsService.findOne(id);
+    findOne(orgId, id) {
+        return this.sectionsService.findOne(orgId, id);
     }
-    update(id, dto) {
-        return this.sectionsService.update(id, dto);
+    update(orgId, id, dto) {
+        return this.sectionsService.update(orgId, id, dto);
     }
-    remove(id) {
-        return this.sectionsService.remove(id);
+    remove(orgId, id) {
+        return this.sectionsService.remove(orgId, id);
     }
 };
 exports.SectionsController = SectionsController;
@@ -50,53 +50,59 @@ __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'إضافة شعبة جديدة' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [section_dto_1.CreateSectionDto]),
+    __metadata("design:paramtypes", [Number, section_dto_1.CreateSectionDto]),
     __metadata("design:returntype", void 0)
 ], SectionsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع الشعب' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], SectionsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('grade/:gradeId'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب شعب صف معين' }),
-    __param(0, (0, common_1.Param)('gradeId', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('gradeId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], SectionsController.prototype, "findByGrade", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب شعبة بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], SectionsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث شعبة' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, section_dto_1.UpdateSectionDto]),
+    __metadata("design:paramtypes", [Number, Number, section_dto_1.UpdateSectionDto]),
     __metadata("design:returntype", void 0)
 ], SectionsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف شعبة' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], SectionsController.prototype, "remove", null);
 exports.SectionsController = SectionsController = __decorate([

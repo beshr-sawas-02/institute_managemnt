@@ -29,11 +29,14 @@ let AuthController = class AuthController {
     async login(loginDto) {
         return this.authService.login(loginDto);
     }
+    async refresh(dto) {
+        return this.authService.refresh(dto);
+    }
     async register(registerDto) {
         return this.authService.register(registerDto);
     }
-    async registerReception(createUserDto) {
-        return this.usersService.createReceptionUser(createUserDto);
+    async registerReception(orgId, createUserDto) {
+        return this.usersService.createReceptionUser(orgId, createUserDto);
     }
     async changePassword(userId, changePasswordDto) {
         return this.authService.changePassword(userId, changePasswordDto);
@@ -49,15 +52,24 @@ exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Login' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Org user login' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.LoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
+    (0, common_1.Post)('refresh'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Refresh access token' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [auth_dto_1.RefreshTokenDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "refresh", null);
+__decorate([
     (0, common_1.Post)('register'),
-    (0, swagger_1.ApiOperation)({ summary: 'Register a new account' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Register a new org user' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.RegisterDto]),
@@ -65,14 +77,14 @@ __decorate([
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Post)('register-reception'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Create a reception account',
-        description: 'Validates that the email already exists in the reception table, then creates login credentials.',
-    }),
-    __param(0, (0, common_1.Body)()),
+    (0, swagger_1.ApiOperation)({ summary: 'Create a reception account' }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_dto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [Number, user_dto_1.CreateUserDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "registerReception", null);
 __decorate([
@@ -92,7 +104,7 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Update preferred app language' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Update preferred language' }),
     __param(0, (0, decorators_1.CurrentUser)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -103,14 +115,14 @@ __decorate([
     (0, common_1.Get)('profile'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get current profile' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get current user profile' }),
     __param(0, (0, decorators_1.CurrentUser)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getProfile", null);
 exports.AuthController = AuthController = __decorate([
-    (0, swagger_1.ApiTags)('Authentication'),
+    (0, swagger_1.ApiTags)('Auth - Org'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
         users_service_1.UsersService])

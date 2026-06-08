@@ -28,8 +28,8 @@ let ReportsController = class ReportsController {
         this.service = service;
         this.monthlyReportService = monthlyReportService;
     }
-    create(userId, dto) {
-        return this.service.create(userId, dto);
+    create(orgId, userId, dto) {
+        return this.service.create(orgId, userId, dto);
     }
     getStudentMonthlyReport(studentId, month, year) {
         return this.monthlyReportService.generateStudentMonthlyReport(studentId, Number(month), Number(year));
@@ -37,41 +37,39 @@ let ReportsController = class ReportsController {
     getSectionMonthlyReport(sectionId, month, year) {
         return this.monthlyReportService.generateSectionMonthlyReports(sectionId, Number(month), Number(year));
     }
-    generateAndNotifySectionReports(sectionId, month, year, userId) {
-        return this.monthlyReportService.generateAndNotifySectionReports(sectionId, Number(month), Number(year), userId);
+    generateAndNotifySectionReports(orgId, userId, sectionId, month, year) {
+        return this.monthlyReportService.generateAndNotifySectionReports(orgId, sectionId, Number(month), Number(year), userId);
     }
-    generateAndNotifyAllSections(month, year, userId) {
-        return this.monthlyReportService.generateAndNotifyAllSections(Number(month), Number(year), userId);
+    generateAndNotifyAllSections(orgId, userId, month, year) {
+        return this.monthlyReportService.generateAndNotifyAllSections(orgId, Number(month), Number(year), userId);
     }
-    findAll(p) {
-        return this.service.findAll(p);
+    findAll(orgId, p) {
+        return this.service.findAll(orgId, p);
     }
-    findOne(id) {
-        return this.service.findOne(id);
+    findOne(orgId, id) {
+        return this.service.findOne(orgId, id);
     }
-    remove(id) {
-        return this.service.remove(id);
+    remove(orgId, id) {
+        return this.service.remove(orgId, id);
     }
 };
 exports.ReportsController = ReportsController;
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'إنشاء تقرير جديد' }),
-    __param(0, (0, decorators_1.CurrentUser)('id')),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, decorators_1.CurrentUser)('id')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, report_dto_1.CreateReportDto]),
+    __metadata("design:paramtypes", [Number, Number, report_dto_1.CreateReportDto]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('monthly/student/:studentId'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.parent),
-    (0, swagger_1.ApiOperation)({
-        summary: 'تقرير شهري لطالب واحد',
-        description: 'يعرض تقييمات المذاكرات والفحوص فقط (بدون الكويزات والواجبات)',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'month', required: true, example: 3, description: 'رقم الشهر (1-12)' }),
-    (0, swagger_1.ApiQuery)({ name: 'year', required: true, example: 2025, description: 'السنة' }),
+    (0, swagger_1.ApiOperation)({ summary: 'تقرير شهري لطالب واحد' }),
+    (0, swagger_1.ApiQuery)({ name: 'month', required: true }),
+    (0, swagger_1.ApiQuery)({ name: 'year', required: true }),
     __param(0, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Query)('month')),
     __param(2, (0, common_1.Query)('year')),
@@ -81,12 +79,9 @@ __decorate([
 ], ReportsController.prototype, "getStudentMonthlyReport", null);
 __decorate([
     (0, common_1.Get)('monthly/section/:sectionId'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'تقرير شهري لشعبة كاملة',
-        description: 'يعرض تقارير جميع طلاب الشعبة',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'month', required: true, example: 3 }),
-    (0, swagger_1.ApiQuery)({ name: 'year', required: true, example: 2025 }),
+    (0, swagger_1.ApiOperation)({ summary: 'تقرير شهري لشعبة كاملة' }),
+    (0, swagger_1.ApiQuery)({ name: 'month', required: true }),
+    (0, swagger_1.ApiQuery)({ name: 'year', required: true }),
     __param(0, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Query)('month')),
     __param(2, (0, common_1.Query)('year')),
@@ -96,58 +91,57 @@ __decorate([
 ], ReportsController.prototype, "getSectionMonthlyReport", null);
 __decorate([
     (0, common_1.Post)('monthly/section/:sectionId/notify'),
-    (0, swagger_1.ApiOperation)({
-        summary: 'إنشاء تقرير شهري لشعبة وإرسال إشعارات للأهل',
-        description: 'ينشئ تقرير شهري لكل طالب في الشعبة ويرسل إشعار push لولي أمره',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'month', required: true, example: 3 }),
-    (0, swagger_1.ApiQuery)({ name: 'year', required: true, example: 2025 }),
-    __param(0, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('month')),
-    __param(2, (0, common_1.Query)('year')),
-    __param(3, (0, decorators_1.CurrentUser)('id')),
+    (0, swagger_1.ApiOperation)({ summary: 'إنشاء تقرير شهري لشعبة وإرسال إشعارات' }),
+    (0, swagger_1.ApiQuery)({ name: 'month', required: true }),
+    (0, swagger_1.ApiQuery)({ name: 'year', required: true }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, decorators_1.CurrentUser)('id')),
+    __param(2, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
+    __param(3, (0, common_1.Query)('month')),
+    __param(4, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number, Number, Number]),
+    __metadata("design:paramtypes", [Number, Number, Number, Number, Number]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "generateAndNotifySectionReports", null);
 __decorate([
     (0, common_1.Post)('monthly/all/notify'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
-    (0, swagger_1.ApiOperation)({
-        summary: 'إنشاء تقارير شهرية لجميع الشعب وإرسال إشعارات',
-        description: 'ينشئ تقارير شهرية لكل الطلاب في كل الشعب النشطة ويرسل إشعارات لأولياء الأمور',
-    }),
-    (0, swagger_1.ApiQuery)({ name: 'month', required: true, example: 3 }),
-    (0, swagger_1.ApiQuery)({ name: 'year', required: true, example: 2025 }),
-    __param(0, (0, common_1.Query)('month')),
-    __param(1, (0, common_1.Query)('year')),
-    __param(2, (0, decorators_1.CurrentUser)('id')),
+    (0, swagger_1.ApiOperation)({ summary: 'إنشاء تقارير شهرية لجميع الشعب' }),
+    (0, swagger_1.ApiQuery)({ name: 'month', required: true }),
+    (0, swagger_1.ApiQuery)({ name: 'year', required: true }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, decorators_1.CurrentUser)('id')),
+    __param(2, (0, common_1.Query)('month')),
+    __param(3, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number, Number]),
+    __metadata("design:paramtypes", [Number, Number, Number, Number]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "generateAndNotifyAllSections", null);
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع التقارير' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب تقرير بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'حذف تقرير' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "remove", null);
 exports.ReportsController = ReportsController = __decorate([

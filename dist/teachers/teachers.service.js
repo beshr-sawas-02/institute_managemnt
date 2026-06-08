@@ -17,28 +17,26 @@ let TeachersService = class TeachersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(createTeacherDto) {
-        const data = { ...createTeacherDto };
-        if (data.hireDate) {
+    async create(orgId, createTeacherDto) {
+        const data = { ...createTeacherDto, organizationId: orgId };
+        if (data.hireDate)
             data.hireDate = new Date(data.hireDate);
-        }
         return this.prisma.teacher.create({
             data,
             include: { user: { select: { id: true, email: true } } },
         });
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search
-            ? {
-                OR: [
-                    { firstName: { contains: search } },
-                    { lastName: { contains: search } },
-                    { specialization: { contains: search } },
-                ],
-            }
-            : {};
+        const where = { organizationId: orgId };
+        if (search) {
+            where.OR = [
+                { firstName: { contains: search } },
+                { lastName: { contains: search } },
+                { specialization: { contains: search } },
+            ];
+        }
         const [data, total] = await Promise.all([
             this.prisma.teacher.findMany({
                 where,
@@ -46,12 +44,7 @@ let TeachersService = class TeachersService {
                 take: limit,
                 include: {
                     user: { select: { id: true, email: true } },
-                    gradeSubjects: {
-                        include: {
-                            grade: true,
-                            subject: true,
-                        },
-                    },
+                    gradeSubjects: { include: { grade: true, subject: true } },
                 },
                 orderBy: { createdAt: 'desc' },
             }),
@@ -59,41 +52,37 @@ let TeachersService = class TeachersService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findOne(id) {
-        const teacher = await this.prisma.teacher.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const teacher = await this.prisma.teacher.findFirst({
+            where: { id, organizationId: orgId },
             include: {
                 user: { select: { id: true, email: true } },
                 gradeSubjects: {
                     include: {
                         grade: true,
                         subject: true,
-                        schedules: {
-                            include: { section: true },
-                        },
+                        schedules: { include: { section: true } },
                     },
                 },
             },
         });
-        if (!teacher) {
+        if (!teacher)
             throw new common_1.NotFoundException('المعلم غير موجود');
-        }
         return teacher;
     }
-    async update(id, updateTeacherDto) {
-        await this.findOne(id);
+    async update(orgId, id, updateTeacherDto) {
+        await this.findOne(orgId, id);
         const data = { ...updateTeacherDto };
-        if (data.hireDate) {
+        if (data.hireDate)
             data.hireDate = new Date(data.hireDate);
-        }
         return this.prisma.teacher.update({
             where: { id },
             data,
             include: { user: { select: { id: true, email: true } } },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.teacher.delete({ where: { id } });
         return { message: 'تم حذف المعلم بنجاح' };
     }

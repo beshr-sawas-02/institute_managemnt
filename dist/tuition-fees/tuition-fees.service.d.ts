@@ -3,7 +3,7 @@ import { CreateTuitionFeeDto, UpdateTuitionFeeDto } from './dto/tuition-fee.dto'
 export declare class TuitionFeesService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(userId: number, dto: CreateTuitionFeeDto): Promise<{
+    create(orgId: number, userId: number, dto: CreateTuitionFeeDto): Promise<{
         grade: {
             name: string;
             id: number;
@@ -18,12 +18,13 @@ export declare class TuitionFeesService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
         createdBy: number | null;
     }>;
-    findAll(academicYear?: string): Promise<({
+    findAll(orgId: number, academicYear?: string): Promise<({
         grade: {
             name: string;
             id: number;
@@ -38,12 +39,13 @@ export declare class TuitionFeesService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
         createdBy: number | null;
     })[]>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         grade: {
             name: string;
             id: number;
@@ -58,12 +60,13 @@ export declare class TuitionFeesService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
         createdBy: number | null;
     }>;
-    findByGrade(gradeId: number, academicYear: string): Promise<{
+    findByGrade(orgId: number, gradeId: number, academicYear: string): Promise<{
         grade: {
             name: string;
             id: number;
@@ -74,12 +77,13 @@ export declare class TuitionFeesService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
         createdBy: number | null;
     }>;
-    update(id: number, dto: UpdateTuitionFeeDto): Promise<{
+    update(orgId: number, id: number, dto: UpdateTuitionFeeDto): Promise<{
         grade: {
             name: string;
             id: number;
@@ -90,12 +94,13 @@ export declare class TuitionFeesService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
         createdBy: number | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
     getStudentBalance(studentId: number, academicYear: string): Promise<{

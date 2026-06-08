@@ -1,6 +1,3 @@
-// src/parents/parents.controller.ts
-// متحكم أولياء الأمور
-
 import {
   Controller,
   Get,
@@ -20,7 +17,7 @@ import { CreateParentDto, UpdateParentDto } from './dto/parent.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 
 @ApiTags('أولياء الأمور')
 @Controller('parents')
@@ -32,38 +29,51 @@ export class ParentsController {
   @Post()
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'إضافة ولي أمر جديد' })
-  create(@Body() createParentDto: CreateParentDto) {
-    return this.parentsService.create(createParentDto);
+  create(
+    @CurrentUser('orgId') orgId: number,
+    @Body() createParentDto: CreateParentDto,
+  ) {
+    return this.parentsService.create(orgId, createParentDto);
   }
 
   @Get()
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'جلب جميع أولياء الأمور' })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.parentsService.findAll(paginationDto);
+  findAll(
+    @CurrentUser('orgId') orgId: number,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.parentsService.findAll(orgId, paginationDto);
   }
 
   @Get(':id')
   @Roles(UserRole.admin, UserRole.reception, UserRole.parent)
   @ApiOperation({ summary: 'جلب ولي أمر بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.parentsService.findOne(id);
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.parentsService.findOne(orgId, id);
   }
 
   @Patch(':id')
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'تحديث بيانات ولي الأمر' })
   update(
+    @CurrentUser('orgId') orgId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateParentDto: UpdateParentDto,
   ) {
-    return this.parentsService.update(id, updateParentDto);
+    return this.parentsService.update(orgId, id, updateParentDto);
   }
 
   @Delete(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف ولي أمر' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.parentsService.remove(id);
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.parentsService.remove(orgId, id);
   }
 }

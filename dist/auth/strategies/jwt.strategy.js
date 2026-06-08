@@ -26,16 +26,37 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         this.prisma = prisma;
     }
     async validate(payload) {
+        if (payload.source === 'platform') {
+            const platformUser = await this.prisma.platformUser.findUnique({
+                where: { id: payload.sub },
+            });
+            if (!platformUser || !platformUser.isActive) {
+                throw new common_1.UnauthorizedException('مستخدم المنصة غير موجود أو غير مفعل');
+            }
+            return {
+                id: platformUser.id,
+                email: platformUser.email,
+                role: platformUser.role,
+                orgId: null,
+                source: 'platform',
+            };
+        }
         const user = await this.prisma.user.findUnique({
             where: { id: payload.sub },
+            include: { organization: { select: { id: true, isActive: true } } },
         });
         if (!user || !user.isActive) {
             throw new common_1.UnauthorizedException('المستخدم غير موجود أو غير مفعل');
+        }
+        if (!user.organization || !user.organization.isActive) {
+            throw new common_1.UnauthorizedException('المؤسسة غير مفعلة');
         }
         return {
             id: user.id,
             email: user.email,
             role: user.role,
+            orgId: user.organizationId,
+            source: 'org',
         };
     }
 };

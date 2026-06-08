@@ -1,6 +1,3 @@
-// src/reports/reports.service.ts
-// خدمة إنشاء التقارير
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReportDto } from './dto/report.dto';
@@ -10,28 +7,27 @@ import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
-  // إنشاء تقرير جديد
-  async create(userId: number, dto: CreateReportDto) {
+  async create(orgId: number, userId: number, dto: CreateReportDto) {
     let reportData: any = {};
 
-    // جمع بيانات التقرير حسب النوع
     switch (dto.type) {
       case 'attendance':
-        reportData = await this.generateAttendanceReport(dto);
+        reportData = await this.generateAttendanceReport(orgId, dto);
         break;
       case 'financial':
-        reportData = await this.generateFinancialReport(dto);
+        reportData = await this.generateFinancialReport(orgId, dto);
         break;
       case 'performance':
-        reportData = await this.generatePerformanceReport(dto);
+        reportData = await this.generatePerformanceReport(orgId, dto);
         break;
       case 'comparison':
-        reportData = await this.generateComparisonReport(dto);
+        reportData = await this.generateComparisonReport(orgId, dto);
         break;
     }
 
     return this.prisma.report.create({
       data: {
+        organizationId: orgId,
         generatedBy: userId,
         type: dto.type,
         title: dto.title,
@@ -45,11 +41,11 @@ export class ReportsService {
     });
   }
 
-  // تقرير الحضور
-  private async generateAttendanceReport(dto: CreateReportDto) {
+  private async generateAttendanceReport(orgId: number, dto: CreateReportDto) {
     const where: any = {};
-    if (dto.periodStart) where.date = { ...where.date, gte: new Date(dto.periodStart) };
-    if (dto.periodEnd) where.date = { ...where.date, lte: new Date(dto.periodEnd) };
+    if (dto.periodStart) where.date = { gte: new Date(dto.periodStart) };
+    if (dto.periodEnd)
+      where.date = { ...where.date, lte: new Date(dto.periodEnd) };
 
     const stats = await this.prisma.attendance.groupBy({
       by: ['status'],
@@ -57,7 +53,9 @@ export class ReportsService {
       _count: true,
     });
 
-    const totalStudents = await this.prisma.student.count({ where: { status: 'active' } });
+    const totalStudents = await this.prisma.student.count({
+      where: { status: 'active', organizationId: orgId },
+    });
 
     const topAbsentees = await this.prisma.attendance.groupBy({
       by: ['studentId'],
@@ -75,23 +73,34 @@ export class ReportsService {
     };
   }
 
-  // تقرير مالي
-  private async generateFinancialReport(dto: CreateReportDto) {
-    const paymentWhere: any = {};
-    const expenseWhere: any = {};
+  private async generateFinancialReport(orgId: number, dto: CreateReportDto) {
+    const paymentWhere: any = { organizationId: orgId };
+    const expenseWhere: any = { organizationId: orgId };
 
     if (dto.periodStart) {
       paymentWhere.dueDate = { gte: new Date(dto.periodStart) };
       expenseWhere.expenseDate = { gte: new Date(dto.periodStart) };
     }
     if (dto.periodEnd) {
-      paymentWhere.dueDate = { ...paymentWhere.dueDate, lte: new Date(dto.periodEnd) };
-      expenseWhere.expenseDate = { ...expenseWhere.expenseDate, lte: new Date(dto.periodEnd) };
+      paymentWhere.dueDate = {
+        ...paymentWhere.dueDate,
+        lte: new Date(dto.periodEnd),
+      };
+      expenseWhere.expenseDate = {
+        ...expenseWhere.expenseDate,
+        lte: new Date(dto.periodEnd),
+      };
     }
 
     const [income, expenses, paymentsByStatus] = await Promise.all([
-      this.prisma.payment.aggregate({ where: { ...paymentWhere, status: 'paid' }, _sum: { finalAmount: true } }),
-      this.prisma.expense.aggregate({ where: expenseWhere, _sum: { amount: true } }),
+      this.prisma.payment.aggregate({
+        where: { ...paymentWhere, status: 'paid' },
+        _sum: { finalAmount: true },
+      }),
+      this.prisma.expense.aggregate({
+        where: expenseWhere,
+        _sum: { amount: true },
+      }),
       this.prisma.payment.groupBy({
         by: ['status'],
         where: paymentWhere,
@@ -109,18 +118,24 @@ export class ReportsService {
     return {
       totalIncome: income._sum.finalAmount || 0,
       totalExpenses: expenses._sum.amount || 0,
-      netProfit: (Number(income._sum.finalAmount) || 0) - (Number(expenses._sum.amount) || 0),
+      netProfit:
+        (Number(income._sum.finalAmount) || 0) -
+        (Number(expenses._sum.amount) || 0),
       paymentsByStatus,
       expensesByCategory,
       generatedAt: new Date().toISOString(),
     };
   }
 
-  // تقرير الأداء
-  private async generatePerformanceReport(dto: CreateReportDto) {
+  private async generatePerformanceReport(orgId: number, dto: CreateReportDto) {
     const where: any = {};
-    if (dto.periodStart) where.assessmentDate = { gte: new Date(dto.periodStart) };
-    if (dto.periodEnd) where.assessmentDate = { ...where.assessmentDate, lte: new Date(dto.periodEnd) };
+    if (dto.periodStart)
+      where.assessmentDate = { gte: new Date(dto.periodStart) };
+    if (dto.periodEnd)
+      where.assessmentDate = {
+        ...where.assessmentDate,
+        lte: new Date(dto.periodEnd),
+      };
 
     const avgScores = await this.prisma.assessment.groupBy({
       by: ['gradeSubjectId'],
@@ -142,10 +157,9 @@ export class ReportsService {
     };
   }
 
-  // تقرير مقارنة
-  private async generateComparisonReport(dto: CreateReportDto) {
+  private async generateComparisonReport(orgId: number, dto: CreateReportDto) {
     const sections = await this.prisma.section.findMany({
-      where: { status: 'active' },
+      where: { status: 'active', organizationId: orgId },
       include: {
         grade: true,
         _count: { select: { students: true } },
@@ -162,33 +176,35 @@ export class ReportsService {
     };
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(orgId: number, paginationDto: PaginationDto) {
     const { page, limit } = paginationDto;
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
       this.prisma.report.findMany({
-        skip, take: limit,
+        where: { organizationId: orgId },
+        skip,
+        take: limit,
         include: { generator: { select: { id: true, email: true } } },
         orderBy: { generatedAt: 'desc' },
       }),
-      this.prisma.report.count(),
+      this.prisma.report.count({ where: { organizationId: orgId } }),
     ]);
 
     return new PaginatedResult(data, total, page, limit);
   }
 
-  async findOne(id: number) {
-    const report = await this.prisma.report.findUnique({
-      where: { id },
+  async findOne(orgId: number, id: number) {
+    const report = await this.prisma.report.findFirst({
+      where: { id, organizationId: orgId },
       include: { generator: { select: { id: true, email: true } } },
     });
     if (!report) throw new NotFoundException('التقرير غير موجود');
     return report;
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(orgId: number, id: number) {
+    await this.findOne(orgId, id);
     await this.prisma.report.delete({ where: { id } });
     return { message: 'تم حذف التقرير بنجاح' };
   }

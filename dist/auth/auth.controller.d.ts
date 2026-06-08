@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { ChangePasswordDto, LoginDto, RegisterDto, UpdatePreferredLanguageDto } from './dto/auth.dto';
+import { ChangePasswordDto, LoginDto, RefreshTokenDto, RegisterDto, UpdatePreferredLanguageDto } from './dto/auth.dto';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/user.dto';
 export declare class AuthController {
@@ -7,26 +7,36 @@ export declare class AuthController {
     private readonly usersService;
     constructor(authService: AuthService, usersService: UsersService);
     login(loginDto: LoginDto): Promise<{
+        accessToken: string;
+        refreshToken: string;
         user: {
             id: number;
             email: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.UserRole;
+            orgId: number;
             preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
+            source: string;
         };
+    }>;
+    refresh(dto: RefreshTokenDto): Promise<{
         accessToken: string;
+        refreshToken: string;
     }>;
     register(registerDto: RegisterDto): Promise<{
+        accessToken: string;
+        refreshToken: string;
         user: {
             id: number;
             email: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.UserRole;
+            orgId: number;
             preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
+            source: string;
         };
-        accessToken: string;
     }>;
-    registerReception(createUserDto: CreateUserDto): Promise<{
+    registerReception(orgId: number, createUserDto: CreateUserDto): Promise<{
         email: string;
         preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
         phone: string | null;
@@ -55,6 +65,7 @@ export declare class AuthController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -63,18 +74,20 @@ export declare class AuthController {
             email: string | null;
             phone: string;
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
-            address: string | null;
             relationship: import(".prisma/client").$Enums.Relationship;
         } | null;
         teacher: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -88,13 +101,14 @@ export declare class AuthController {
         } | null;
         student: {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -108,7 +122,8 @@ export declare class AuthController {
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
         isActive: boolean;
-        lastLogin: Date | null;
         createdAt: Date;
+        organizationId: number;
+        lastLogin: Date | null;
     }>;
 }

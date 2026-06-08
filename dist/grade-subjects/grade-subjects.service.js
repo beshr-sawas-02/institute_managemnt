@@ -16,9 +16,18 @@ let GradeSubjectsService = class GradeSubjectsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto) {
+    async create(orgId, dto) {
+        const grade = await this.prisma.grade.findFirst({
+            where: { id: dto.gradeId, organizationId: orgId },
+        });
+        if (!grade)
+            throw new common_1.NotFoundException('الصف غير موجود');
         const existing = await this.prisma.gradeSubject.findFirst({
-            where: { gradeId: dto.gradeId, subjectId: dto.subjectId, sectionId: dto.sectionId },
+            where: {
+                gradeId: dto.gradeId,
+                subjectId: dto.subjectId,
+                sectionId: dto.sectionId,
+            },
         });
         if (existing)
             throw new common_1.ConflictException('هذه المادة مربوطة بالصف بالفعل');
@@ -27,43 +36,44 @@ let GradeSubjectsService = class GradeSubjectsService {
             include: { grade: true, subject: true, teacher: true },
         });
     }
-    async findAll() {
+    async findAll(orgId) {
         return this.prisma.gradeSubject.findMany({
+            where: { grade: { organizationId: orgId } },
             include: { grade: true, subject: true, teacher: true },
             orderBy: { gradeId: 'asc' },
         });
     }
-    async findByGrade(gradeId) {
+    async findByGrade(orgId, gradeId) {
         return this.prisma.gradeSubject.findMany({
-            where: { gradeId },
+            where: { gradeId, grade: { organizationId: orgId } },
             include: { subject: true, teacher: true },
         });
     }
-    async findByTeacher(teacherId) {
+    async findByTeacher(orgId, teacherId) {
         return this.prisma.gradeSubject.findMany({
-            where: { teacherId },
+            where: { teacherId, grade: { organizationId: orgId } },
             include: { grade: true, subject: true },
         });
     }
-    async findOne(id) {
-        const gs = await this.prisma.gradeSubject.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const gs = await this.prisma.gradeSubject.findFirst({
+            where: { id, grade: { organizationId: orgId } },
             include: { grade: true, subject: true, teacher: true, schedules: true },
         });
         if (!gs)
             throw new common_1.NotFoundException('مادة الصف غير موجودة');
         return gs;
     }
-    async update(id, dto) {
-        await this.findOne(id);
+    async update(orgId, id, dto) {
+        await this.findOne(orgId, id);
         return this.prisma.gradeSubject.update({
             where: { id },
             data: dto,
             include: { grade: true, subject: true, teacher: true },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.gradeSubject.delete({ where: { id } });
         return { message: 'تم حذف ربط المادة بالصف بنجاح' };
     }

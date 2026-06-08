@@ -1,5 +1,3 @@
-// src/auth/auth.controller.ts
-
 import {
   Body,
   Controller,
@@ -15,6 +13,7 @@ import { AuthService } from './auth.service';
 import {
   ChangePasswordDto,
   LoginDto,
+  RefreshTokenDto,
   RegisterDto,
   UpdatePreferredLanguageDto,
 } from './dto/auth.dto';
@@ -23,7 +22,7 @@ import { CurrentUser } from '../common/decorators';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/user.dto';
 
-@ApiTags('Authentication')
+@ApiTags('Auth - Org')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -33,26 +32,34 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login' })
+  @ApiOperation({ summary: 'Org user login' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token' })
+  async refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refresh(dto);
+  }
+
   @Post('register')
-  @ApiOperation({ summary: 'Register a new account' })
+  @ApiOperation({ summary: 'Register a new org user' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('register-reception')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Create a reception account',
-    description:
-      'Validates that the email already exists in the reception table, then creates login credentials.',
-  })
-  async registerReception(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createReceptionUser(createUserDto);
+  @ApiOperation({ summary: 'Create a reception account' })
+  async registerReception(
+    @CurrentUser('orgId') orgId: number,
+    @Body() createUserDto: CreateUserDto,
+  ) {
+    return this.usersService.createReceptionUser(orgId, createUserDto);
   }
 
   @Post('change-password')
@@ -71,7 +78,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update preferred app language' })
+  @ApiOperation({ summary: 'Update preferred language' })
   async updatePreferredLanguage(
     @CurrentUser('id') userId: number,
     @Body() dto: UpdatePreferredLanguageDto,
@@ -82,7 +89,7 @@ export class AuthController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current profile' })
+  @ApiOperation({ summary: 'Get current user profile' })
   async getProfile(@CurrentUser('id') userId: number) {
     return this.authService.getProfile(userId);
   }

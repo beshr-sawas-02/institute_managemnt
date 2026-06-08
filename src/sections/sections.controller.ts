@@ -1,7 +1,14 @@
-// src/sections/sections.controller.ts
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete,
-  Query, UseGuards, ParseIntPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
@@ -10,7 +17,7 @@ import { CreateSectionDto, UpdateSectionDto } from './dto/section.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 
 @ApiTags('الشعب')
 @Controller('sections')
@@ -22,40 +29,56 @@ export class SectionsController {
   @Post()
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'إضافة شعبة جديدة' })
-  create(@Body() dto: CreateSectionDto) {
-    return this.sectionsService.create(dto);
+  create(@CurrentUser('orgId') orgId: number, @Body() dto: CreateSectionDto) {
+    return this.sectionsService.create(orgId, dto);
   }
 
   @Get()
   @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
   @ApiOperation({ summary: 'جلب جميع الشعب' })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.sectionsService.findAll(paginationDto);
+  findAll(
+    @CurrentUser('orgId') orgId: number,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.sectionsService.findAll(orgId, paginationDto);
   }
 
   @Get('grade/:gradeId')
   @ApiOperation({ summary: 'جلب شعب صف معين' })
-  findByGrade(@Param('gradeId', ParseIntPipe) gradeId: number) {
-    return this.sectionsService.findByGrade(gradeId);
+  findByGrade(
+    @CurrentUser('orgId') orgId: number,
+    @Param('gradeId', ParseIntPipe) gradeId: number,
+  ) {
+    return this.sectionsService.findByGrade(orgId, gradeId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'جلب شعبة بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.sectionsService.findOne(id);
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.sectionsService.findOne(orgId, id);
   }
 
   @Patch(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'تحديث شعبة' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSectionDto) {
-    return this.sectionsService.update(id, dto);
+  update(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSectionDto,
+  ) {
+    return this.sectionsService.update(orgId, id, dto);
   }
 
   @Delete(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف شعبة' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.sectionsService.remove(id);
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.sectionsService.remove(orgId, id);
   }
 }

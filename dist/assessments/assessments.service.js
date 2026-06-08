@@ -20,7 +20,12 @@ let AssessmentsService = class AssessmentsService {
         this.prisma = prisma;
         this.notificationsService = notificationsService;
     }
-    async create(dto) {
+    async create(orgId, dto) {
+        const student = await this.prisma.student.findFirst({
+            where: { id: dto.studentId, organizationId: orgId },
+        });
+        if (!student)
+            throw new common_1.NotFoundException('الطالب غير موجود');
         let percentage = null;
         let grade = null;
         if (dto.score !== undefined && dto.score !== null) {
@@ -72,7 +77,9 @@ let AssessmentsService = class AssessmentsService {
                 relatedId: assessment.id,
                 relatedType: 'assessment',
                 type: dto.score !== undefined && dto.score !== null && percentage !== null
-                    ? (percentage >= 50 ? 'success' : 'warning')
+                    ? percentage >= 50
+                        ? 'success'
+                        : 'warning'
                     : 'info',
                 channel: 'push',
                 content,
@@ -80,12 +87,12 @@ let AssessmentsService = class AssessmentsService {
         }
         return assessment;
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, sectionId, gradeSubjectId } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = {};
+        const where = { student: { organizationId: orgId } };
         if (sectionId) {
-            where.student = { sectionId };
+            where.student = { organizationId: orgId, sectionId };
         }
         if (gradeSubjectId) {
             where.gradeSubjectId = gradeSubjectId;
@@ -105,32 +112,37 @@ let AssessmentsService = class AssessmentsService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findByStudent(studentId) {
+    async findByStudent(orgId, studentId) {
+        const student = await this.prisma.student.findFirst({
+            where: { id: studentId, organizationId: orgId },
+        });
+        if (!student)
+            throw new common_1.NotFoundException('الطالب غير موجود');
         return this.prisma.assessment.findMany({
             where: { studentId },
             include: { gradeSubject: { include: { subject: true } } },
             orderBy: { assessmentDate: 'desc' },
         });
     }
-    async findOne(id) {
-        const assessment = await this.prisma.assessment.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const assessment = await this.prisma.assessment.findFirst({
+            where: { id, student: { organizationId: orgId } },
             include: {
                 student: true,
-                gradeSubject: { include: { subject: true, grade: true, teacher: true } },
+                gradeSubject: {
+                    include: { subject: true, grade: true, teacher: true },
+                },
             },
         });
-        if (!assessment) {
+        if (!assessment)
             throw new common_1.NotFoundException('التقييم غير موجود');
-        }
         return assessment;
     }
-    async update(id, dto) {
-        const existing = await this.findOne(id);
+    async update(orgId, id, dto) {
+        const existing = await this.findOne(orgId, id);
         const data = { ...dto };
-        if (dto.assessmentDate) {
+        if (dto.assessmentDate)
             data.assessmentDate = new Date(dto.assessmentDate);
-        }
         let newPercentage = null;
         let newGrade = null;
         if (dto.score !== undefined && dto.maxScore) {
@@ -184,8 +196,8 @@ let AssessmentsService = class AssessmentsService {
         }
         return updated;
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.assessment.delete({ where: { id } });
         return { message: 'تم حذف التقييم بنجاح' };
     }

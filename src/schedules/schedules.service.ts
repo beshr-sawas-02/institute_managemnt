@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateScheduleDto, UpdateScheduleDto } from './dto/schedule.dto';
 
@@ -6,28 +10,29 @@ import { CreateScheduleDto, UpdateScheduleDto } from './dto/schedule.dto';
 export class SchedulesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateScheduleDto) {
+  async create(orgId: number, dto: CreateScheduleDto) {
+    const section = await this.prisma.section.findFirst({
+      where: { id: dto.sectionId, organizationId: orgId },
+    });
+    if (!section) throw new NotFoundException('الشعبة غير موجودة');
+
     const startTime = new Date(`1970-01-01T${dto.startTime}:00`);
     const endTime = new Date(`1970-01-01T${dto.endTime}:00`);
 
-    // 1. تحقق من تضارب الشعبة
     const sectionConflict = await this.prisma.schedule.findFirst({
       where: {
         sectionId: dto.sectionId,
         dayOfWeek: dto.dayOfWeek,
         status: 'scheduled',
-        AND: [
-          { startTime: { lt: endTime } },
-          { endTime: { gt: startTime } },
-        ],
+        AND: [{ startTime: { lt: endTime } }, { endTime: { gt: startTime } }],
       },
     });
-
     if (sectionConflict) {
-      throw new BadRequestException('يوجد تضارب في الجدول الزمني لهذه الشعبة في هذا الوقت');
+      throw new BadRequestException(
+        'يوجد تضارب في الجدول الزمني لهذه الشعبة في هذا الوقت',
+      );
     }
 
-    // 2. تحقق من تضارب المعلم
     const gradeSubject = await this.prisma.gradeSubject.findUnique({
       where: { id: dto.gradeSubjectId },
       select: { teacherId: true },
@@ -39,24 +44,18 @@ export class SchedulesService {
           dayOfWeek: dto.dayOfWeek,
           status: 'scheduled',
           gradeSubject: { teacherId: gradeSubject.teacherId },
-          AND: [
-            { startTime: { lt: endTime } },
-            { endTime: { gt: startTime } },
-          ],
+          AND: [{ startTime: { lt: endTime } }, { endTime: { gt: startTime } }],
         },
       });
-
       if (teacherConflict) {
-        throw new BadRequestException('المعلم لديه حصة أخرى تتداخل مع هذا الوقت');
+        throw new BadRequestException(
+          'المعلم لديه حصة أخرى تتداخل مع هذا الوقت',
+        );
       }
     }
 
     return this.prisma.schedule.create({
-      data: {
-        ...dto,
-        startTime,
-        endTime,
-      },
+      data: { ...dto, startTime, endTime },
       include: {
         section: { include: { grade: true } },
         gradeSubject: { include: { subject: true, teacher: true } },
@@ -64,8 +63,9 @@ export class SchedulesService {
     });
   }
 
-  async findAll() {
+  async findAll(orgId: number) {
     return this.prisma.schedule.findMany({
+      where: { section: { organizationId: orgId } },
       include: {
         section: { include: { grade: true } },
         gradeSubject: { include: { subject: true, teacher: true } },
@@ -74,9 +74,13 @@ export class SchedulesService {
     });
   }
 
-  async findBySection(sectionId: number) {
+  async findBySection(orgId: number, sectionId: number) {
     return this.prisma.schedule.findMany({
-      where: { sectionId, status: 'scheduled' },
+      where: {
+        sectionId,
+        status: 'scheduled',
+        section: { organizationId: orgId },
+      },
       include: {
         gradeSubject: { include: { subject: true, teacher: true } },
       },
@@ -84,11 +88,12 @@ export class SchedulesService {
     });
   }
 
-  async findByTeacher(teacherId: number) {
+  async findByTeacher(orgId: number, teacherId: number) {
     return this.prisma.schedule.findMany({
       where: {
         gradeSubject: { teacherId },
         status: 'scheduled',
+        section: { organizationId: orgId },
       },
       include: {
         section: { include: { grade: true } },
@@ -98,9 +103,9 @@ export class SchedulesService {
     });
   }
 
-  async findOne(id: number) {
-    const schedule = await this.prisma.schedule.findUnique({
-      where: { id },
+  async findOne(orgId: number, id: number) {
+    const schedule = await this.prisma.schedule.findFirst({
+      where: { id, section: { organizationId: orgId } },
       include: {
         section: { include: { grade: true } },
         gradeSubject: { include: { subject: true, teacher: true } },
@@ -110,8 +115,8 @@ export class SchedulesService {
     return schedule;
   }
 
-  async update(id: number, dto: UpdateScheduleDto) {
-    const existing = await this.findOne(id);
+  async update(orgId: number, id: number, dto: UpdateScheduleDto) {
+    const existing = await this.findOne(orgId, id);
 
     const newStartTime = dto.startTime
       ? new Date(`1970-01-01T${dto.startTime}:00`)
@@ -121,9 +126,8 @@ export class SchedulesService {
       : existing.endTime;
     const newDayOfWeek = dto.dayOfWeek || existing.dayOfWeek;
     const newGradeSubjectId = dto.gradeSubjectId || existing.gradeSubjectId;
-
-    // تحقق من تضارب الشعبة عند التعديل (مع استثناء السجل الحالي)
     const newSectionId = dto.sectionId || existing.sectionId;
+
     const sectionConflict = await this.prisma.schedule.findFirst({
       where: {
         id: { not: id },
@@ -136,12 +140,12 @@ export class SchedulesService {
         ],
       },
     });
-
     if (sectionConflict) {
-      throw new BadRequestException('يوجد تضارب في الجدول الزمني لهذه الشعبة في هذا الوقت');
+      throw new BadRequestException(
+        'يوجد تضارب في الجدول الزمني لهذه الشعبة في هذا الوقت',
+      );
     }
 
-    // تحقق من تضارب المعلم عند التعديل (مع استثناء السجل الحالي)
     const gradeSubject = await this.prisma.gradeSubject.findUnique({
       where: { id: newGradeSubjectId },
       select: { teacherId: true },
@@ -160,9 +164,10 @@ export class SchedulesService {
           ],
         },
       });
-
       if (teacherConflict) {
-        throw new BadRequestException('المعلم لديه حصة أخرى تتداخل مع هذا الوقت');
+        throw new BadRequestException(
+          'المعلم لديه حصة أخرى تتداخل مع هذا الوقت',
+        );
       }
     }
 
@@ -180,8 +185,8 @@ export class SchedulesService {
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(orgId: number, id: number) {
+    await this.findOne(orgId, id);
     await this.prisma.schedule.delete({ where: { id } });
     return { message: 'تم حذف الحصة بنجاح' };
   }

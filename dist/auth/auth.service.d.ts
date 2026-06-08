@@ -1,29 +1,41 @@
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { ChangePasswordDto, LoginDto, RegisterDto, UpdatePreferredLanguageDto } from './dto/auth.dto';
+import { ChangePasswordDto, LoginDto, RefreshTokenDto, RegisterDto, UpdatePreferredLanguageDto } from './dto/auth.dto';
 export declare class AuthService {
     private prisma;
     private jwtService;
-    constructor(prisma: PrismaService, jwtService: JwtService);
+    private configService;
+    constructor(prisma: PrismaService, jwtService: JwtService, configService: ConfigService);
     login(loginDto: LoginDto): Promise<{
+        accessToken: string;
+        refreshToken: string;
         user: {
             id: number;
             email: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.UserRole;
+            orgId: number;
             preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
+            source: string;
         };
-        accessToken: string;
     }>;
     register(registerDto: RegisterDto): Promise<{
+        accessToken: string;
+        refreshToken: string;
         user: {
             id: number;
             email: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.UserRole;
+            orgId: number;
             preferredLanguage: import(".prisma/client").$Enums.AppLanguage;
+            source: string;
         };
+    }>;
+    refresh(dto: RefreshTokenDto): Promise<{
         accessToken: string;
+        refreshToken: string;
     }>;
     changePassword(userId: number, changePasswordDto: ChangePasswordDto): Promise<{
         message: string;
@@ -45,6 +57,7 @@ export declare class AuthService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -53,18 +66,20 @@ export declare class AuthService {
             email: string | null;
             phone: string;
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
-            address: string | null;
             relationship: import(".prisma/client").$Enums.Relationship;
         } | null;
         teacher: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -78,13 +93,14 @@ export declare class AuthService {
         } | null;
         student: {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -98,8 +114,16 @@ export declare class AuthService {
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
         isActive: boolean;
-        lastLogin: Date | null;
         createdAt: Date;
+        organizationId: number;
+        lastLogin: Date | null;
     }>;
-    private generateToken;
+    generateOrgTokens(userId: number, email: string, role: string, orgId: number): Promise<{
+        accessToken: string;
+        refreshToken: string;
+    }>;
+    generatePlatformTokens(userId: number, email: string, role: string): Promise<{
+        accessToken: string;
+        refreshToken: string;
+    }>;
 }

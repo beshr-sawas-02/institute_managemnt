@@ -1,16 +1,24 @@
-// src/reports/reports.controller.ts
-// متحكم التقارير - محدّث مع التقارير الشهرية
-
 import {
-  Controller, Get, Post, Body, Param, Delete,
-  Query, UseGuards, ParseIntPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { ReportsService } from './reports.service';
 import { MonthlyReportService } from './monthly-report.service';
 import { CreateReportDto } from './dto/report.dto';
-import { GenerateMonthlyReportDto, GenerateSectionMonthlyReportDto } from './dto/monthly-report.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
@@ -29,20 +37,19 @@ export class ReportsController {
 
   @Post()
   @ApiOperation({ summary: 'إنشاء تقرير جديد' })
-  create(@CurrentUser('id') userId: number, @Body() dto: CreateReportDto) {
-    return this.service.create(userId, dto);
+  create(
+    @CurrentUser('orgId') orgId: number,
+    @CurrentUser('id') userId: number,
+    @Body() dto: CreateReportDto,
+  ) {
+    return this.service.create(orgId, userId, dto);
   }
-
-  // ==================== التقارير الشهرية ====================
 
   @Get('monthly/student/:studentId')
   @Roles(UserRole.admin, UserRole.reception, UserRole.parent)
-  @ApiOperation({
-    summary: 'تقرير شهري لطالب واحد',
-    description: 'يعرض تقييمات المذاكرات والفحوص فقط (بدون الكويزات والواجبات)',
-  })
-  @ApiQuery({ name: 'month', required: true, example: 3, description: 'رقم الشهر (1-12)' })
-  @ApiQuery({ name: 'year', required: true, example: 2025, description: 'السنة' })
+  @ApiOperation({ summary: 'تقرير شهري لطالب واحد' })
+  @ApiQuery({ name: 'month', required: true })
+  @ApiQuery({ name: 'year', required: true })
   getStudentMonthlyReport(
     @Param('studentId', ParseIntPipe) studentId: number,
     @Query('month') month: number,
@@ -56,12 +63,9 @@ export class ReportsController {
   }
 
   @Get('monthly/section/:sectionId')
-  @ApiOperation({
-    summary: 'تقرير شهري لشعبة كاملة',
-    description: 'يعرض تقارير جميع طلاب الشعبة',
-  })
-  @ApiQuery({ name: 'month', required: true, example: 3 })
-  @ApiQuery({ name: 'year', required: true, example: 2025 })
+  @ApiOperation({ summary: 'تقرير شهري لشعبة كاملة' })
+  @ApiQuery({ name: 'month', required: true })
+  @ApiQuery({ name: 'year', required: true })
   getSectionMonthlyReport(
     @Param('sectionId', ParseIntPipe) sectionId: number,
     @Query('month') month: number,
@@ -75,19 +79,18 @@ export class ReportsController {
   }
 
   @Post('monthly/section/:sectionId/notify')
-  @ApiOperation({
-    summary: 'إنشاء تقرير شهري لشعبة وإرسال إشعارات للأهل',
-    description: 'ينشئ تقرير شهري لكل طالب في الشعبة ويرسل إشعار push لولي أمره',
-  })
-  @ApiQuery({ name: 'month', required: true, example: 3 })
-  @ApiQuery({ name: 'year', required: true, example: 2025 })
+  @ApiOperation({ summary: 'إنشاء تقرير شهري لشعبة وإرسال إشعارات' })
+  @ApiQuery({ name: 'month', required: true })
+  @ApiQuery({ name: 'year', required: true })
   generateAndNotifySectionReports(
+    @CurrentUser('orgId') orgId: number,
+    @CurrentUser('id') userId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
     @Query('month') month: number,
     @Query('year') year: number,
-    @CurrentUser('id') userId: number,
   ) {
     return this.monthlyReportService.generateAndNotifySectionReports(
+      orgId,
       sectionId,
       Number(month),
       Number(year),
@@ -97,41 +100,44 @@ export class ReportsController {
 
   @Post('monthly/all/notify')
   @Roles(UserRole.admin)
-  @ApiOperation({
-    summary: 'إنشاء تقارير شهرية لجميع الشعب وإرسال إشعارات',
-    description: 'ينشئ تقارير شهرية لكل الطلاب في كل الشعب النشطة ويرسل إشعارات لأولياء الأمور',
-  })
-  @ApiQuery({ name: 'month', required: true, example: 3 })
-  @ApiQuery({ name: 'year', required: true, example: 2025 })
+  @ApiOperation({ summary: 'إنشاء تقارير شهرية لجميع الشعب' })
+  @ApiQuery({ name: 'month', required: true })
+  @ApiQuery({ name: 'year', required: true })
   generateAndNotifyAllSections(
+    @CurrentUser('orgId') orgId: number,
+    @CurrentUser('id') userId: number,
     @Query('month') month: number,
     @Query('year') year: number,
-    @CurrentUser('id') userId: number,
   ) {
     return this.monthlyReportService.generateAndNotifyAllSections(
+      orgId,
       Number(month),
       Number(year),
       userId,
     );
   }
 
-  // ==================== التقارير العامة ====================
-
   @Get()
   @ApiOperation({ summary: 'جلب جميع التقارير' })
-  findAll(@Query() p: PaginationDto) {
-    return this.service.findAll(p);
+  findAll(@CurrentUser('orgId') orgId: number, @Query() p: PaginationDto) {
+    return this.service.findAll(orgId, p);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'جلب تقرير بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.findOne(id);
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.findOne(orgId, id);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'حذف تقرير' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.service.remove(id);
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.remove(orgId, id);
   }
 }

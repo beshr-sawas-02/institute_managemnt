@@ -6,7 +6,7 @@ export declare class ReportsController {
     private readonly service;
     private readonly monthlyReportService;
     constructor(service: ReportsService, monthlyReportService: MonthlyReportService);
-    create(userId: number, dto: CreateReportDto): Promise<{
+    create(orgId: number, userId: number, dto: CreateReportDto): Promise<{
         generator: {
             email: string;
             id: number;
@@ -17,6 +17,7 @@ export declare class ReportsController {
         title: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -39,8 +40,8 @@ export declare class ReportsController {
         totalStudents: number;
         reports: import("./monthly-report.service").StudentMonthlyReport[];
     }>;
-    generateAndNotifySectionReports(sectionId: number, month: number, year: number, userId: number): Promise<import("./monthly-report.service").SectionNotifyResult>;
-    generateAndNotifyAllSections(month: number, year: number, userId: number): Promise<{
+    generateAndNotifySectionReports(orgId: number, userId: number, sectionId: number, month: number, year: number): Promise<import("./monthly-report.service").SectionNotifyResult>;
+    generateAndNotifyAllSections(orgId: number, userId: number, month: number, year: number): Promise<{
         message: string;
         totalSections: number;
         totalNotified: number;
@@ -48,7 +49,7 @@ export declare class ReportsController {
         year: number;
         results: (import("./monthly-report.service").SectionNotifyResult | import("./monthly-report.service").SectionNotifyError)[];
     }>;
-    findAll(p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
+    findAll(orgId: number, p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
         generator: {
             email: string;
             id: number;
@@ -59,6 +60,7 @@ export declare class ReportsController {
         title: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -67,7 +69,7 @@ export declare class ReportsController {
         generatedAt: Date;
         generatedBy: number | null;
     }>>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         generator: {
             email: string;
             id: number;
@@ -78,6 +80,7 @@ export declare class ReportsController {
         title: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -86,7 +89,7 @@ export declare class ReportsController {
         generatedAt: Date;
         generatedBy: number | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

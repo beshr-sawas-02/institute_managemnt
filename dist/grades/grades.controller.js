@@ -26,20 +26,20 @@ let GradesController = class GradesController {
     constructor(gradesService) {
         this.gradesService = gradesService;
     }
-    create(createGradeDto) {
-        return this.gradesService.create(createGradeDto);
+    create(orgId, createGradeDto) {
+        return this.gradesService.create(orgId, createGradeDto);
     }
-    findAll(paginationDto) {
-        return this.gradesService.findAll(paginationDto);
+    findAll(orgId, paginationDto) {
+        return this.gradesService.findAll(orgId, paginationDto);
     }
-    findOne(id) {
-        return this.gradesService.findOne(id);
+    findOne(orgId, id) {
+        return this.gradesService.findOne(orgId, id);
     }
-    update(id, updateGradeDto) {
-        return this.gradesService.update(id, updateGradeDto);
+    update(orgId, id, updateGradeDto) {
+        return this.gradesService.update(orgId, id, updateGradeDto);
     }
-    remove(id) {
-        return this.gradesService.remove(id);
+    remove(orgId, id) {
+        return this.gradesService.remove(orgId, id);
     }
 };
 exports.GradesController = GradesController;
@@ -47,45 +47,51 @@ __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'إضافة صف جديد' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [grade_dto_1.CreateGradeDto]),
+    __metadata("design:paramtypes", [Number, grade_dto_1.CreateGradeDto]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع الصفوف' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
+    (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'جلب صف بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث صف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, grade_dto_1.UpdateGradeDto]),
+    __metadata("design:paramtypes", [Number, Number, grade_dto_1.UpdateGradeDto]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف صف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], GradesController.prototype, "remove", null);
 exports.GradesController = GradesController = __decorate([

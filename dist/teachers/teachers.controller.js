@@ -26,20 +26,20 @@ let TeachersController = class TeachersController {
     constructor(teachersService) {
         this.teachersService = teachersService;
     }
-    create(createTeacherDto) {
-        return this.teachersService.create(createTeacherDto);
+    create(orgId, createTeacherDto) {
+        return this.teachersService.create(orgId, createTeacherDto);
     }
-    findAll(paginationDto) {
-        return this.teachersService.findAll(paginationDto);
+    findAll(orgId, paginationDto) {
+        return this.teachersService.findAll(orgId, paginationDto);
     }
-    findOne(id) {
-        return this.teachersService.findOne(id);
+    findOne(orgId, id) {
+        return this.teachersService.findOne(orgId, id);
     }
-    update(id, updateTeacherDto) {
-        return this.teachersService.update(id, updateTeacherDto);
+    update(orgId, id, updateTeacherDto) {
+        return this.teachersService.update(orgId, id, updateTeacherDto);
     }
-    remove(id) {
-        return this.teachersService.remove(id);
+    remove(orgId, id) {
+        return this.teachersService.remove(orgId, id);
     }
 };
 exports.TeachersController = TeachersController;
@@ -47,46 +47,51 @@ __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'إضافة معلم جديد' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [teacher_dto_1.CreateTeacherDto]),
+    __metadata("design:paramtypes", [Number, teacher_dto_1.CreateTeacherDto]),
     __metadata("design:returntype", void 0)
 ], TeachersController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع المعلمين' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], TeachersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'جلب معلم بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], TeachersController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث بيانات المعلم' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, teacher_dto_1.UpdateTeacherDto]),
+    __metadata("design:paramtypes", [Number, Number, teacher_dto_1.UpdateTeacherDto]),
     __metadata("design:returntype", void 0)
 ], TeachersController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف معلم' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], TeachersController.prototype, "remove", null);
 exports.TeachersController = TeachersController = __decorate([

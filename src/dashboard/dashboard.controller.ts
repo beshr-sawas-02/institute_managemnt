@@ -1,41 +1,62 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser, PlatformRoles } from '../common/decorators';
 
 @ApiTags('لوحة التحكم')
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.admin, UserRole.reception)
 @ApiBearerAuth()
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  @Get()
-  @ApiOperation({ summary: 'جلب جميع إحصائيات لوحة التحكم' })
-  getStats() {
-    return this.dashboardService.getStats();
+  @Get('org')
+  @Roles(UserRole.admin, UserRole.reception)
+  @ApiOperation({ summary: 'Org dashboard — students, attendance, finance' })
+  @ApiOkResponse({ description: 'Org stats' })
+  getOrgStats(@CurrentUser('orgId') orgId: number) {
+    return this.dashboardService.getOrgStats(orgId);
+  }
+
+  @Get('platform')
+  @PlatformRoles('super_admin', 'admin')
+  @ApiOperation({
+    summary: 'Platform dashboard — orgs, subscriptions, revenue',
+  })
+  @ApiOkResponse({ description: 'Platform stats' })
+  getPlatformStats() {
+    return this.dashboardService.getPlatformStats();
   }
 
   @Get('financial')
-  @Roles(UserRole.admin,UserRole.reception)
-  @ApiOperation({ summary: 'ملخص مالي شهري' })
+  @Roles(UserRole.admin, UserRole.reception)
+  @ApiOperation({ summary: 'Monthly financial summary' })
+  @ApiOkResponse({ description: 'Income, expenses, net for the month' })
   getFinancialSummary(
+    @CurrentUser('orgId') orgId: number,
     @Query('month') month?: number,
     @Query('year') year?: number,
   ) {
-    return this.dashboardService.getFinancialSummary(month, year);
+    return this.dashboardService.getFinancialSummary(orgId, month, year);
   }
 
   @Get('attendance')
-  @ApiOperation({ summary: 'ملخص الحضور' })
+  @Roles(UserRole.admin, UserRole.reception)
+  @ApiOperation({ summary: 'Attendance summary with top absentees' })
+  @ApiOkResponse({ description: 'Attendance breakdown' })
   getAttendanceSummary(
+    @CurrentUser('orgId') orgId: number,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
   ) {
-    return this.dashboardService.getAttendanceSummary(dateFrom, dateTo);
+    return this.dashboardService.getAttendanceSummary(orgId, dateFrom, dateTo);
   }
 }

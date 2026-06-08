@@ -4,7 +4,7 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 export declare class ParentsController {
     private readonly parentsService;
     constructor(parentsService: ParentsService);
-    create(createParentDto: CreateParentDto): Promise<{
+    create(orgId: number, createParentDto: CreateParentDto): Promise<{
         user: {
             email: string;
             role: import(".prisma/client").$Enums.UserRole;
@@ -14,15 +14,16 @@ export declare class ParentsController {
         email: string | null;
         phone: string;
         id: number;
+        address: string | null;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
-        address: string | null;
         relationship: import(".prisma/client").$Enums.Relationship;
     }>;
-    findAll(paginationDto: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
+    findAll(orgId: number, paginationDto: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
         user: {
             email: string;
             id: number;
@@ -36,15 +37,16 @@ export declare class ParentsController {
         email: string | null;
         phone: string;
         id: number;
+        address: string | null;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
-        address: string | null;
         relationship: import(".prisma/client").$Enums.Relationship;
     }>>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         user: {
             email: string;
             id: number;
@@ -52,11 +54,12 @@ export declare class ParentsController {
         students: ({
             section: ({
                 grade: {
-                    description: string | null;
                     name: string;
+                    description: string | null;
                     id: number;
                     createdAt: Date;
                     updatedAt: Date;
+                    organizationId: number;
                     level: import(".prisma/client").$Enums.GradeLevel;
                 };
             } & {
@@ -64,6 +67,7 @@ export declare class ParentsController {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 status: import(".prisma/client").$Enums.SectionStatus;
                 academicYear: string;
                 gradeId: number;
@@ -71,13 +75,14 @@ export declare class ParentsController {
             }) | null;
         } & {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -89,15 +94,16 @@ export declare class ParentsController {
         email: string | null;
         phone: string;
         id: number;
+        address: string | null;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
-        address: string | null;
         relationship: import(".prisma/client").$Enums.Relationship;
     }>;
-    update(id: number, updateParentDto: UpdateParentDto): Promise<{
+    update(orgId: number, id: number, updateParentDto: UpdateParentDto): Promise<{
         user: {
             email: string;
             id: number;
@@ -106,15 +112,16 @@ export declare class ParentsController {
         email: string | null;
         phone: string;
         id: number;
+        address: string | null;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
-        address: string | null;
         relationship: import(".prisma/client").$Enums.Relationship;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

@@ -15,31 +15,34 @@ export declare class PaymentsController {
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;
                     isActive: boolean;
-                    lastLogin: Date | null;
                     createdAt: Date;
                     updatedAt: Date;
+                    organizationId: number;
+                    lastLogin: Date | null;
                 } | null;
             } & {
                 email: string | null;
                 phone: string;
                 id: number;
+                address: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
-                address: string | null;
                 relationship: import(".prisma/client").$Enums.Relationship;
             }) | null;
         } & {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -51,6 +54,7 @@ export declare class PaymentsController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         status: import(".prisma/client").$Enums.PaymentStatus;
         academicYear: string;
         dueDate: Date;
@@ -62,7 +66,7 @@ export declare class PaymentsController {
         paymentDate: Date | null;
         receiptNumber: string | null;
     }>;
-    findAll(p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
+    findAll(orgId: number, p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
         student: {
             id: number;
             firstName: string;
@@ -72,6 +76,7 @@ export declare class PaymentsController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         status: import(".prisma/client").$Enums.PaymentStatus;
         academicYear: string;
         dueDate: Date;
@@ -83,16 +88,17 @@ export declare class PaymentsController {
         paymentDate: Date | null;
         receiptNumber: string | null;
     }>>;
-    getStats(academicYear?: string): Promise<{
+    getStats(orgId: number, academicYear?: string): Promise<{
         totalPaid: number | import("@prisma/client/runtime/library").Decimal;
         totalPending: number | import("@prisma/client/runtime/library").Decimal;
         totalPartial: number | import("@prisma/client/runtime/library").Decimal;
     }>;
-    findByStudent(id: number, academicYear?: string): Promise<{
+    findByStudent(orgId: number, id: number, academicYear?: string): Promise<{
         payments: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             status: import(".prisma/client").$Enums.PaymentStatus;
             academicYear: string;
             dueDate: Date;
@@ -117,23 +123,25 @@ export declare class PaymentsController {
                 email: string | null;
                 phone: string;
                 id: number;
+                address: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
-                address: string | null;
                 relationship: import(".prisma/client").$Enums.Relationship;
             } | null;
         } & {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -145,6 +153,7 @@ export declare class PaymentsController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         status: import(".prisma/client").$Enums.PaymentStatus;
         academicYear: string;
         dueDate: Date;
@@ -167,31 +176,34 @@ export declare class PaymentsController {
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;
                     isActive: boolean;
-                    lastLogin: Date | null;
                     createdAt: Date;
                     updatedAt: Date;
+                    organizationId: number;
+                    lastLogin: Date | null;
                 } | null;
             } & {
                 email: string | null;
                 phone: string;
                 id: number;
+                address: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
-                address: string | null;
                 relationship: import(".prisma/client").$Enums.Relationship;
             }) | null;
         } & {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -203,6 +215,7 @@ export declare class PaymentsController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         status: import(".prisma/client").$Enums.PaymentStatus;
         academicYear: string;
         dueDate: Date;

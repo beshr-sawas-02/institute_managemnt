@@ -1,5 +1,3 @@
-// src/payments/payments.service.ts
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -19,10 +17,12 @@ export class PaymentsService {
     const discount = dto.discount || 0;
     const finalAmount = dto.amount - discount;
     const receiptNumber = `RCP-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+    const orgId = await this.getStudentOrgId(dto.studentId);
 
     const payment = await this.prisma.payment.create({
       data: {
         ...dto,
+        organizationId: orgId,
         discount,
         finalAmount,
         receiptNumber,
@@ -34,7 +34,7 @@ export class PaymentsService {
       },
     });
 
-    if (payment.student?.parent?.userId) {
+    if (payment.student.parent?.userId) {
       const balance = await this.tuitionFeesService.getStudentBalance(
         dto.studentId,
         dto.academicYear,
@@ -52,19 +52,18 @@ export class PaymentsService {
     return payment;
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(orgId: number, paginationDto: PaginationDto) {
     const { page, limit, search } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? {
-          OR: [
-            { receiptNumber: { contains: search } },
-            { student: { firstName: { contains: search } } },
-            { student: { lastName: { contains: search } } },
-          ],
-        }
-      : {};
+    const where: any = { organizationId: orgId };
+    if (search) {
+      where.OR = [
+        { receiptNumber: { contains: search } },
+        { student: { firstName: { contains: search } } },
+        { student: { lastName: { contains: search } } },
+      ];
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.payment.findMany({
@@ -82,9 +81,13 @@ export class PaymentsService {
     return new PaginatedResult(data, total, page, limit);
   }
 
-  async findByStudent(studentId: number, academicYear?: string) {
+  async findByStudent(orgId: number, studentId: number, academicYear?: string) {
     const payments = await this.prisma.payment.findMany({
-      where: { studentId, ...(academicYear ? { academicYear } : {}) },
+      where: {
+        organizationId: orgId,
+        studentId,
+        ...(academicYear ? { academicYear } : {}),
+      },
       orderBy: { dueDate: 'desc' },
     });
 
@@ -99,8 +102,9 @@ export class PaymentsService {
     return { payments, balance: null };
   }
 
-  async getStats(academicYear?: string) {
-    const where = academicYear ? { academicYear } : {};
+  async getStats(orgId: number, academicYear?: string) {
+    const where: any = { organizationId: orgId };
+    if (academicYear) where.academicYear = academicYear;
 
     const [totalPaid, totalPending, totalPartial] = await Promise.all([
       this.prisma.payment.aggregate({
@@ -136,6 +140,7 @@ export class PaymentsService {
   async update(id: number, dto: UpdatePaymentDto) {
     const current = await this.findOne(id);
     const data: any = { ...dto };
+
     if (dto.dueDate) data.dueDate = new Date(dto.dueDate);
     if (dto.paymentDate) data.paymentDate = new Date(dto.paymentDate);
     if (dto.amount !== undefined || dto.discount !== undefined) {
@@ -153,7 +158,7 @@ export class PaymentsService {
     });
 
     if (dto.status === 'paid' && current.status !== 'paid') {
-      if (updated.student?.parent?.userId) {
+      if (updated.student.parent?.userId) {
         const balance = await this.tuitionFeesService.getStudentBalance(
           updated.studentId,
           updated.academicYear,
@@ -176,5 +181,16 @@ export class PaymentsService {
     await this.findOne(id);
     await this.prisma.payment.delete({ where: { id } });
     return { message: 'تم حذف الدفعة بنجاح' };
+  }
+
+  // ─── Private Helpers ──────────────────────────────────────────────────────
+
+  private async getStudentOrgId(studentId: number): Promise<number> {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      select: { organizationId: true },
+    });
+    if (!student) throw new NotFoundException('الطالب غير موجود');
+    return student.organizationId;
   }
 }

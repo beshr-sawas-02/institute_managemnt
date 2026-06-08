@@ -4,7 +4,7 @@ import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 export declare class TeachersService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(createTeacherDto: CreateTeacherDto): Promise<{
+    create(orgId: number, createTeacherDto: CreateTeacherDto): Promise<{
         user: {
             email: string;
             id: number;
@@ -13,6 +13,7 @@ export declare class TeachersService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
@@ -24,26 +25,28 @@ export declare class TeachersService {
         status: import(".prisma/client").$Enums.TeacherStatus;
         hireDate: Date | null;
     }>;
-    findAll(paginationDto: PaginationDto): Promise<PaginatedResult<{
+    findAll(orgId: number, paginationDto: PaginationDto): Promise<PaginatedResult<{
         user: {
             email: string;
             id: number;
         } | null;
         gradeSubjects: ({
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -58,6 +61,7 @@ export declare class TeachersService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
@@ -69,26 +73,28 @@ export declare class TeachersService {
         status: import(".prisma/client").$Enums.TeacherStatus;
         hireDate: Date | null;
     }>>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         user: {
             email: string;
             id: number;
         } | null;
         gradeSubjects: ({
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
             schedules: ({
                 section: {
@@ -96,6 +102,7 @@ export declare class TeachersService {
                     id: number;
                     createdAt: Date;
                     updatedAt: Date;
+                    organizationId: number;
                     status: import(".prisma/client").$Enums.SectionStatus;
                     academicYear: string;
                     gradeId: number;
@@ -126,6 +133,7 @@ export declare class TeachersService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
@@ -137,7 +145,7 @@ export declare class TeachersService {
         status: import(".prisma/client").$Enums.TeacherStatus;
         hireDate: Date | null;
     }>;
-    update(id: number, updateTeacherDto: UpdateTeacherDto): Promise<{
+    update(orgId: number, id: number, updateTeacherDto: UpdateTeacherDto): Promise<{
         user: {
             email: string;
             id: number;
@@ -146,6 +154,7 @@ export declare class TeachersService {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
@@ -157,7 +166,7 @@ export declare class TeachersService {
         status: import(".prisma/client").$Enums.TeacherStatus;
         hireDate: Date | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

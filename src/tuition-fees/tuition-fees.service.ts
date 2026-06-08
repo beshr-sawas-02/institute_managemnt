@@ -1,20 +1,25 @@
-// src/tuition-fees/tuition-fees.service.ts
-
 import {
   Injectable,
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTuitionFeeDto, UpdateTuitionFeeDto } from './dto/tuition-fee.dto';
+import {
+  CreateTuitionFeeDto,
+  UpdateTuitionFeeDto,
+} from './dto/tuition-fee.dto';
 
 @Injectable()
 export class TuitionFeesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: number, dto: CreateTuitionFeeDto) {
+  async create(orgId: number, userId: number, dto: CreateTuitionFeeDto) {
     const existing = await this.prisma.tuitionFee.findFirst({
-      where: { gradeId: dto.gradeId, academicYear: dto.academicYear },
+      where: {
+        gradeId: dto.gradeId,
+        academicYear: dto.academicYear,
+        organizationId: orgId,
+      },
     });
 
     if (existing) {
@@ -24,10 +29,7 @@ export class TuitionFeesService {
     }
 
     return this.prisma.tuitionFee.create({
-      data: {
-        ...dto,
-        createdBy: userId,
-      },
+      data: { ...dto, organizationId: orgId, createdBy: userId },
       include: {
         grade: { select: { id: true, name: true, level: true } },
         creator: { select: { id: true, email: true } },
@@ -35,8 +37,9 @@ export class TuitionFeesService {
     });
   }
 
-  async findAll(academicYear?: string) {
-    const where = academicYear ? { academicYear } : {};
+  async findAll(orgId: number, academicYear?: string) {
+    const where: any = { organizationId: orgId };
+    if (academicYear) where.academicYear = academicYear;
 
     return this.prisma.tuitionFee.findMany({
       where,
@@ -48,9 +51,9 @@ export class TuitionFeesService {
     });
   }
 
-  async findOne(id: number) {
-    const fee = await this.prisma.tuitionFee.findUnique({
-      where: { id },
+  async findOne(orgId: number, id: number) {
+    const fee = await this.prisma.tuitionFee.findFirst({
+      where: { id, organizationId: orgId },
       include: {
         grade: { select: { id: true, name: true, level: true } },
         creator: { select: { id: true, email: true } },
@@ -61,12 +64,10 @@ export class TuitionFeesService {
     return fee;
   }
 
-  async findByGrade(gradeId: number, academicYear: string) {
+  async findByGrade(orgId: number, gradeId: number, academicYear: string) {
     const fee = await this.prisma.tuitionFee.findFirst({
-      where: { gradeId, academicYear },
-      include: {
-        grade: { select: { id: true, name: true, level: true } },
-      },
+      where: { gradeId, academicYear, organizationId: orgId },
+      include: { grade: { select: { id: true, name: true, level: true } } },
     });
 
     if (!fee)
@@ -76,15 +77,20 @@ export class TuitionFeesService {
     return fee;
   }
 
-  async update(id: number, dto: UpdateTuitionFeeDto) {
-    const current = await this.findOne(id);
+  async update(orgId: number, id: number, dto: UpdateTuitionFeeDto) {
+    const current = await this.findOne(orgId, id);
 
     if (dto.gradeId || dto.academicYear) {
       const gradeId = dto.gradeId ?? current.grade.id;
       const academicYear = dto.academicYear ?? current.academicYear;
 
       const conflict = await this.prisma.tuitionFee.findFirst({
-        where: { gradeId, academicYear, id: { not: id } },
+        where: {
+          gradeId,
+          academicYear,
+          organizationId: orgId,
+          id: { not: id },
+        },
       });
 
       if (conflict) {
@@ -97,36 +103,20 @@ export class TuitionFeesService {
     return this.prisma.tuitionFee.update({
       where: { id },
       data: dto,
-      include: {
-        grade: { select: { id: true, name: true, level: true } },
-      },
+      include: { grade: { select: { id: true, name: true, level: true } } },
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(orgId: number, id: number) {
+    await this.findOne(orgId, id);
     await this.prisma.tuitionFee.delete({ where: { id } });
     return { message: 'تم حذف القسط بنجاح' };
   }
 
-  // ==================== دالة مساعدة ====================
-
-  async getStudentBalance(
-    studentId: number,
-    academicYear: string,
-  ): Promise<{
-    annualAmount: number;
-    totalPaid: number;
-    remaining: number;
-    gradeName: string;
-  } | null> {
+  async getStudentBalance(studentId: number, academicYear: string) {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
-      include: {
-        section: {
-          include: { grade: true },
-        },
-      },
+      include: { section: { include: { grade: true } } },
     });
 
     if (!student?.section?.gradeId) return null;
@@ -135,17 +125,14 @@ export class TuitionFeesService {
       where: {
         gradeId: student.section.gradeId,
         academicYear,
+        organizationId: student.organizationId,
       },
     });
 
     if (!tuitionFee) return null;
 
     const paidAggregate = await this.prisma.payment.aggregate({
-      where: {
-        studentId,
-      
-        status: 'paid',
-      },
+      where: { studentId, status: 'paid' },
       _sum: { finalAmount: true },
     });
 

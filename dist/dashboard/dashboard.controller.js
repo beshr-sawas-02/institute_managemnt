@@ -24,48 +24,69 @@ let DashboardController = class DashboardController {
     constructor(dashboardService) {
         this.dashboardService = dashboardService;
     }
-    getStats() {
-        return this.dashboardService.getStats();
+    getOrgStats(orgId) {
+        return this.dashboardService.getOrgStats(orgId);
     }
-    getFinancialSummary(month, year) {
-        return this.dashboardService.getFinancialSummary(month, year);
+    getPlatformStats() {
+        return this.dashboardService.getPlatformStats();
     }
-    getAttendanceSummary(dateFrom, dateTo) {
-        return this.dashboardService.getAttendanceSummary(dateFrom, dateTo);
+    getFinancialSummary(orgId, month, year) {
+        return this.dashboardService.getFinancialSummary(orgId, month, year);
+    }
+    getAttendanceSummary(orgId, dateFrom, dateTo) {
+        return this.dashboardService.getAttendanceSummary(orgId, dateFrom, dateTo);
     }
 };
 exports.DashboardController = DashboardController;
 __decorate([
-    (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'جلب جميع إحصائيات لوحة التحكم' }),
+    (0, common_1.Get)('org'),
+    (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
+    (0, swagger_1.ApiOperation)({ summary: 'Org dashboard — students, attendance, finance' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Org stats' }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], DashboardController.prototype, "getOrgStats", null);
+__decorate([
+    (0, common_1.Get)('platform'),
+    (0, decorators_1.PlatformRoles)('super_admin', 'admin'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Platform dashboard — orgs, subscriptions, revenue',
+    }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Platform stats' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
-], DashboardController.prototype, "getStats", null);
+], DashboardController.prototype, "getPlatformStats", null);
 __decorate([
     (0, common_1.Get)('financial'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
-    (0, swagger_1.ApiOperation)({ summary: 'ملخص مالي شهري' }),
-    __param(0, (0, common_1.Query)('month')),
-    __param(1, (0, common_1.Query)('year')),
+    (0, swagger_1.ApiOperation)({ summary: 'Monthly financial summary' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Income, expenses, net for the month' }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)('month')),
+    __param(2, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:paramtypes", [Number, Number, Number]),
     __metadata("design:returntype", void 0)
 ], DashboardController.prototype, "getFinancialSummary", null);
 __decorate([
     (0, common_1.Get)('attendance'),
-    (0, swagger_1.ApiOperation)({ summary: 'ملخص الحضور' }),
-    __param(0, (0, common_1.Query)('dateFrom')),
-    __param(1, (0, common_1.Query)('dateTo')),
+    (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
+    (0, swagger_1.ApiOperation)({ summary: 'Attendance summary with top absentees' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Attendance breakdown' }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)('dateFrom')),
+    __param(2, (0, common_1.Query)('dateTo')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [Number, String, String]),
     __metadata("design:returntype", void 0)
 ], DashboardController.prototype, "getAttendanceSummary", null);
 exports.DashboardController = DashboardController = __decorate([
     (0, swagger_1.ApiTags)('لوحة التحكم'),
     (0, common_1.Controller)('dashboard'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, guards_1.RolesGuard),
-    (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [dashboard_service_1.DashboardService])
 ], DashboardController);

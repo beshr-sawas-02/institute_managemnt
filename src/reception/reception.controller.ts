@@ -17,7 +17,7 @@ import { CreateReceptionDto, UpdateReceptionDto } from './dto/reception.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 
 @ApiTags('Reception')
 @Controller('reception')
@@ -29,38 +29,51 @@ export class ReceptionController {
   @Post()
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'Create a reception user profile' })
-  create(@Body() createReceptionDto: CreateReceptionDto) {
-    return this.receptionService.create(createReceptionDto);
+  create(
+    @CurrentUser('orgId') orgId: number,
+    @Body() createReceptionDto: CreateReceptionDto,
+  ) {
+    return this.receptionService.create(orgId, createReceptionDto);
   }
 
   @Get()
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'Get all reception users' })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.receptionService.findAll(paginationDto);
+  findAll(
+    @CurrentUser('orgId') orgId: number,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.receptionService.findAll(orgId, paginationDto);
   }
 
   @Get(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'Get reception user by id' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.receptionService.findOne(id);
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.receptionService.findOne(orgId, id);
   }
 
   @Patch(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'Update reception user' })
   update(
+    @CurrentUser('orgId') orgId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateReceptionDto: UpdateReceptionDto,
   ) {
-    return this.receptionService.update(id, updateReceptionDto);
+    return this.receptionService.update(orgId, id, updateReceptionDto);
   }
 
   @Delete(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'Delete reception user' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.receptionService.remove(id);
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.receptionService.remove(orgId, id);
   }
 }

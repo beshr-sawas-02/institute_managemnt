@@ -1,6 +1,3 @@
-// src/users/users.controller.ts
-// متحكم المستخدمين
-
 import {
   Controller,
   Get,
@@ -20,66 +17,83 @@ import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 
 @ApiTags('المستخدمون')
 @Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'إنشاء مستخدم جديد' })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  create(
+    @CurrentUser('orgId') orgId: number,
+    @Body() createUserDto: CreateUserDto,
+  ) {
+    return this.usersService.create(orgId, createUserDto);
   }
 
   @Post('parent')
-  @ApiOperation({ summary: 'إنشاء حساب ولي أمر بالتحقق من البريد الإلكتروني' })
-  createParentUser(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createParentUser(createUserDto);
+  @Roles(UserRole.admin)
+  @ApiOperation({ summary: 'إنشاء حساب ولي أمر' })
+  createParentUser(
+    @CurrentUser('orgId') orgId: number,
+    @Body() createUserDto: CreateUserDto,
+  ) {
+    return this.usersService.createParentUser(orgId, createUserDto);
   }
 
   @Post('reception')
-  @ApiOperation({ summary: 'Create reception account by verifying email' })
-  createReceptionUser(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createReceptionUser(createUserDto);
+  @Roles(UserRole.admin)
+  @ApiOperation({ summary: 'إنشاء حساب موظف استقبال' })
+  createReceptionUser(
+    @CurrentUser('orgId') orgId: number,
+    @Body() createUserDto: CreateUserDto,
+  ) {
+    return this.usersService.createReceptionUser(orgId, createUserDto);
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'جلب جميع المستخدمين' })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.usersService.findAll(paginationDto);
+  findAll(
+    @CurrentUser('orgId') orgId: number,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.usersService.findAll(orgId, paginationDto);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'جلب مستخدم بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.findOne(id);
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.usersService.findOne(orgId, id);
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'تحديث مستخدم' })
   update(
+    @CurrentUser('orgId') orgId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.update(orgId, id, updateUserDto);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف مستخدم' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.usersService.remove(orgId, id);
   }
 }

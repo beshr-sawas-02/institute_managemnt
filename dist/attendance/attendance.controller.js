@@ -25,41 +25,41 @@ let AttendanceController = class AttendanceController {
     constructor(attendanceService) {
         this.attendanceService = attendanceService;
     }
-    create(dto) {
-        return this.attendanceService.create(dto);
+    create(orgId, dto) {
+        return this.attendanceService.create(orgId, dto);
     }
-    bulkCreate(dto) {
-        return this.attendanceService.bulkCreate(dto);
+    bulkCreate(orgId, dto) {
+        return this.attendanceService.bulkCreate(orgId, dto);
     }
-    smartBulkCreate(dto) {
-        return this.attendanceService.smartBulkCreate(dto);
+    smartBulkCreate(orgId, dto) {
+        return this.attendanceService.smartBulkCreate(orgId, dto);
     }
-    getSectionSheet(sectionId, date) {
-        return this.attendanceService.getSectionAttendanceSheet(sectionId, date);
+    getSectionSheet(orgId, sectionId, date) {
+        return this.attendanceService.getSectionAttendanceSheet(orgId, sectionId, date);
     }
-    findAll(date, sectionId) {
-        return this.attendanceService.findAll({
+    findAll(orgId, date, sectionId) {
+        return this.attendanceService.findAll(orgId, {
             date,
             sectionId: sectionId ? parseInt(sectionId) : undefined,
         });
     }
-    findBySection(sectionId, date) {
-        return this.attendanceService.findBySection(sectionId, date);
+    findBySection(orgId, sectionId, date) {
+        return this.attendanceService.findBySection(orgId, sectionId, date);
     }
-    findByStudent(studentId, dateFrom, dateTo) {
-        return this.attendanceService.findByStudent(studentId, dateFrom, dateTo);
+    findByStudent(orgId, studentId, dateFrom, dateTo) {
+        return this.attendanceService.findByStudent(orgId, studentId, dateFrom, dateTo);
     }
-    getStats(studentId, dateFrom, dateTo) {
-        return this.attendanceService.getStats(studentId, dateFrom, dateTo);
+    getStats(orgId, studentId, dateFrom, dateTo) {
+        return this.attendanceService.getStats(orgId, studentId, dateFrom, dateTo);
     }
-    findOne(id) {
-        return this.attendanceService.findOne(id);
+    findOne(orgId, id) {
+        return this.attendanceService.findOne(orgId, id);
     }
-    update(id, dto) {
-        return this.attendanceService.update(id, dto);
+    update(orgId, id, dto) {
+        return this.attendanceService.update(orgId, id, dto);
     }
-    remove(id) {
-        return this.attendanceService.remove(id);
+    remove(orgId, id) {
+        return this.attendanceService.remove(orgId, id);
     }
 };
 exports.AttendanceController = AttendanceController;
@@ -67,54 +67,53 @@ __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'تسجيل حضور طالب واحد' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [attendance_dto_1.CreateAttendanceDto]),
+    __metadata("design:paramtypes", [Number, attendance_dto_1.CreateAttendanceDto]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "create", null);
 __decorate([
     (0, common_1.Post)('bulk'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'تسجيل حضور جماعي يدوي' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [attendance_dto_1.BulkAttendanceDto]),
+    __metadata("design:paramtypes", [Number, attendance_dto_1.BulkAttendanceDto]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "bulkCreate", null);
 __decorate([
     (0, common_1.Post)('smart-bulk'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
-    (0, swagger_1.ApiOperation)({
-        summary: 'تسجيل حضور ذكي - الكل حضور ما عدا الاستثناءات',
-        description: 'يسجل حضور لكل طلاب الشعبة تلقائياً، فقط الغائبين والمتأخرين يُذكرون في exceptions',
-    }),
-    __param(0, (0, common_1.Body)()),
+    (0, swagger_1.ApiOperation)({ summary: 'تسجيل حضور ذكي - الكل حضور ما عدا الاستثناءات' }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [attendance_dto_1.SmartBulkAttendanceDto]),
+    __metadata("design:paramtypes", [Number, attendance_dto_1.SmartBulkAttendanceDto]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "smartBulkCreate", null);
 __decorate([
     (0, common_1.Get)('section/:sectionId/sheet'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
-    (0, swagger_1.ApiOperation)({
-        summary: 'كشف حضور الشعبة ليوم معين',
-        description: 'يجيب قائمة الطلاب مرتبين أبجدياً مع حالة حضورهم - null إذا لم يُسجَّل بعد',
-    }),
+    (0, swagger_1.ApiOperation)({ summary: 'كشف حضور الشعبة ليوم معين' }),
     (0, swagger_1.ApiQuery)({ name: 'date', example: '2025-09-14' }),
-    __param(0, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('date')),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Query)('date')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, Number, String]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "getSectionSheet", null);
 __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'جلب سجلات الحضور مع فلترة' }),
-    __param(0, (0, common_1.Query)('date')),
-    __param(1, (0, common_1.Query)('sectionId')),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)('date')),
+    __param(2, (0, common_1.Query)('sectionId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [Number, String, String]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "findAll", null);
 __decorate([
@@ -122,60 +121,66 @@ __decorate([
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'حضور شعبة في يوم معين' }),
     (0, swagger_1.ApiQuery)({ name: 'date', example: '2025-09-14' }),
-    __param(0, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('date')),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Query)('date')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, Number, String]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "findBySection", null);
 __decorate([
     (0, common_1.Get)('student/:studentId'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher, client_1.UserRole.parent),
     (0, swagger_1.ApiOperation)({ summary: 'سجل حضور طالب معين' }),
-    __param(0, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('dateFrom')),
-    __param(2, (0, common_1.Query)('dateTo')),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Query)('dateFrom')),
+    __param(3, (0, common_1.Query)('dateTo')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String, String]),
+    __metadata("design:paramtypes", [Number, Number, String, String]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "findByStudent", null);
 __decorate([
     (0, common_1.Get)('stats/:studentId'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher, client_1.UserRole.parent),
     (0, swagger_1.ApiOperation)({ summary: 'إحصائيات حضور طالب' }),
-    __param(0, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('dateFrom')),
-    __param(2, (0, common_1.Query)('dateTo')),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Query)('dateFrom')),
+    __param(3, (0, common_1.Query)('dateTo')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String, String]),
+    __metadata("design:paramtypes", [Number, Number, String, String]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "getStats", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'تفاصيل سجل حضور' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.teacher),
     (0, swagger_1.ApiOperation)({ summary: 'تعديل سجل حضور' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, attendance_dto_1.UpdateAttendanceDto]),
+    __metadata("design:paramtypes", [Number, Number, attendance_dto_1.UpdateAttendanceDto]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف سجل حضور' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], AttendanceController.prototype, "remove", null);
 exports.AttendanceController = AttendanceController = __decorate([

@@ -25,78 +25,93 @@ let GradeSubjectsController = class GradeSubjectsController {
     constructor(service) {
         this.service = service;
     }
-    create(dto) { return this.service.create(dto); }
-    findAll() { return this.service.findAll(); }
-    findByGrade(gradeId) {
-        return this.service.findByGrade(gradeId);
+    create(orgId, dto) {
+        return this.service.create(orgId, dto);
     }
-    findByTeacher(teacherId) {
-        return this.service.findByTeacher(teacherId);
+    findAll(orgId) {
+        return this.service.findAll(orgId);
     }
-    findOne(id) { return this.service.findOne(id); }
-    update(id, dto) {
-        return this.service.update(id, dto);
+    findByGrade(orgId, gradeId) {
+        return this.service.findByGrade(orgId, gradeId);
     }
-    remove(id) { return this.service.remove(id); }
+    findByTeacher(orgId, teacherId) {
+        return this.service.findByTeacher(orgId, teacherId);
+    }
+    findOne(orgId, id) {
+        return this.service.findOne(orgId, id);
+    }
+    update(orgId, id, dto) {
+        return this.service.update(orgId, id, dto);
+    }
+    remove(orgId, id) {
+        return this.service.remove(orgId, id);
+    }
 };
 exports.GradeSubjectsController = GradeSubjectsController;
 __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'ربط مادة بصف' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [grade_subject_dto_1.CreateGradeSubjectDto]),
+    __metadata("design:paramtypes", [Number, grade_subject_dto_1.CreateGradeSubjectDto]),
     __metadata("design:returntype", void 0)
 ], GradeSubjectsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع مواد الصفوف' }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], GradeSubjectsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('grade/:gradeId'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب مواد صف معين' }),
-    __param(0, (0, common_1.Param)('gradeId', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('gradeId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], GradeSubjectsController.prototype, "findByGrade", null);
 __decorate([
     (0, common_1.Get)('teacher/:teacherId'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب مواد معلم معين' }),
-    __param(0, (0, common_1.Param)('teacherId', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('teacherId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], GradeSubjectsController.prototype, "findByTeacher", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'جلب مادة صف بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], GradeSubjectsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث ربط مادة بصف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, grade_subject_dto_1.UpdateGradeSubjectDto]),
+    __metadata("design:paramtypes", [Number, Number, grade_subject_dto_1.UpdateGradeSubjectDto]),
     __metadata("design:returntype", void 0)
 ], GradeSubjectsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف ربط مادة بصف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], GradeSubjectsController.prototype, "remove", null);
 exports.GradeSubjectsController = GradeSubjectsController = __decorate([

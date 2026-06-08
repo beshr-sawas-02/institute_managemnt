@@ -27,8 +27,12 @@ export class AttendanceService {
     private notificationsService: NotificationsService,
   ) {}
 
-  // ==================== تسجيل فردي ====================
-  async create(dto: CreateAttendanceDto) {
+  async create(orgId: number, dto: CreateAttendanceDto) {
+    const student = await this.prisma.student.findFirst({
+      where: { id: dto.studentId, organizationId: orgId },
+    });
+    if (!student) throw new NotFoundException('الطالب غير موجود');
+
     const existing = await this.prisma.attendance.findUnique({
       where: {
         unique_attendance: {
@@ -37,12 +41,8 @@ export class AttendanceService {
         },
       },
     });
-
-    if (existing) {
-      throw new ConflictException(
-        'تم تسجيل حضور هذا الطالب لهذا اليوم مسبقاً',
-      );
-    }
+    if (existing)
+      throw new ConflictException('تم تسجيل حضور هذا الطالب لهذا اليوم مسبقاً');
 
     const attendance = await this.prisma.attendance.create({
       data: {
@@ -69,11 +69,15 @@ export class AttendanceService {
     return attendance;
   }
 
-  // ==================== تسجيل جماعي يدوي ====================
-  async bulkCreate(dto: BulkAttendanceDto) {
+  async bulkCreate(orgId: number, dto: BulkAttendanceDto) {
     const results: any[] = [];
 
     for (const studentData of dto.students) {
+      const student = await this.prisma.student.findFirst({
+        where: { id: studentData.studentId, organizationId: orgId },
+      });
+      if (!student) continue;
+
       const attendance = await this.prisma.attendance.upsert({
         where: {
           unique_attendance: {
@@ -116,21 +120,19 @@ export class AttendanceService {
     };
   }
 
-  // ==================== كشف الحضور للشعبة ====================
-  async getSectionAttendanceSheet(sectionId: number, date: string) {
+  async getSectionAttendanceSheet(
+    orgId: number,
+    sectionId: number,
+    date: string,
+  ) {
     const students = await this.prisma.student.findMany({
-      where: { sectionId, status: 'active' },
+      where: { sectionId, organizationId: orgId, status: 'active' },
       orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-      },
+      select: { id: true, firstName: true, lastName: true },
     });
 
-    if (students.length === 0) {
+    if (students.length === 0)
       throw new NotFoundException('لا يوجد طلاب في هذه الشعبة');
-    }
 
     const existingRecords = await this.prisma.attendance.findMany({
       where: {
@@ -156,23 +158,23 @@ export class AttendanceService {
     };
   }
 
-  // ==================== تسجيل ذكي ====================
-  async smartBulkCreate(dto: SmartBulkAttendanceDto) {
+  async smartBulkCreate(orgId: number, dto: SmartBulkAttendanceDto) {
     const students = await this.prisma.student.findMany({
-      where: { sectionId: dto.sectionId, status: 'active' },
+      where: {
+        sectionId: dto.sectionId,
+        organizationId: orgId,
+        status: 'active',
+      },
       orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
       include: {
         parent: {
-          include: {
-            user: { select: { id: true, email: true, role: true } },
-          },
+          include: { user: { select: { id: true, email: true, role: true } } },
         },
       },
     });
 
-    if (students.length === 0) {
+    if (students.length === 0)
       throw new NotFoundException('لا يوجد طلاب في هذه الشعبة');
-    }
 
     const exceptionsMap = new Map(
       (dto.exceptions || []).map((e) => [e.studentId, e]),
@@ -182,7 +184,6 @@ export class AttendanceService {
 
     for (const student of students) {
       const exception = exceptionsMap.get(student.id);
-
       const attendanceData = {
         studentId: student.id,
         date: new Date(dto.date),
@@ -224,7 +225,6 @@ export class AttendanceService {
       });
 
       await this.handleAttendanceNotification(attendance as any);
-
       results.push({
         order: results.length + 1,
         studentId: student.id,
@@ -251,16 +251,16 @@ export class AttendanceService {
     };
   }
 
-  // ==================== جلب السجلات ====================
-  async findAll(filters?: { date?: string; sectionId?: number }) {
-    const where: any = {};
+  async findAll(
+    orgId: number,
+    filters?: { date?: string; sectionId?: number },
+  ) {
+    const where: any = { student: { organizationId: orgId } };
 
-    if (filters?.date) {
-      where.date = new Date(filters.date);
-    }
+    if (filters?.date) where.date = new Date(filters.date);
 
     if (filters?.sectionId) {
-      where.student = { sectionId: filters.sectionId };
+      where.student = { organizationId: orgId, sectionId: filters.sectionId };
     }
 
     return this.prisma.attendance.findMany({
@@ -279,9 +279,18 @@ export class AttendanceService {
     });
   }
 
-  async findByStudent(studentId: number, dateFrom?: string, dateTo?: string) {
-    const where: any = { studentId };
+  async findByStudent(
+    orgId: number,
+    studentId: number,
+    dateFrom?: string,
+    dateTo?: string,
+  ) {
+    const student = await this.prisma.student.findFirst({
+      where: { id: studentId, organizationId: orgId },
+    });
+    if (!student) throw new NotFoundException('الطالب غير موجود');
 
+    const where: any = { studentId };
     if (dateFrom || dateTo) {
       where.date = {};
       if (dateFrom) where.date.gte = new Date(dateFrom);
@@ -294,58 +303,59 @@ export class AttendanceService {
     });
   }
 
-  async findBySection(sectionId: number, date: string) {
+  async findBySection(orgId: number, sectionId: number, date: string) {
     return this.prisma.attendance.findMany({
       where: {
         date: new Date(date),
-        student: { sectionId },
+        student: { sectionId, organizationId: orgId },
       },
       include: {
-        student: {
-          select: { id: true, firstName: true, lastName: true },
-        },
+        student: { select: { id: true, firstName: true, lastName: true } },
       },
       orderBy: { studentId: 'asc' },
     });
   }
 
-  async findOne(id: number) {
-    const attendance = await this.prisma.attendance.findUnique({
-      where: { id },
+  async findOne(orgId: number, id: number) {
+    const attendance = await this.prisma.attendance.findFirst({
+      where: { id, student: { organizationId: orgId } },
       include: {
-        student: {
-          select: { id: true, firstName: true, lastName: true },
-        },
+        student: { select: { id: true, firstName: true, lastName: true } },
       },
     });
     if (!attendance) throw new NotFoundException('سجل الحضور غير موجود');
     return attendance;
   }
 
-  // ==================== تعديل وحذف ====================
-  async update(id: number, dto: UpdateAttendanceDto) {
-    await this.findOne(id);
+  async update(orgId: number, id: number, dto: UpdateAttendanceDto) {
+    await this.findOne(orgId, id);
     return this.prisma.attendance.update({
       where: { id },
       data: dto,
       include: {
-        student: {
-          select: { id: true, firstName: true, lastName: true },
-        },
+        student: { select: { id: true, firstName: true, lastName: true } },
       },
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(orgId: number, id: number) {
+    await this.findOne(orgId, id);
     await this.prisma.attendance.delete({ where: { id } });
     return { message: 'تم حذف سجل الحضور بنجاح' };
   }
 
-  // ==================== إحصائيات ====================
-  async getStats(studentId: number, dateFrom?: string, dateTo?: string) {
-    const where: any = { studentId };
+  async getStats(
+    orgId: number,
+    studentId: number,
+    dateFrom?: string,
+    dateTo?: string,
+  ) {
+    const student = await this.prisma.student.findFirst({
+      where: { id: studentId, organizationId: orgId },
+    });
+    if (!student) throw new NotFoundException('الطالب غير موجود');
 
+    const where: any = { studentId };
     if (dateFrom || dateTo) {
       where.date = {};
       if (dateFrom) where.date.gte = new Date(dateFrom);
@@ -353,14 +363,12 @@ export class AttendanceService {
     }
 
     const records = await this.prisma.attendance.findMany({ where });
-
     const total = records.length;
     const present = records.filter((r) => r.status === 'present').length;
     const absent = records.filter((r) => r.status === 'absent').length;
     const late = records.filter((r) => r.status === 'late').length;
     const excused = records.filter((r) => r.status === 'excused').length;
-    const attendanceRate =
-      total > 0 ? ((present + late) / total) * 100 : 0;
+    const attendanceRate = total > 0 ? ((present + late) / total) * 100 : 0;
 
     return {
       studentId,
@@ -373,15 +381,11 @@ export class AttendanceService {
     };
   }
 
-  // ==================== إشعارات ====================
   private async handleAttendanceNotification(attendance: any) {
     try {
       if (attendance.parentNotified) return;
 
-      if (
-        attendance.status === 'absent' &&
-        attendance.student?.parent?.user
-      ) {
+      if (attendance.status === 'absent' && attendance.student?.parent?.user) {
         await this.notificationsService.notifyAbsence(
           attendance.studentId,
           attendance.id,

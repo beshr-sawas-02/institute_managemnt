@@ -1,7 +1,14 @@
-// src/subjects/subjects.controller.ts
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete,
-  Query, UseGuards, ParseIntPipe,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
@@ -10,7 +17,7 @@ import { CreateSubjectDto, UpdateSubjectDto } from './dto/subject.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 
 @ApiTags('المواد الدراسية')
 @Controller('subjects')
@@ -22,25 +29,43 @@ export class SubjectsController {
   @Post()
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'إضافة مادة جديدة' })
-  create(@Body() dto: CreateSubjectDto) { return this.subjectsService.create(dto); }
+  create(@CurrentUser('orgId') orgId: number, @Body() dto: CreateSubjectDto) {
+    return this.subjectsService.create(orgId, dto);
+  }
 
   @Get()
   @ApiOperation({ summary: 'جلب جميع المواد' })
-  findAll(@Query() p: PaginationDto) { return this.subjectsService.findAll(p); }
+  findAll(@CurrentUser('orgId') orgId: number, @Query() p: PaginationDto) {
+    return this.subjectsService.findAll(orgId, p);
+  }
 
   @Get(':id')
   @ApiOperation({ summary: 'جلب مادة بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) { return this.subjectsService.findOne(id); }
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.subjectsService.findOne(orgId, id);
+  }
 
   @Patch(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'تحديث مادة' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSubjectDto) {
-    return this.subjectsService.update(id, dto);
+  update(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSubjectDto,
+  ) {
+    return this.subjectsService.update(orgId, id, dto);
   }
 
   @Delete(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف مادة' })
-  remove(@Param('id', ParseIntPipe) id: number) { return this.subjectsService.remove(id); }
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.subjectsService.remove(orgId, id);
+  }
 }

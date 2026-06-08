@@ -25,9 +25,11 @@ let PaymentsService = class PaymentsService {
         const discount = dto.discount || 0;
         const finalAmount = dto.amount - discount;
         const receiptNumber = `RCP-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+        const orgId = await this.getStudentOrgId(dto.studentId);
         const payment = await this.prisma.payment.create({
             data: {
                 ...dto,
+                organizationId: orgId,
                 discount,
                 finalAmount,
                 receiptNumber,
@@ -38,24 +40,23 @@ let PaymentsService = class PaymentsService {
                 student: { include: { parent: { include: { user: true } } } },
             },
         });
-        if (payment.student?.parent?.userId) {
+        if (payment.student.parent?.userId) {
             const balance = await this.tuitionFeesService.getStudentBalance(dto.studentId, dto.academicYear);
             await this.notificationsService.notifyNewPaymentWithBalance(dto.studentId, finalAmount, dto.dueDate, payment.id, balance);
         }
         return payment;
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search
-            ? {
-                OR: [
-                    { receiptNumber: { contains: search } },
-                    { student: { firstName: { contains: search } } },
-                    { student: { lastName: { contains: search } } },
-                ],
-            }
-            : {};
+        const where = { organizationId: orgId };
+        if (search) {
+            where.OR = [
+                { receiptNumber: { contains: search } },
+                { student: { firstName: { contains: search } } },
+                { student: { lastName: { contains: search } } },
+            ];
+        }
         const [data, total] = await Promise.all([
             this.prisma.payment.findMany({
                 where,
@@ -70,9 +71,13 @@ let PaymentsService = class PaymentsService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findByStudent(studentId, academicYear) {
+    async findByStudent(orgId, studentId, academicYear) {
         const payments = await this.prisma.payment.findMany({
-            where: { studentId, ...(academicYear ? { academicYear } : {}) },
+            where: {
+                organizationId: orgId,
+                studentId,
+                ...(academicYear ? { academicYear } : {}),
+            },
             orderBy: { dueDate: 'desc' },
         });
         if (academicYear) {
@@ -81,8 +86,10 @@ let PaymentsService = class PaymentsService {
         }
         return { payments, balance: null };
     }
-    async getStats(academicYear) {
-        const where = academicYear ? { academicYear } : {};
+    async getStats(orgId, academicYear) {
+        const where = { organizationId: orgId };
+        if (academicYear)
+            where.academicYear = academicYear;
         const [totalPaid, totalPending, totalPartial] = await Promise.all([
             this.prisma.payment.aggregate({
                 where: { ...where, status: 'paid' },
@@ -132,7 +139,7 @@ let PaymentsService = class PaymentsService {
             },
         });
         if (dto.status === 'paid' && current.status !== 'paid') {
-            if (updated.student?.parent?.userId) {
+            if (updated.student.parent?.userId) {
                 const balance = await this.tuitionFeesService.getStudentBalance(updated.studentId, updated.academicYear);
                 await this.notificationsService.notifyPaymentConfirmedWithBalance(updated.studentId, Number(updated.finalAmount), updated.receiptNumber || '', updated.id, balance);
             }
@@ -143,6 +150,15 @@ let PaymentsService = class PaymentsService {
         await this.findOne(id);
         await this.prisma.payment.delete({ where: { id } });
         return { message: 'تم حذف الدفعة بنجاح' };
+    }
+    async getStudentOrgId(studentId) {
+        const student = await this.prisma.student.findUnique({
+            where: { id: studentId },
+            select: { organizationId: true },
+        });
+        if (!student)
+            throw new common_1.NotFoundException('الطالب غير موجود');
+        return student.organizationId;
     }
 };
 exports.PaymentsService = PaymentsService;

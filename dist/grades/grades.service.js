@@ -17,13 +17,17 @@ let GradesService = class GradesService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(createGradeDto) {
-        return this.prisma.grade.create({ data: createGradeDto });
+    async create(orgId, createGradeDto) {
+        return this.prisma.grade.create({
+            data: { ...createGradeDto, organizationId: orgId },
+        });
     }
-    async findAll(paginationDto) {
+    async findAll(orgId, paginationDto) {
         const { page, limit, search } = paginationDto;
         const skip = (page - 1) * limit;
-        const where = search ? { name: { contains: search } } : {};
+        const where = { organizationId: orgId };
+        if (search)
+            where.name = { contains: search };
         const [data, total] = await Promise.all([
             this.prisma.grade.findMany({
                 where,
@@ -39,9 +43,9 @@ let GradesService = class GradesService {
         ]);
         return new pagination_dto_1.PaginatedResult(data, total, page, limit);
     }
-    async findOne(id) {
-        const grade = await this.prisma.grade.findUnique({
-            where: { id },
+    async findOne(orgId, id) {
+        const grade = await this.prisma.grade.findFirst({
+            where: { id, organizationId: orgId },
             include: {
                 sections: {
                     include: { students: { where: { status: 'active' } } },
@@ -55,15 +59,15 @@ let GradesService = class GradesService {
             throw new common_1.NotFoundException('الصف غير موجود');
         return grade;
     }
-    async update(id, updateGradeDto) {
-        await this.findOne(id);
+    async update(orgId, id, updateGradeDto) {
+        await this.findOne(orgId, id);
         return this.prisma.grade.update({
             where: { id },
             data: updateGradeDto,
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(orgId, id) {
+        await this.findOne(orgId, id);
         await this.prisma.grade.delete({ where: { id } });
         return { message: 'تم حذف الصف بنجاح' };
     }

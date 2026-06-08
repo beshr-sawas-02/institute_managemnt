@@ -26,20 +26,20 @@ let ReceptionController = class ReceptionController {
     constructor(receptionService) {
         this.receptionService = receptionService;
     }
-    create(createReceptionDto) {
-        return this.receptionService.create(createReceptionDto);
+    create(orgId, createReceptionDto) {
+        return this.receptionService.create(orgId, createReceptionDto);
     }
-    findAll(paginationDto) {
-        return this.receptionService.findAll(paginationDto);
+    findAll(orgId, paginationDto) {
+        return this.receptionService.findAll(orgId, paginationDto);
     }
-    findOne(id) {
-        return this.receptionService.findOne(id);
+    findOne(orgId, id) {
+        return this.receptionService.findOne(orgId, id);
     }
-    update(id, updateReceptionDto) {
-        return this.receptionService.update(id, updateReceptionDto);
+    update(orgId, id, updateReceptionDto) {
+        return this.receptionService.update(orgId, id, updateReceptionDto);
     }
-    remove(id) {
-        return this.receptionService.remove(id);
+    remove(orgId, id) {
+        return this.receptionService.remove(orgId, id);
     }
 };
 exports.ReceptionController = ReceptionController;
@@ -47,46 +47,51 @@ __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'Create a reception user profile' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [reception_dto_1.CreateReceptionDto]),
+    __metadata("design:paramtypes", [Number, reception_dto_1.CreateReceptionDto]),
     __metadata("design:returntype", void 0)
 ], ReceptionController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'Get all reception users' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], ReceptionController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'Get reception user by id' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], ReceptionController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'Update reception user' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, reception_dto_1.UpdateReceptionDto]),
+    __metadata("design:paramtypes", [Number, Number, reception_dto_1.UpdateReceptionDto]),
     __metadata("design:returntype", void 0)
 ], ReceptionController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'Delete reception user' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], ReceptionController.prototype, "remove", null);
 exports.ReceptionController = ReceptionController = __decorate([

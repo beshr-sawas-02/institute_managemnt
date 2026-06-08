@@ -4,7 +4,7 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 export declare class AssessmentsController {
     private readonly service;
     constructor(service: AssessmentsService);
-    create(dto: CreateAssessmentDto): Promise<{
+    create(orgId: number, dto: CreateAssessmentDto): Promise<{
         student: {
             parent: ({
                 user: {
@@ -15,31 +15,34 @@ export declare class AssessmentsController {
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;
                     isActive: boolean;
-                    lastLogin: Date | null;
                     createdAt: Date;
                     updatedAt: Date;
+                    organizationId: number;
+                    lastLogin: Date | null;
                 } | null;
             } & {
                 email: string | null;
                 phone: string;
                 id: number;
+                address: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
-                address: string | null;
                 relationship: import(".prisma/client").$Enums.Relationship;
             }) | null;
         } & {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -52,6 +55,7 @@ export declare class AssessmentsController {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -64,11 +68,12 @@ export declare class AssessmentsController {
                 hireDate: Date | null;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -94,7 +99,7 @@ export declare class AssessmentsController {
         feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
     }>;
-    findAll(p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
+    findAll(orgId: number, p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
         student: {
             id: number;
             firstName: string;
@@ -102,19 +107,21 @@ export declare class AssessmentsController {
         };
         gradeSubject: {
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -140,14 +147,15 @@ export declare class AssessmentsController {
         feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
     }>>;
-    findByStudent(id: number): Promise<({
+    findByStudent(orgId: number, studentId: number): Promise<({
         gradeSubject: {
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -173,16 +181,17 @@ export declare class AssessmentsController {
         feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
     })[]>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         student: {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -195,6 +204,7 @@ export declare class AssessmentsController {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -207,19 +217,21 @@ export declare class AssessmentsController {
                 hireDate: Date | null;
             };
             grade: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -245,7 +257,7 @@ export declare class AssessmentsController {
         feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
     }>;
-    update(id: number, dto: UpdateAssessmentDto): Promise<{
+    update(orgId: number, id: number, dto: UpdateAssessmentDto): Promise<{
         student: {
             parent: ({
                 user: {
@@ -256,31 +268,34 @@ export declare class AssessmentsController {
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;
                     isActive: boolean;
-                    lastLogin: Date | null;
                     createdAt: Date;
                     updatedAt: Date;
+                    organizationId: number;
+                    lastLogin: Date | null;
                 } | null;
             } & {
                 email: string | null;
                 phone: string;
                 id: number;
+                address: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
-                address: string | null;
                 relationship: import(".prisma/client").$Enums.Relationship;
             }) | null;
         } & {
             id: number;
+            address: string | null;
             createdAt: Date;
             updatedAt: Date;
+            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
             status: import(".prisma/client").$Enums.StudentStatus;
-            address: string | null;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -293,6 +308,7 @@ export declare class AssessmentsController {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -305,11 +321,12 @@ export declare class AssessmentsController {
                 hireDate: Date | null;
             };
             subject: {
-                description: string | null;
                 name: string;
+                description: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                organizationId: number;
             };
         } & {
             id: number;
@@ -335,7 +352,7 @@ export declare class AssessmentsController {
         feedback: string | null;
         percentage: import("@prisma/client/runtime/library").Decimal | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

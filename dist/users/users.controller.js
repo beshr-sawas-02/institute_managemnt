@@ -26,99 +26,104 @@ let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
     }
-    create(createUserDto) {
-        return this.usersService.create(createUserDto);
+    create(orgId, createUserDto) {
+        return this.usersService.create(orgId, createUserDto);
     }
-    createParentUser(createUserDto) {
-        return this.usersService.createParentUser(createUserDto);
+    createParentUser(orgId, createUserDto) {
+        return this.usersService.createParentUser(orgId, createUserDto);
     }
-    createReceptionUser(createUserDto) {
-        return this.usersService.createReceptionUser(createUserDto);
+    createReceptionUser(orgId, createUserDto) {
+        return this.usersService.createReceptionUser(orgId, createUserDto);
     }
-    findAll(paginationDto) {
-        return this.usersService.findAll(paginationDto);
+    findAll(orgId, paginationDto) {
+        return this.usersService.findAll(orgId, paginationDto);
     }
-    findOne(id) {
-        return this.usersService.findOne(id);
+    findOne(orgId, id) {
+        return this.usersService.findOne(orgId, id);
     }
-    update(id, updateUserDto) {
-        return this.usersService.update(id, updateUserDto);
+    update(orgId, id, updateUserDto) {
+        return this.usersService.update(orgId, id, updateUserDto);
     }
-    remove(id) {
-        return this.usersService.remove(id);
+    remove(orgId, id) {
+        return this.usersService.remove(orgId, id);
     }
 };
 exports.UsersController = UsersController;
 __decorate([
     (0, common_1.Post)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, guards_1.RolesGuard),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'إنشاء مستخدم جديد' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_dto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [Number, user_dto_1.CreateUserDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "create", null);
 __decorate([
     (0, common_1.Post)('parent'),
-    (0, swagger_1.ApiOperation)({ summary: 'إنشاء حساب ولي أمر بالتحقق من البريد الإلكتروني' }),
-    __param(0, (0, common_1.Body)()),
+    (0, decorators_1.Roles)(client_1.UserRole.admin),
+    (0, swagger_1.ApiOperation)({ summary: 'إنشاء حساب ولي أمر' }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_dto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [Number, user_dto_1.CreateUserDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "createParentUser", null);
 __decorate([
     (0, common_1.Post)('reception'),
-    (0, swagger_1.ApiOperation)({ summary: 'Create reception account by verifying email' }),
-    __param(0, (0, common_1.Body)()),
+    (0, decorators_1.Roles)(client_1.UserRole.admin),
+    (0, swagger_1.ApiOperation)({ summary: 'إنشاء حساب موظف استقبال' }),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_dto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [Number, user_dto_1.CreateUserDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "createReceptionUser", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, guards_1.RolesGuard),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'جلب جميع المستخدمين' }),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [Number, pagination_dto_1.PaginationDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, guards_1.RolesGuard),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'جلب مستخدم بالمعرف' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, guards_1.RolesGuard),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'تحديث مستخدم' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, user_dto_1.UpdateUserDto]),
+    __metadata("design:paramtypes", [Number, Number, user_dto_1.UpdateUserDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, guards_1.RolesGuard),
     (0, decorators_1.Roles)(client_1.UserRole.admin),
     (0, swagger_1.ApiOperation)({ summary: 'حذف مستخدم' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "remove", null);
 exports.UsersController = UsersController = __decorate([
     (0, swagger_1.ApiTags)('المستخدمون'),
     (0, common_1.Controller)('users'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, guards_1.RolesGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [users_service_1.UsersService])
 ], UsersController);

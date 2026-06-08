@@ -1,5 +1,3 @@
-// src/notifications/notifications.service.ts
-
 import {
   AppLanguage,
   NotificationChannel,
@@ -61,22 +59,29 @@ export class NotificationsService {
 
   async create(dto: CreateNotificationInput) {
     const preferredLanguage =
-      dto.preferredLanguage ?? (await this.getUserPreferredLanguage(dto.userId));
+      dto.preferredLanguage ??
+      (await this.getUserPreferredLanguage(dto.userId));
     const localizedContent = this.buildLocalizedContent(dto);
 
     if (!localizedContent) {
       throw new BadRequestException('عنوان الإشعار ومحتواه مطلوبان');
     }
 
-    const title = this.resolveLocalizedText(localizedContent.title, preferredLanguage);
+    const title = this.resolveLocalizedText(
+      localizedContent.title,
+      preferredLanguage,
+    );
     const message = this.resolveLocalizedText(
       localizedContent.message,
       preferredLanguage,
     );
     const channel = dto.channel ?? 'in_app';
 
+    const orgId = await this.getUserOrgId(dto.userId);
+
     const notification = await this.prisma.notification.create({
       data: {
+        organizationId: orgId,
         userId: dto.userId,
         relatedId: dto.relatedId,
         relatedType: dto.relatedType,
@@ -366,8 +371,8 @@ export class NotificationsService {
       }),
     ]);
 
-    return notifications.map((notification) =>
-      this.localizeNotification(notification, preferredLanguage),
+    return notifications.map((n) =>
+      this.localizeNotification(n, preferredLanguage),
     );
   }
 
@@ -383,16 +388,16 @@ export class NotificationsService {
       where: { id },
     });
 
-    if (!notification) {
-      throw new NotFoundException('الإشعار غير موجود');
-    }
+    if (!notification) throw new NotFoundException('الإشعار غير موجود');
 
     const updated = await this.prisma.notification.update({
       where: { id },
       data: { isRead: true, readAt: new Date() },
     });
 
-    const preferredLanguage = await this.getUserPreferredLanguage(updated.userId);
+    const preferredLanguage = await this.getUserPreferredLanguage(
+      updated.userId,
+    );
     return this.localizeNotification(updated, preferredLanguage);
   }
 
@@ -401,7 +406,6 @@ export class NotificationsService {
       where: { userId, isRead: false },
       data: { isRead: true, readAt: new Date() },
     });
-
     return { message: 'تم تحديد جميع الإشعارات كمقروءة' };
   }
 
@@ -410,9 +414,7 @@ export class NotificationsService {
       where: { id },
     });
 
-    if (!notification) {
-      throw new NotFoundException('الإشعار غير موجود');
-    }
+    if (!notification) throw new NotFoundException('الإشعار غير موجود');
 
     await this.prisma.notification.delete({ where: { id } });
     return { message: 'تم حذف الإشعار بنجاح' };
@@ -448,29 +450,40 @@ export class NotificationsService {
     };
   }
 
+  // ─── Private Helpers ──────────────────────────────────────────────────────
+
   private async getUserPreferredLanguage(userId: number): Promise<AppLanguage> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { preferredLanguage: true },
     });
-
     return user?.preferredLanguage ?? 'ar';
+  }
+
+  private async getUserOrgId(userId: number): Promise<number> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+    if (!user) throw new NotFoundException('المستخدم غير موجود');
+    return user.organizationId;
   }
 
   private buildLocalizedContent(
     dto: CreateNotificationInput,
   ): StoredLocalizedContent | null {
-    const title = this.normalizeLocalizedText(dto.title, dto.titleAr, dto.titleEn);
+    const title = this.normalizeLocalizedText(
+      dto.title,
+      dto.titleAr,
+      dto.titleEn,
+    );
     const message = this.normalizeLocalizedText(
       dto.message,
       dto.messageAr,
       dto.messageEn,
     );
 
-    if (!title || !message) {
-      return null;
-    }
-
+    if (!title || !message) return null;
     return { title, message };
   }
 
@@ -482,11 +495,7 @@ export class NotificationsService {
     const defaultValue = fallback?.trim();
     const ar = arabic?.trim() || defaultValue || english?.trim();
     const en = english?.trim() || defaultValue || arabic?.trim();
-
-    if (!ar || !en) {
-      return null;
-    }
-
+    if (!ar || !en) return null;
     return { ar, en };
   }
 
@@ -501,21 +510,16 @@ export class NotificationsService {
     data: Record<string, any> | undefined,
     localizedContent: StoredLocalizedContent,
   ) {
-    return {
-      ...(data ?? {}),
-      localizedContent,
-    };
+    return { ...(data ?? {}), localizedContent };
   }
 
-  private extractLocalizedContent(data: unknown): StoredLocalizedContent | null {
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      return null;
-    }
+  private extractLocalizedContent(
+    data: unknown,
+  ): StoredLocalizedContent | null {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
 
     const localizedContent = (data as Record<string, any>).localizedContent;
-    if (!localizedContent || typeof localizedContent !== 'object') {
-      return null;
-    }
+    if (!localizedContent || typeof localizedContent !== 'object') return null;
 
     if (
       !localizedContent.title ||
@@ -531,19 +535,18 @@ export class NotificationsService {
     return localizedContent as StoredLocalizedContent;
   }
 
-  private localizeNotification<T extends { title: string; message: string; data: any }>(
-    notification: T,
-    preferredLanguage: AppLanguage,
-  ): T {
+  private localizeNotification<
+    T extends { title: string; message: string; data: any },
+  >(notification: T, preferredLanguage: AppLanguage): T {
     const localizedContent = this.extractLocalizedContent(notification.data);
-
-    if (!localizedContent) {
-      return notification;
-    }
+    if (!localizedContent) return notification;
 
     return {
       ...notification,
-      title: this.resolveLocalizedText(localizedContent.title, preferredLanguage),
+      title: this.resolveLocalizedText(
+        localizedContent.title,
+        preferredLanguage,
+      ),
       message: this.resolveLocalizedText(
         localizedContent.message,
         preferredLanguage,

@@ -9,8 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const jwt_1 = require("@nestjs/jwt");
+const schedule_1 = require("@nestjs/schedule");
 const prisma_module_1 = require("./prisma/prisma.module");
 const auth_module_1 = require("./auth/auth.module");
+const platform_auth_module_1 = require("./platform-auth/platform-auth.module");
+const organizations_module_1 = require("./organizations/organizations.module");
+const subscriptions_module_1 = require("./subscriptions/subscriptions.module");
 const users_module_1 = require("./users/users.module");
 const parents_module_1 = require("./parents/parents.module");
 const teachers_module_1 = require("./teachers/teachers.module");
@@ -29,17 +34,32 @@ const reports_module_1 = require("./reports/reports.module");
 const dashboard_module_1 = require("./dashboard/dashboard.module");
 const tuition_fees_module_1 = require("./tuition-fees/tuition-fees.module");
 const reception_module_1 = require("./reception/reception.module");
+const subscription_middleware_1 = require("./common/middleware/subscription.middleware");
 let AppModule = class AppModule {
+    configure(consumer) {
+        consumer
+            .apply(subscription_middleware_1.SubscriptionMiddleware)
+            .forRoutes({ path: '*', method: common_1.RequestMethod.ALL });
+    }
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({
-                isGlobal: true,
+            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            schedule_1.ScheduleModule.forRoot(),
+            jwt_1.JwtModule.registerAsync({
+                imports: [config_1.ConfigModule],
+                useFactory: (configService) => ({
+                    secret: configService.get('JWT_SECRET'),
+                }),
+                inject: [config_1.ConfigService],
             }),
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
+            platform_auth_module_1.PlatformAuthModule,
+            organizations_module_1.OrganizationsModule,
+            subscriptions_module_1.SubscriptionsModule,
             users_module_1.UsersModule,
             parents_module_1.ParentsModule,
             teachers_module_1.TeachersModule,

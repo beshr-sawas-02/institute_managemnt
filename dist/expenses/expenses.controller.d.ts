@@ -4,7 +4,7 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 export declare class ExpensesController {
     private readonly service;
     constructor(service: ExpensesService);
-    create(userId: number, dto: CreateExpenseDto): Promise<{
+    create(orgId: number, userId: number, dto: CreateExpenseDto): Promise<{
         creator: {
             email: string;
             id: number;
@@ -14,6 +14,7 @@ export declare class ExpensesController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -21,7 +22,7 @@ export declare class ExpensesController {
         expenseDate: Date;
         attachments: string | null;
     }>;
-    findAll(p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
+    findAll(orgId: number, p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
         creator: {
             email: string;
             id: number;
@@ -31,6 +32,7 @@ export declare class ExpensesController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -38,7 +40,7 @@ export declare class ExpensesController {
         expenseDate: Date;
         attachments: string | null;
     }>>;
-    getStats(dateFrom?: string, dateTo?: string): Promise<{
+    getStats(orgId: number, dateFrom?: string, dateTo?: string): Promise<{
         total: number | import("@prisma/client/runtime/library").Decimal;
         byCategory: (import(".prisma/client").Prisma.PickEnumerable<import(".prisma/client").Prisma.ExpenseGroupByOutputType, "category"[]> & {
             _count: number;
@@ -48,7 +50,7 @@ export declare class ExpensesController {
         })[];
         availableBalance: number;
     }>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         creator: {
             email: string;
             id: number;
@@ -58,6 +60,7 @@ export declare class ExpensesController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -65,7 +68,7 @@ export declare class ExpensesController {
         expenseDate: Date;
         attachments: string | null;
     }>;
-    update(id: number, dto: UpdateExpenseDto): Promise<{
+    update(orgId: number, id: number, dto: UpdateExpenseDto): Promise<{
         creator: {
             email: string;
             id: number;
@@ -75,6 +78,7 @@ export declare class ExpensesController {
         id: number;
         createdAt: Date;
         updatedAt: Date;
+        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -82,7 +86,7 @@ export declare class ExpensesController {
         expenseDate: Date;
         attachments: string | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

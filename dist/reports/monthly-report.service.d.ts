@@ -73,8 +73,8 @@ export declare class MonthlyReportService {
         totalStudents: number;
         reports: StudentMonthlyReport[];
     }>;
-    generateAndNotifySectionReports(sectionId: number, month: number, year: number, generatedByUserId: number): Promise<SectionNotifyResult>;
-    generateAndNotifyAllSections(month: number, year: number, generatedByUserId: number): Promise<{
+    generateAndNotifySectionReports(orgId: number, sectionId: number, month: number, year: number, generatedByUserId: number): Promise<SectionNotifyResult>;
+    generateAndNotifyAllSections(orgId: number, month: number, year: number, generatedByUserId: number): Promise<{
         message: string;
         totalSections: number;
         totalNotified: number;

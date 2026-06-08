@@ -1,6 +1,3 @@
-// src/teachers/teachers.service.ts
-// خدمة إدارة المعلمين
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTeacherDto, UpdateTeacherDto } from './dto/teacher.dto';
@@ -10,11 +7,9 @@ import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 export class TeachersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createTeacherDto: CreateTeacherDto) {
-    const data: any = { ...createTeacherDto };
-    if (data.hireDate) {
-      data.hireDate = new Date(data.hireDate);
-    }
+  async create(orgId: number, createTeacherDto: CreateTeacherDto) {
+    const data: any = { ...createTeacherDto, organizationId: orgId };
+    if (data.hireDate) data.hireDate = new Date(data.hireDate);
 
     return this.prisma.teacher.create({
       data,
@@ -22,19 +17,18 @@ export class TeachersService {
     });
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(orgId: number, paginationDto: PaginationDto) {
     const { page, limit, search } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const where = search
-      ? {
-          OR: [
-            { firstName: { contains: search } },
-            { lastName: { contains: search } },
-            { specialization: { contains: search } },
-          ],
-        }
-      : {};
+    const where: any = { organizationId: orgId };
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search } },
+        { lastName: { contains: search } },
+        { specialization: { contains: search } },
+      ];
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.teacher.findMany({
@@ -43,12 +37,7 @@ export class TeachersService {
         take: limit,
         include: {
           user: { select: { id: true, email: true } },
-          gradeSubjects: {
-            include: {
-              grade: true,
-              subject: true,
-            },
-          },
+          gradeSubjects: { include: { grade: true, subject: true } },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -58,36 +47,29 @@ export class TeachersService {
     return new PaginatedResult(data, total, page, limit);
   }
 
-  async findOne(id: number) {
-    const teacher = await this.prisma.teacher.findUnique({
-      where: { id },
+  async findOne(orgId: number, id: number) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { id, organizationId: orgId },
       include: {
         user: { select: { id: true, email: true } },
         gradeSubjects: {
           include: {
             grade: true,
             subject: true,
-            schedules: {
-              include: { section: true },
-            },
+            schedules: { include: { section: true } },
           },
         },
       },
     });
 
-    if (!teacher) {
-      throw new NotFoundException('المعلم غير موجود');
-    }
-
+    if (!teacher) throw new NotFoundException('المعلم غير موجود');
     return teacher;
   }
 
-  async update(id: number, updateTeacherDto: UpdateTeacherDto) {
-    await this.findOne(id);
+  async update(orgId: number, id: number, updateTeacherDto: UpdateTeacherDto) {
+    await this.findOne(orgId, id);
     const data: any = { ...updateTeacherDto };
-    if (data.hireDate) {
-      data.hireDate = new Date(data.hireDate);
-    }
+    if (data.hireDate) data.hireDate = new Date(data.hireDate);
 
     return this.prisma.teacher.update({
       where: { id },
@@ -96,8 +78,8 @@ export class TeachersService {
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(orgId: number, id: number) {
+    await this.findOne(orgId, id);
     await this.prisma.teacher.delete({ where: { id } });
     return { message: 'تم حذف المعلم بنجاح' };
   }

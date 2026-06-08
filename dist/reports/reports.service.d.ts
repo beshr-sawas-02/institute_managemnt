@@ -4,7 +4,7 @@ import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 export declare class ReportsService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(userId: number, dto: CreateReportDto): Promise<{
+    create(orgId: number, userId: number, dto: CreateReportDto): Promise<{
         generator: {
             email: string;
             id: number;
@@ -15,6 +15,7 @@ export declare class ReportsService {
         title: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -27,7 +28,7 @@ export declare class ReportsService {
     private generateFinancialReport;
     private generatePerformanceReport;
     private generateComparisonReport;
-    findAll(paginationDto: PaginationDto): Promise<PaginatedResult<{
+    findAll(orgId: number, paginationDto: PaginationDto): Promise<PaginatedResult<{
         generator: {
             email: string;
             id: number;
@@ -38,6 +39,7 @@ export declare class ReportsService {
         title: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -46,7 +48,7 @@ export declare class ReportsService {
         generatedAt: Date;
         generatedBy: number | null;
     }>>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         generator: {
             email: string;
             id: number;
@@ -57,6 +59,7 @@ export declare class ReportsService {
         title: string;
         id: number;
         createdAt: Date;
+        organizationId: number;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -65,7 +68,7 @@ export declare class ReportsService {
         generatedAt: Date;
         generatedBy: number | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
 }

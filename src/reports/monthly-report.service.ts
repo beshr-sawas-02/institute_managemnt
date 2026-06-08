@@ -1,5 +1,3 @@
-// src/reports/monthly-report.service.ts
-
 import {
   BadRequestException,
   Injectable,
@@ -31,16 +29,8 @@ export interface StudentReportSummary {
 }
 
 export interface StudentMonthlyReport {
-  student: {
-    id: number;
-    name: string;
-    section: string;
-  };
-  period: {
-    month: number;
-    year: number;
-    monthName: string;
-  };
+  student: { id: number; name: string; section: string };
+  period: { month: number; year: number; monthName: string };
   assessments: StudentReportAssessment[];
   summary: StudentReportSummary;
 }
@@ -79,9 +69,7 @@ export class MonthlyReportService {
       },
     });
 
-    if (!student) {
-      throw new NotFoundException('الطالب غير موجود');
-    }
+    if (!student) throw new NotFoundException('الطالب غير موجود');
 
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
@@ -90,27 +78,19 @@ export class MonthlyReportService {
       where: {
         studentId,
         type: { in: ['midterm', 'final'] },
-        assessmentDate: {
-          gte: startDate,
-          lte: endDate,
-        },
+        assessmentDate: { gte: startDate, lte: endDate },
       },
       include: {
-        gradeSubject: {
-          include: {
-            subject: true,
-            teacher: true,
-          },
-        },
+        gradeSubject: { include: { subject: true, teacher: true } },
       },
       orderBy: { assessmentDate: 'asc' },
     });
 
-    const scoredAssessments = assessments.filter((assessment) => assessment.score !== null);
+    const scoredAssessments = assessments.filter((a) => a.score !== null);
     const averagePercentage =
       scoredAssessments.length > 0
         ? scoredAssessments.reduce(
-            (sum, assessment) => sum + Number(assessment.percentage || 0),
+            (sum, a) => sum + Number(a.percentage || 0),
             0,
           ) / scoredAssessments.length
         : null;
@@ -123,26 +103,21 @@ export class MonthlyReportService {
           ? `${student.section.grade?.name} - ${student.section.name}`
           : 'غير محدد',
       },
-      period: {
-        month,
-        year,
-        monthName: this.getArabicMonthName(month),
-      },
-      assessments: assessments.map((assessment) => ({
-        id: assessment.id,
-        subject: assessment.gradeSubject?.subject?.name || 'غير محدد',
-        teacher: assessment.gradeSubject?.teacher
-          ? `${assessment.gradeSubject.teacher.firstName} ${assessment.gradeSubject.teacher.lastName}`
+      period: { month, year, monthName: this.getArabicMonthName(month) },
+      assessments: assessments.map((a) => ({
+        id: a.id,
+        subject: a.gradeSubject?.subject?.name || 'غير محدد',
+        teacher: a.gradeSubject?.teacher
+          ? `${a.gradeSubject.teacher.firstName} ${a.gradeSubject.teacher.lastName}`
           : 'غير محدد',
-        type: assessment.type === 'midterm' ? 'مذاكرة' : 'فحص نهائي',
-        title: assessment.title,
-        maxScore: Number(assessment.maxScore),
-        score: assessment.score !== null ? Number(assessment.score) : null,
-        percentage:
-          assessment.percentage !== null ? Number(assessment.percentage) : null,
-        grade: assessment.grade,
-        date: assessment.assessmentDate,
-        feedback: assessment.feedback,
+        type: a.type === 'midterm' ? 'مذاكرة' : 'فحص نهائي',
+        title: a.title,
+        maxScore: Number(a.maxScore),
+        score: a.score !== null ? Number(a.score) : null,
+        percentage: a.percentage !== null ? Number(a.percentage) : null,
+        grade: a.grade,
+        date: a.assessmentDate,
+        feedback: a.feedback,
       })),
       summary: {
         totalAssessments: assessments.length,
@@ -169,9 +144,7 @@ export class MonthlyReportService {
       include: { grade: true },
     });
 
-    if (!section) {
-      throw new NotFoundException('الشعبة غير موجودة');
-    }
+    if (!section) throw new NotFoundException('الشعبة غير موجودة');
 
     const students = await this.prisma.student.findMany({
       where: { sectionId, status: 'active' },
@@ -180,12 +153,9 @@ export class MonthlyReportService {
 
     const reports: StudentMonthlyReport[] = [];
     for (const student of students) {
-      const report = await this.generateStudentMonthlyReport(
-        student.id,
-        month,
-        year,
+      reports.push(
+        await this.generateStudentMonthlyReport(student.id, month, year),
       );
-      reports.push(report);
     }
 
     return {
@@ -193,17 +163,14 @@ export class MonthlyReportService {
         id: section.id,
         name: `${section.grade.name} - ${section.name}`,
       },
-      period: {
-        month,
-        year,
-        monthName: this.getArabicMonthName(month),
-      },
+      period: { month, year, monthName: this.getArabicMonthName(month) },
       totalStudents: reports.length,
       reports,
     };
   }
 
   async generateAndNotifySectionReports(
+    orgId: number,
     sectionId: number,
     month: number,
     year: number,
@@ -218,7 +185,6 @@ export class MonthlyReportService {
       month,
       year,
     );
-
     let notifiedCount = 0;
     const monthName = this.getArabicMonthName(month);
 
@@ -234,12 +200,12 @@ export class MonthlyReportService {
           sectionName: report.student.section,
           month,
           year,
-          assessments: report.assessments.map((assessment) => ({
-            subject: assessment.subject,
-            score: assessment.score,
-            maxScore: assessment.maxScore,
-            percentage: assessment.percentage,
-            grade: assessment.grade,
+          assessments: report.assessments.map((a) => ({
+            subject: a.subject,
+            score: a.score,
+            maxScore: a.maxScore,
+            percentage: a.percentage,
+            grade: a.grade,
           })),
           averagePercentage: report.summary.averagePercentage,
           overallGrade: report.summary.overallGrade,
@@ -252,11 +218,7 @@ export class MonthlyReportService {
           relatedType: 'assessment',
           type: 'info',
           channel: 'push',
-          data: {
-            studentId: report.student.id,
-            month,
-            year,
-          },
+          data: { studentId: report.student.id, month, year },
           content,
         });
 
@@ -266,6 +228,7 @@ export class MonthlyReportService {
 
     const savedReport = await this.prisma.report.create({
       data: {
+        organizationId: orgId,
         generatedBy: generatedByUserId,
         type: 'performance',
         title: `تقرير شهري - ${sectionReports.section.name} - ${monthName} ${year}`,
@@ -288,6 +251,7 @@ export class MonthlyReportService {
   }
 
   async generateAndNotifyAllSections(
+    orgId: number,
     month: number,
     year: number,
     generatedByUserId: number,
@@ -297,7 +261,7 @@ export class MonthlyReportService {
     }
 
     const sections = await this.prisma.section.findMany({
-      where: { status: 'active' },
+      where: { status: 'active', organizationId: orgId },
       select: { id: true, name: true, grade: { select: { name: true } } },
     });
 
@@ -307,6 +271,7 @@ export class MonthlyReportService {
     for (const section of sections) {
       try {
         const result = await this.generateAndNotifySectionReports(
+          orgId,
           section.id,
           month,
           year,
@@ -354,7 +319,6 @@ export class MonthlyReportService {
       'نوفمبر',
       'ديسمبر',
     ];
-
     return months[month - 1] || '';
   }
 

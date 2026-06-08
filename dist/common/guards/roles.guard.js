@@ -12,23 +12,38 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RolesGuard = void 0;
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
-const roles_decorator_1 = require("../decorators/roles.decorator");
+const decorators_1 = require("../decorators");
 let RolesGuard = class RolesGuard {
     constructor(reflector) {
         this.reflector = reflector;
     }
     canActivate(context) {
-        const requiredRoles = this.reflector.getAllAndOverride(roles_decorator_1.ROLES_KEY, [context.getHandler(), context.getClass()]);
-        if (!requiredRoles) {
+        const requiredRoles = this.reflector.getAllAndOverride(decorators_1.ROLES_KEY, [context.getHandler(), context.getClass()]);
+        const requiredPlatformRoles = this.reflector.getAllAndOverride(decorators_1.PLATFORM_ROLES_KEY, [context.getHandler(), context.getClass()]);
+        if (!requiredRoles?.length && !requiredPlatformRoles?.length) {
             return true;
         }
         const { user } = context.switchToHttp().getRequest();
         if (!user) {
-            throw new common_1.ForbiddenException('غير مصرح لك بالوصول');
+            throw new common_1.ForbiddenException('غير مصرح بالوصول');
         }
-        const hasRole = requiredRoles.some((role) => user.role === role);
-        if (!hasRole) {
-            throw new common_1.ForbiddenException('ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد');
+        if (requiredPlatformRoles?.length) {
+            if (user.source !== 'platform') {
+                throw new common_1.ForbiddenException('ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد');
+            }
+            if (!requiredPlatformRoles.includes(user.role)) {
+                throw new common_1.ForbiddenException('ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد');
+            }
+            return true;
+        }
+        if (requiredRoles?.length) {
+            if (user.source !== 'org') {
+                throw new common_1.ForbiddenException('ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد');
+            }
+            if (!requiredRoles.includes(user.role)) {
+                throw new common_1.ForbiddenException('ليس لديك الصلاحيات الكافية للوصول إلى هذا المورد');
+            }
+            return true;
         }
         return true;
     }

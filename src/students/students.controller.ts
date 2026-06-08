@@ -1,6 +1,3 @@
-// src/students/students.controller.ts
-// متحكم الطلاب
-
 import {
   Controller,
   Get,
@@ -20,7 +17,7 @@ import { CreateStudentDto, UpdateStudentDto } from './dto/student.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards';
-import { Roles } from '../common/decorators';
+import { Roles, CurrentUser } from '../common/decorators';
 
 @ApiTags('الطلاب')
 @Controller('students')
@@ -32,52 +29,71 @@ export class StudentsController {
   @Post()
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'تسجيل طالب جديد' })
-  create(@Body() createStudentDto: CreateStudentDto) {
-    return this.studentsService.create(createStudentDto);
+  create(
+    @CurrentUser('orgId') orgId: number,
+    @Body() createStudentDto: CreateStudentDto,
+  ) {
+    return this.studentsService.create(orgId, createStudentDto);
   }
 
   @Get()
   @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
   @ApiOperation({ summary: 'جلب جميع الطلاب' })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.studentsService.findAll(paginationDto);
+  findAll(
+    @CurrentUser('orgId') orgId: number,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.studentsService.findAll(orgId, paginationDto);
   }
 
   @Get('section/:sectionId')
   @Roles(UserRole.admin, UserRole.reception, UserRole.teacher)
   @ApiOperation({ summary: 'جلب طلاب شعبة معينة' })
-  findBySection(@Param('sectionId', ParseIntPipe) sectionId: number) {
-    return this.studentsService.findBySection(sectionId);
+  findBySection(
+    @CurrentUser('orgId') orgId: number,
+    @Param('sectionId', ParseIntPipe) sectionId: number,
+  ) {
+    return this.studentsService.findBySection(orgId, sectionId);
   }
 
   @Get('parent/:parentId')
   @Roles(UserRole.admin, UserRole.reception, UserRole.parent)
   @ApiOperation({ summary: 'جلب طلاب ولي أمر معين' })
-  findByParent(@Param('parentId', ParseIntPipe) parentId: number) {
-    return this.studentsService.findByParent(parentId);
+  findByParent(
+    @CurrentUser('orgId') orgId: number,
+    @Param('parentId', ParseIntPipe) parentId: number,
+  ) {
+    return this.studentsService.findByParent(orgId, parentId);
   }
 
   @Get(':id')
   @Roles(UserRole.admin, UserRole.reception, UserRole.teacher, UserRole.parent)
   @ApiOperation({ summary: 'جلب طالب بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.findOne(id);
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.studentsService.findOne(orgId, id);
   }
 
   @Patch(':id')
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'تحديث بيانات طالب' })
   update(
+    @CurrentUser('orgId') orgId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateStudentDto: UpdateStudentDto,
   ) {
-    return this.studentsService.update(id, updateStudentDto);
+    return this.studentsService.update(orgId, id, updateStudentDto);
   }
 
   @Delete(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف طالب' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.remove(id);
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.studentsService.remove(orgId, id);
   }
 }
