@@ -59,11 +59,15 @@ __decorate([
 class PaginatedResult {
     constructor(data, total, page, limit) {
         this.data = data;
+        this.total = total;
+        this.page = page;
+        this.limit = limit;
+        this.totalPages = Math.ceil(total / limit);
         this.meta = {
             total,
             page,
             limit,
-            totalPages: Math.ceil(total / limit),
+            totalPages: this.totalPages,
             hasNextPage: page < Math.ceil(total / limit),
         };
     }

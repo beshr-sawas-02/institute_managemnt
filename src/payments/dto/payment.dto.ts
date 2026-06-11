@@ -1,6 +1,7 @@
 // src/payments/dto/payment.dto.ts
 import {
   IsInt, IsNotEmpty, IsOptional, IsString, IsNumber, IsEnum, IsDateString,
+  IsIn,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { PaymentStatus } from '@prisma/client';
@@ -18,6 +19,11 @@ export class CreatePaymentDto {
   @ApiProperty({ example: 5000 })
   @IsNumber()
   amount: number;
+
+  @ApiPropertyOptional({ enum: ['SYP', 'USD'], default: 'SYP' })
+  @IsOptional()
+  @IsIn(['SYP', 'USD'])
+  currency?: 'SYP' | 'USD';
 
   @ApiPropertyOptional({ example: 500 })
   @IsOptional()

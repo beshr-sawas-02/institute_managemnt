@@ -51,9 +51,9 @@ export declare class DashboardService {
             };
         } & {
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.PaymentStatus;
             academicYear: string;
             dueDate: Date;
@@ -62,6 +62,7 @@ export declare class DashboardService {
             finalAmount: import("@prisma/client/runtime/library").Decimal | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
+            currency: string;
             paymentDate: Date | null;
             receiptNumber: string | null;
         })[];
@@ -101,8 +102,8 @@ export declare class DashboardService {
         recentOrgs: ({
             subscriptions: {
                 id: number;
-                createdAt: Date;
                 organizationId: number;
+                createdAt: Date;
                 status: string;
                 plan: string;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -116,11 +117,15 @@ export declare class DashboardService {
             slug: string;
             phone: string | null;
             id: number;
-            address: string | null;
-            logo: string | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            nameAr: string | null;
+            nameEn: string | null;
+            typeAr: string | null;
+            typeEn: string | null;
+            address: string | null;
+            logo: string | null;
         })[];
     }>;
     getFinancialSummary(orgId: number, month?: number, year?: number): Promise<{

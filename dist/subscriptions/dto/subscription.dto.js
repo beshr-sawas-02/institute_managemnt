@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExtendSubscriptionDto = exports.UpdateSubscriptionDto = exports.CreateSubscriptionDto = void 0;
+exports.UpdateSubscriptionStatusDto = exports.ExtendSubscriptionDto = exports.UpdateSubscriptionDto = exports.CreateSubscriptionDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class CreateSubscriptionDto {
@@ -51,4 +51,12 @@ __decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], ExtendSubscriptionDto.prototype, "endDate", void 0);
+class UpdateSubscriptionStatusDto {
+}
+exports.UpdateSubscriptionStatusDto = UpdateSubscriptionStatusDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: ['active', 'paused'] }),
+    (0, class_validator_1.IsIn)(['active', 'paused']),
+    __metadata("design:type", String)
+], UpdateSubscriptionStatusDto.prototype, "status", void 0);
 //# sourceMappingURL=subscription.dto.js.map

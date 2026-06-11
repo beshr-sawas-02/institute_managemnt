@@ -30,9 +30,12 @@ __decorate([
     __metadata("design:type", String)
 ], LoginDto.prototype, "password", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Organization slug', example: 'default-org' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Organization slug (resolved automatically from email)',
+        example: 'default-org',
+    }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)({ message: 'معرف المؤسسة مطلوب' }),
     __metadata("design:type", String)
 ], LoginDto.prototype, "slug", void 0);
 __decorate([

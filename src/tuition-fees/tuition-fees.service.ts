@@ -14,6 +14,7 @@ export class TuitionFeesService {
   constructor(private prisma: PrismaService) {}
 
   async create(orgId: number, userId: number, dto: CreateTuitionFeeDto) {
+    await this.ensureGradeBelongsToOrg(orgId, dto.gradeId);
     const existing = await this.prisma.tuitionFee.findFirst({
       where: {
         gradeId: dto.gradeId,
@@ -79,6 +80,9 @@ export class TuitionFeesService {
 
   async update(orgId: number, id: number, dto: UpdateTuitionFeeDto) {
     const current = await this.findOne(orgId, id);
+    if (dto.gradeId !== undefined) {
+      await this.ensureGradeBelongsToOrg(orgId, dto.gradeId);
+    }
 
     if (dto.gradeId || dto.academicYear) {
       const gradeId = dto.gradeId ?? current.grade.id;
@@ -113,9 +117,13 @@ export class TuitionFeesService {
     return { message: 'تم حذف القسط بنجاح' };
   }
 
-  async getStudentBalance(studentId: number, academicYear: string) {
-    const student = await this.prisma.student.findUnique({
-      where: { id: studentId },
+  async getStudentBalance(
+    orgId: number,
+    studentId: number,
+    academicYear: string,
+  ) {
+    const student = await this.prisma.student.findFirst({
+      where: { id: studentId, organizationId: orgId },
       include: { section: { include: { grade: true } } },
     });
 
@@ -132,7 +140,7 @@ export class TuitionFeesService {
     if (!tuitionFee) return null;
 
     const paidAggregate = await this.prisma.payment.aggregate({
-      where: { studentId, status: 'paid' },
+      where: { studentId, organizationId: orgId, status: 'paid' },
       _sum: { finalAmount: true },
     });
 
@@ -146,5 +154,13 @@ export class TuitionFeesService {
       remaining,
       gradeName: student.section.grade.name,
     };
+  }
+
+  private async ensureGradeBelongsToOrg(orgId: number, gradeId: number) {
+    const grade = await this.prisma.grade.findFirst({
+      where: { id: gradeId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!grade) throw new NotFoundException('الصف غير موجود');
   }
 }

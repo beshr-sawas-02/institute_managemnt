@@ -14,6 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrganizationsController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
+const multer_1 = require("multer");
+const path_1 = require("path");
+const fs_1 = require("fs");
 const swagger_1 = require("@nestjs/swagger");
 const organizations_service_1 = require("./organizations.service");
 const organization_dto_1 = require("./dto/organization.dto");
@@ -36,6 +40,15 @@ let OrganizationsController = class OrganizationsController {
     }
     update(id, dto) {
         return this.service.update(id, dto);
+    }
+    resetAdminPassword(id, dto) {
+        return this.service.resetAdminPassword(id, dto.newPassword);
+    }
+    uploadLogo(id, file) {
+        if (!file) {
+            throw new common_1.BadRequestException('ملف الشعار مطلوب أو نوعه غير مدعوم');
+        }
+        return this.service.updateLogo(id, `/uploads/organizations/${id}/${file.filename}`);
     }
     remove(id) {
         return this.service.remove(id);
@@ -84,6 +97,52 @@ __decorate([
     __metadata("design:paramtypes", [Number, organization_dto_1.UpdateOrganizationDto]),
     __metadata("design:returntype", void 0)
 ], OrganizationsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Patch)(':id/admin-password'),
+    (0, decorators_1.PlatformRoles)('super_admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Reset organization admin password' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Organization admin password reset' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, organization_dto_1.ResetOrganizationAdminPasswordDto]),
+    __metadata("design:returntype", void 0)
+], OrganizationsController.prototype, "resetAdminPassword", null);
+__decorate([
+    (0, common_1.Patch)(':id/logo'),
+    (0, decorators_1.PlatformRoles)('super_admin', 'admin'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('logo', {
+        storage: (0, multer_1.diskStorage)({
+            destination: (req, _file, callback) => {
+                const directory = (0, path_1.join)(process.cwd(), 'uploads', 'organizations', req.params.id);
+                (0, fs_1.mkdirSync)(directory, { recursive: true });
+                callback(null, directory);
+            },
+            filename: (_req, file, callback) => {
+                const extensions = {
+                    'image/jpeg': '.jpg',
+                    'image/png': '.png',
+                    'image/webp': '.webp',
+                };
+                const extension = extensions[file.mimetype] ||
+                    (0, path_1.extname)(file.originalname).toLowerCase();
+                callback(null, `logo-${Date.now()}${extension}`);
+            },
+        }),
+        limits: { fileSize: 5 * 1024 * 1024 },
+        fileFilter: (_req, file, callback) => {
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            callback(null, allowedTypes.includes(file.mimetype));
+        },
+    })),
+    (0, swagger_1.ApiOperation)({ summary: 'Upload organization logo' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Organization logo uploaded' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", void 0)
+], OrganizationsController.prototype, "uploadLogo", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, decorators_1.PlatformRoles)('super_admin'),

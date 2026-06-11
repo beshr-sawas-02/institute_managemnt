@@ -72,10 +72,11 @@ export class TuitionFeesController {
   @ApiOperation({ summary: 'رصيد الطالب' })
   @ApiQuery({ name: 'academicYear', required: true })
   getStudentBalance(
+    @CurrentUser('orgId') orgId: number,
     @Param('studentId', ParseIntPipe) studentId: number,
     @Query('academicYear') academicYear: string,
   ) {
-    return this.service.getStudentBalance(studentId, academicYear);
+    return this.service.getStudentBalance(orgId, studentId, academicYear);
   }
 
   @Get(':id')

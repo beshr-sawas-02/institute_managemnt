@@ -1,10 +1,11 @@
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateSubscriptionDto, UpdateSubscriptionDto, ExtendSubscriptionDto } from './dto/subscription.dto';
+import { CreateSubscriptionDto, UpdateSubscriptionDto, ExtendSubscriptionDto, UpdateSubscriptionStatusDto } from './dto/subscription.dto';
 import { PaginationDto, PaginatedResult } from '../common/dto/pagination.dto';
 export declare class SubscriptionsService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(createSubscriptionDto: CreateSubscriptionDto): Promise<{
+    create(dto: CreateSubscriptionDto): Promise<{
         organization: {
             name: string;
             type: string;
@@ -12,19 +13,23 @@ export declare class SubscriptionsService {
             slug: string;
             phone: string | null;
             id: number;
-            address: string | null;
-            logo: string | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            nameAr: string | null;
+            nameEn: string | null;
+            typeAr: string | null;
+            typeEn: string | null;
+            address: string | null;
+            logo: string | null;
         };
     } & {
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         status: string;
         plan: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        price: Prisma.Decimal;
         startDate: Date;
         endDate: Date;
     }>;
@@ -36,19 +41,23 @@ export declare class SubscriptionsService {
             slug: string;
             phone: string | null;
             id: number;
-            address: string | null;
-            logo: string | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            nameAr: string | null;
+            nameEn: string | null;
+            typeAr: string | null;
+            typeEn: string | null;
+            address: string | null;
+            logo: string | null;
         };
     } & {
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         status: string;
         plan: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        price: Prisma.Decimal;
         startDate: Date;
         endDate: Date;
     }>>;
@@ -60,23 +69,27 @@ export declare class SubscriptionsService {
             slug: string;
             phone: string | null;
             id: number;
-            address: string | null;
-            logo: string | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            nameAr: string | null;
+            nameEn: string | null;
+            typeAr: string | null;
+            typeEn: string | null;
+            address: string | null;
+            logo: string | null;
         };
     } & {
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         status: string;
         plan: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        price: Prisma.Decimal;
         startDate: Date;
         endDate: Date;
     }>;
-    update(id: number, updateSubscriptionDto: UpdateSubscriptionDto): Promise<{
+    update(id: number, dto: UpdateSubscriptionDto): Promise<{
         organization: {
             name: string;
             type: string;
@@ -84,19 +97,23 @@ export declare class SubscriptionsService {
             slug: string;
             phone: string | null;
             id: number;
-            address: string | null;
-            logo: string | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            nameAr: string | null;
+            nameEn: string | null;
+            typeAr: string | null;
+            typeEn: string | null;
+            address: string | null;
+            logo: string | null;
         };
     } & {
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         status: string;
         plan: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        price: Prisma.Decimal;
         startDate: Date;
         endDate: Date;
     }>;
@@ -108,19 +125,51 @@ export declare class SubscriptionsService {
             slug: string;
             phone: string | null;
             id: number;
-            address: string | null;
-            logo: string | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            nameAr: string | null;
+            nameEn: string | null;
+            typeAr: string | null;
+            typeEn: string | null;
+            address: string | null;
+            logo: string | null;
         };
     } & {
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         status: string;
         plan: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        price: Prisma.Decimal;
+        startDate: Date;
+        endDate: Date;
+    }>;
+    updateStatus(id: number, dto: UpdateSubscriptionStatusDto): Promise<{
+        organization: {
+            name: string;
+            type: string;
+            email: string;
+            slug: string;
+            phone: string | null;
+            id: number;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            nameAr: string | null;
+            nameEn: string | null;
+            typeAr: string | null;
+            typeEn: string | null;
+            address: string | null;
+            logo: string | null;
+        };
+    } & {
+        id: number;
+        organizationId: number;
+        createdAt: Date;
+        status: string;
+        plan: string;
+        price: Prisma.Decimal;
         startDate: Date;
         endDate: Date;
     }>;
@@ -132,23 +181,32 @@ export declare class SubscriptionsService {
             slug: string;
             phone: string | null;
             id: number;
-            address: string | null;
-            logo: string | null;
             isActive: boolean;
             createdAt: Date;
             updatedAt: Date;
+            nameAr: string | null;
+            nameEn: string | null;
+            typeAr: string | null;
+            typeEn: string | null;
+            address: string | null;
+            logo: string | null;
         };
     } & {
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         status: string;
         plan: string;
-        price: import("@prisma/client/runtime/library").Decimal;
+        price: Prisma.Decimal;
         startDate: Date;
         endDate: Date;
     }>;
     remove(id: number): Promise<{
         message: string;
     }>;
+    private parseDate;
+    private today;
+    private validateNewDates;
+    private setStatusAndSyncOrganization;
+    private syncOrganizationStatus;
 }

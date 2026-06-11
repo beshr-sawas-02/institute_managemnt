@@ -34,8 +34,8 @@ export class PaymentsController {
   @Post()
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'إنشاء دفعة جديدة' })
-  create(@Body() dto: CreatePaymentDto) {
-    return this.service.create(dto);
+  create(@CurrentUser('orgId') orgId: number, @Body() dto: CreatePaymentDto) {
+    return this.service.create(orgId, dto);
   }
 
   @Get()
@@ -69,21 +69,31 @@ export class PaymentsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'جلب دفعة بالمعرف' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.findOne(id);
+  findOne(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.findOne(orgId, id);
   }
 
   @Patch(':id')
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'تحديث دفعة' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePaymentDto) {
-    return this.service.update(id, dto);
+  update(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePaymentDto,
+  ) {
+    return this.service.update(orgId, id, dto);
   }
 
   @Delete(':id')
   @Roles(UserRole.admin)
   @ApiOperation({ summary: 'حذف دفعة' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.service.remove(id);
+  remove(
+    @CurrentUser('orgId') orgId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.remove(orgId, id);
   }
 }

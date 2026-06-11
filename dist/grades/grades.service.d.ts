@@ -8,18 +8,18 @@ export declare class GradesService {
         name: string;
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         level: import(".prisma/client").$Enums.GradeLevel;
     }>;
     findAll(orgId: number, paginationDto: PaginationDto): Promise<PaginatedResult<{
         sections: {
             name: string;
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -28,9 +28,10 @@ export declare class GradesService {
         gradeSubjects: ({
             teacher: {
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
+                status: import(".prisma/client").$Enums.TeacherStatus;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -39,16 +40,15 @@ export declare class GradesService {
                 experienceYears: number | null;
                 bio: string | null;
                 salary: import("@prisma/client/runtime/library").Decimal | null;
-                status: import(".prisma/client").$Enums.TeacherStatus;
                 hireDate: Date | null;
             };
             subject: {
                 name: string;
                 description: string | null;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
             };
         } & {
             id: number;
@@ -63,23 +63,23 @@ export declare class GradesService {
         name: string;
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         level: import(".prisma/client").$Enums.GradeLevel;
     }>>;
     findOne(orgId: number, id: number): Promise<{
         sections: ({
             students: {
                 id: number;
-                address: string | null;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
+                status: import(".prisma/client").$Enums.StudentStatus;
+                address: string | null;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
-                status: import(".prisma/client").$Enums.StudentStatus;
                 parentId: number | null;
                 sectionId: number | null;
                 dateOfBirth: Date;
@@ -90,9 +90,9 @@ export declare class GradesService {
         } & {
             name: string;
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -101,9 +101,10 @@ export declare class GradesService {
         gradeSubjects: ({
             teacher: {
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
+                status: import(".prisma/client").$Enums.TeacherStatus;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -112,16 +113,15 @@ export declare class GradesService {
                 experienceYears: number | null;
                 bio: string | null;
                 salary: import("@prisma/client/runtime/library").Decimal | null;
-                status: import(".prisma/client").$Enums.TeacherStatus;
                 hireDate: Date | null;
             };
             subject: {
                 name: string;
                 description: string | null;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
             };
         } & {
             id: number;
@@ -136,18 +136,18 @@ export declare class GradesService {
         name: string;
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         level: import(".prisma/client").$Enums.GradeLevel;
     }>;
     update(orgId: number, id: number, updateGradeDto: UpdateGradeDto): Promise<{
         name: string;
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         level: import(".prisma/client").$Enums.GradeLevel;
     }>;
     remove(orgId: number, id: number): Promise<{

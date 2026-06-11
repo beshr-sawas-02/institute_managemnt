@@ -24,10 +24,10 @@ export declare class AttendanceService {
                 email: string | null;
                 phone: string;
                 id: number;
-                address: string | null;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
+                address: string | null;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -35,14 +35,14 @@ export declare class AttendanceService {
             }) | null;
         } & {
             id: number;
-            address: string | null;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
+            status: import(".prisma/client").$Enums.StudentStatus;
+            address: string | null;
             userId: number | null;
             firstName: string;
             lastName: string;
-            status: import(".prisma/client").$Enums.StudentStatus;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -113,17 +113,17 @@ export declare class AttendanceService {
                     name: string;
                     description: string | null;
                     id: number;
+                    organizationId: number;
                     createdAt: Date;
                     updatedAt: Date;
-                    organizationId: number;
                     level: import(".prisma/client").$Enums.GradeLevel;
                 };
             } & {
                 name: string;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
                 status: import(".prisma/client").$Enums.SectionStatus;
                 academicYear: string;
                 gradeId: number;

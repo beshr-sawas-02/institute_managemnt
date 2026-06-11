@@ -18,6 +18,7 @@ let SectionsService = class SectionsService {
         this.prisma = prisma;
     }
     async create(orgId, createSectionDto) {
+        await this.ensureGradeBelongsToOrg(orgId, createSectionDto.gradeId);
         return this.prisma.section.create({
             data: { ...createSectionDto, organizationId: orgId },
             include: { grade: true },
@@ -72,11 +73,22 @@ let SectionsService = class SectionsService {
     }
     async update(orgId, id, updateSectionDto) {
         await this.findOne(orgId, id);
+        if (updateSectionDto.gradeId !== undefined) {
+            await this.ensureGradeBelongsToOrg(orgId, updateSectionDto.gradeId);
+        }
         return this.prisma.section.update({
             where: { id },
             data: updateSectionDto,
             include: { grade: true },
         });
+    }
+    async ensureGradeBelongsToOrg(orgId, gradeId) {
+        const grade = await this.prisma.grade.findFirst({
+            where: { id: gradeId, organizationId: orgId },
+            select: { id: true },
+        });
+        if (!grade)
+            throw new common_1.NotFoundException('الصف غير موجود');
     }
     async remove(orgId, id) {
         await this.findOne(orgId, id);

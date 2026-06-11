@@ -25,11 +25,11 @@ let NotificationsController = class NotificationsController {
     constructor(service) {
         this.service = service;
     }
-    create(dto) {
-        return this.service.create(dto);
+    create(orgId, dto) {
+        return this.service.createForOrganization(orgId, dto);
     }
-    sendBulk(body) {
-        return this.service.sendBulkNotification(body);
+    sendBulk(orgId, body) {
+        return this.service.sendBulkNotification(orgId, body);
     }
     findMyNotifications(userId) {
         return this.service.findByUser(userId);
@@ -37,14 +37,14 @@ let NotificationsController = class NotificationsController {
     getUnreadCount(userId) {
         return this.service.getUnreadCount(userId);
     }
-    markAsRead(id) {
-        return this.service.markAsRead(id);
+    markAsRead(userId, id) {
+        return this.service.markAsRead(userId, id);
     }
     markAllAsRead(userId) {
         return this.service.markAllAsRead(userId);
     }
-    remove(id) {
-        return this.service.remove(id);
+    remove(userId, id) {
+        return this.service.remove(userId, id);
     }
 };
 exports.NotificationsController = NotificationsController;
@@ -52,18 +52,20 @@ __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'Create a notification' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [notification_dto_1.CreateNotificationDto]),
+    __metadata("design:paramtypes", [Number, notification_dto_1.CreateNotificationDto]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "create", null);
 __decorate([
     (0, common_1.Post)('bulk'),
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception),
     (0, swagger_1.ApiOperation)({ summary: 'Send a bulk notification' }),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [notification_dto_1.BulkNotificationDto]),
+    __metadata("design:paramtypes", [Number, notification_dto_1.BulkNotificationDto]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "sendBulk", null);
 __decorate([
@@ -85,9 +87,10 @@ __decorate([
 __decorate([
     (0, common_1.Patch)(':id/read'),
     (0, swagger_1.ApiOperation)({ summary: 'Mark a notification as read' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('id')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "markAsRead", null);
 __decorate([
@@ -101,9 +104,10 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Delete a notification' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(0, (0, decorators_1.CurrentUser)('id')),
+    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "remove", null);
 exports.NotificationsController = NotificationsController = __decorate([

@@ -8,17 +8,18 @@ export declare class SubjectsController {
         name: string;
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
     }>;
     findAll(orgId: number, p: PaginationDto): Promise<import("../common/dto/pagination.dto").PaginatedResult<{
         gradeSubjects: ({
             teacher: {
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
+                status: import(".prisma/client").$Enums.TeacherStatus;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -27,16 +28,15 @@ export declare class SubjectsController {
                 experienceYears: number | null;
                 bio: string | null;
                 salary: import("@prisma/client/runtime/library").Decimal | null;
-                status: import(".prisma/client").$Enums.TeacherStatus;
                 hireDate: Date | null;
             };
             grade: {
                 name: string;
                 description: string | null;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
@@ -52,17 +52,18 @@ export declare class SubjectsController {
         name: string;
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
     }>>;
     findOne(orgId: number, id: number): Promise<{
         gradeSubjects: ({
             teacher: {
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
+                status: import(".prisma/client").$Enums.TeacherStatus;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -71,16 +72,15 @@ export declare class SubjectsController {
                 experienceYears: number | null;
                 bio: string | null;
                 salary: import("@prisma/client/runtime/library").Decimal | null;
-                status: import(".prisma/client").$Enums.TeacherStatus;
                 hireDate: Date | null;
             };
             grade: {
                 name: string;
                 description: string | null;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
@@ -96,17 +96,17 @@ export declare class SubjectsController {
         name: string;
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
     }>;
     update(orgId: number, id: number, dto: UpdateSubjectDto): Promise<{
         name: string;
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
     }>;
     remove(orgId: number, id: number): Promise<{
         message: string;

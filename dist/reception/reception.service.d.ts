@@ -14,9 +14,9 @@ export declare class ReceptionService {
         email: string;
         phone: string;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
@@ -31,9 +31,9 @@ export declare class ReceptionService {
         email: string;
         phone: string;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
@@ -48,9 +48,9 @@ export declare class ReceptionService {
         email: string;
         phone: string;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
@@ -65,13 +65,14 @@ export declare class ReceptionService {
         email: string;
         phone: string;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         userId: number | null;
         firstName: string;
         lastName: string;
     }>;
+    private ensureUserBelongsToOrg;
     remove(orgId: number, id: number): Promise<{
         message: string;
     }>;

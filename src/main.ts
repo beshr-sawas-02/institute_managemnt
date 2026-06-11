@@ -4,6 +4,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { join } from 'path';
+import { static as serveStatic } from 'express';
 
 let cachedServer: any;
 
@@ -24,6 +26,7 @@ async function bootstrap() {
   );
 
   app.enableCors();
+  app.use('/uploads', serveStatic(join(process.cwd(), 'uploads')));
 
   const config = new DocumentBuilder()
     .setTitle('نظام إدارة المدرسة')
@@ -53,6 +56,7 @@ if (!process.env.VERCEL) {
       }),
     );
     app.enableCors();
+    app.use('/uploads', serveStatic(join(process.cwd(), 'uploads')));
     await app.listen(3000);
     console.log('Server running on http://localhost:3000');
   });

@@ -16,9 +16,9 @@ export declare class TuitionFeesService {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
@@ -37,9 +37,9 @@ export declare class TuitionFeesService {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
@@ -58,9 +58,9 @@ export declare class TuitionFeesService {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
@@ -75,9 +75,9 @@ export declare class TuitionFeesService {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
@@ -92,9 +92,9 @@ export declare class TuitionFeesService {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
@@ -103,10 +103,11 @@ export declare class TuitionFeesService {
     remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
-    getStudentBalance(studentId: number, academicYear: string): Promise<{
+    getStudentBalance(orgId: number, studentId: number, academicYear: string): Promise<{
         annualAmount: number;
         totalPaid: number;
         remaining: number;
         gradeName: string;
     } | null>;
+    private ensureGradeBelongsToOrg;
 }

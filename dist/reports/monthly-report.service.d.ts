@@ -59,8 +59,8 @@ export declare class MonthlyReportService {
     private prisma;
     private notificationsService;
     constructor(prisma: PrismaService, notificationsService: NotificationsService);
-    generateStudentMonthlyReport(studentId: number, month: number, year: number): Promise<StudentMonthlyReport>;
-    generateSectionMonthlyReports(sectionId: number, month: number, year: number): Promise<{
+    generateStudentMonthlyReport(orgId: number, studentId: number, month: number, year: number): Promise<StudentMonthlyReport>;
+    generateSectionMonthlyReports(orgId: number, sectionId: number, month: number, year: number): Promise<{
         section: {
             id: number;
             name: string;

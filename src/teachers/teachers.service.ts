@@ -8,6 +8,7 @@ export class TeachersService {
   constructor(private prisma: PrismaService) {}
 
   async create(orgId: number, createTeacherDto: CreateTeacherDto) {
+    await this.ensureUserBelongsToOrg(orgId, createTeacherDto.userId);
     const data: any = { ...createTeacherDto, organizationId: orgId };
     if (data.hireDate) data.hireDate = new Date(data.hireDate);
 
@@ -68,6 +69,7 @@ export class TeachersService {
 
   async update(orgId: number, id: number, updateTeacherDto: UpdateTeacherDto) {
     await this.findOne(orgId, id);
+    await this.ensureUserBelongsToOrg(orgId, updateTeacherDto.userId);
     const data: any = { ...updateTeacherDto };
     if (data.hireDate) data.hireDate = new Date(data.hireDate);
 
@@ -76,6 +78,15 @@ export class TeachersService {
       data,
       include: { user: { select: { id: true, email: true } } },
     });
+  }
+
+  private async ensureUserBelongsToOrg(orgId: number, userId?: number) {
+    if (userId === undefined) return;
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!user) throw new NotFoundException('المستخدم غير موجود');
   }
 
   async remove(orgId: number, id: number) {

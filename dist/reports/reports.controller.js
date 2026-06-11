@@ -31,11 +31,11 @@ let ReportsController = class ReportsController {
     create(orgId, userId, dto) {
         return this.service.create(orgId, userId, dto);
     }
-    getStudentMonthlyReport(studentId, month, year) {
-        return this.monthlyReportService.generateStudentMonthlyReport(studentId, Number(month), Number(year));
+    getStudentMonthlyReport(orgId, studentId, month, year) {
+        return this.monthlyReportService.generateStudentMonthlyReport(orgId, studentId, Number(month), Number(year));
     }
-    getSectionMonthlyReport(sectionId, month, year) {
-        return this.monthlyReportService.generateSectionMonthlyReports(sectionId, Number(month), Number(year));
+    getSectionMonthlyReport(orgId, sectionId, month, year) {
+        return this.monthlyReportService.generateSectionMonthlyReports(orgId, sectionId, Number(month), Number(year));
     }
     generateAndNotifySectionReports(orgId, userId, sectionId, month, year) {
         return this.monthlyReportService.generateAndNotifySectionReports(orgId, sectionId, Number(month), Number(year), userId);
@@ -70,11 +70,12 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'تقرير شهري لطالب واحد' }),
     (0, swagger_1.ApiQuery)({ name: 'month', required: true }),
     (0, swagger_1.ApiQuery)({ name: 'year', required: true }),
-    __param(0, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('month')),
-    __param(2, (0, common_1.Query)('year')),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Query)('month')),
+    __param(3, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number, Number]),
+    __metadata("design:paramtypes", [Number, Number, Number, Number]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getStudentMonthlyReport", null);
 __decorate([
@@ -82,11 +83,12 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'تقرير شهري لشعبة كاملة' }),
     (0, swagger_1.ApiQuery)({ name: 'month', required: true }),
     (0, swagger_1.ApiQuery)({ name: 'year', required: true }),
-    __param(0, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('month')),
-    __param(2, (0, common_1.Query)('year')),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('sectionId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Query)('month')),
+    __param(3, (0, common_1.Query)('year')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number, Number]),
+    __metadata("design:paramtypes", [Number, Number, Number, Number]),
     __metadata("design:returntype", void 0)
 ], ReportsController.prototype, "getSectionMonthlyReport", null);
 __decorate([

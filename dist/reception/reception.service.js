@@ -18,6 +18,7 @@ let ReceptionService = class ReceptionService {
         this.prisma = prisma;
     }
     async create(orgId, createReceptionDto) {
+        await this.ensureUserBelongsToOrg(orgId, createReceptionDto.userId);
         return this.prisma.reception.create({
             data: { ...createReceptionDto, organizationId: orgId },
             include: { user: { select: { id: true, email: true, role: true } } },
@@ -58,11 +59,22 @@ let ReceptionService = class ReceptionService {
     }
     async update(orgId, id, updateReceptionDto) {
         await this.findOne(orgId, id);
+        await this.ensureUserBelongsToOrg(orgId, updateReceptionDto.userId);
         return this.prisma.reception.update({
             where: { id },
             data: updateReceptionDto,
             include: { user: { select: { id: true, email: true, role: true } } },
         });
+    }
+    async ensureUserBelongsToOrg(orgId, userId) {
+        if (userId === undefined)
+            return;
+        const user = await this.prisma.user.findFirst({
+            where: { id: userId, organizationId: orgId },
+            select: { id: true },
+        });
+        if (!user)
+            throw new common_1.NotFoundException('User not found');
     }
     async remove(orgId, id) {
         await this.findOne(orgId, id);

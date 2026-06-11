@@ -14,10 +14,7 @@ export class GradeSubjectsService {
   constructor(private prisma: PrismaService) {}
 
   async create(orgId: number, dto: CreateGradeSubjectDto) {
-    const grade = await this.prisma.grade.findFirst({
-      where: { id: dto.gradeId, organizationId: orgId },
-    });
-    if (!grade) throw new NotFoundException('الصف غير موجود');
+    await this.validateRelations(orgId, dto);
 
     const existing = await this.prisma.gradeSubject.findFirst({
       where: {
@@ -67,11 +64,53 @@ export class GradeSubjectsService {
 
   async update(orgId: number, id: number, dto: UpdateGradeSubjectDto) {
     await this.findOne(orgId, id);
+    await this.validateRelations(orgId, dto);
     return this.prisma.gradeSubject.update({
       where: { id },
       data: dto,
       include: { grade: true, subject: true, teacher: true },
     });
+  }
+
+  private async validateRelations(orgId: number, dto: UpdateGradeSubjectDto) {
+    const checks: Promise<unknown>[] = [];
+    if (dto.gradeId !== undefined) {
+      checks.push(
+        this.prisma.grade.findFirst({
+          where: { id: dto.gradeId, organizationId: orgId },
+          select: { id: true },
+        }),
+      );
+    }
+    if (dto.subjectId !== undefined) {
+      checks.push(
+        this.prisma.subject.findFirst({
+          where: { id: dto.subjectId, organizationId: orgId },
+          select: { id: true },
+        }),
+      );
+    }
+    if (dto.teacherId !== undefined) {
+      checks.push(
+        this.prisma.teacher.findFirst({
+          where: { id: dto.teacherId, organizationId: orgId },
+          select: { id: true },
+        }),
+      );
+    }
+    if (dto.sectionId !== undefined && dto.sectionId !== null) {
+      checks.push(
+        this.prisma.section.findFirst({
+          where: { id: dto.sectionId, organizationId: orgId },
+          select: { id: true },
+        }),
+      );
+    }
+
+    const results = await Promise.all(checks);
+    if (results.some((result) => !result)) {
+      throw new NotFoundException('إحدى البيانات المرتبطة لا تتبع هذه المؤسسة');
+    }
   }
 
   async remove(orgId: number, id: number) {

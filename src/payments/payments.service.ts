@@ -13,15 +13,16 @@ export class PaymentsService {
     private tuitionFeesService: TuitionFeesService,
   ) {}
 
-  async create(dto: CreatePaymentDto) {
+  async create(orgId: number, dto: CreatePaymentDto) {
     const discount = dto.discount || 0;
     const finalAmount = dto.amount - discount;
     const receiptNumber = `RCP-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-    const orgId = await this.getStudentOrgId(dto.studentId);
+    await this.ensureStudentBelongsToOrg(orgId, dto.studentId);
 
     const payment = await this.prisma.payment.create({
       data: {
         ...dto,
+        currency: dto.currency ?? 'SYP',
         organizationId: orgId,
         discount,
         finalAmount,
@@ -36,6 +37,7 @@ export class PaymentsService {
 
     if (payment.student.parent?.userId) {
       const balance = await this.tuitionFeesService.getStudentBalance(
+        orgId,
         dto.studentId,
         dto.academicYear,
       );
@@ -93,6 +95,7 @@ export class PaymentsService {
 
     if (academicYear) {
       const balance = await this.tuitionFeesService.getStudentBalance(
+        orgId,
         studentId,
         academicYear,
       );
@@ -128,17 +131,20 @@ export class PaymentsService {
     };
   }
 
-  async findOne(id: number) {
-    const payment = await this.prisma.payment.findUnique({
-      where: { id },
+  async findOne(orgId: number, id: number) {
+    const payment = await this.prisma.payment.findFirst({
+      where: { id, organizationId: orgId },
       include: { student: { include: { parent: true } } },
     });
     if (!payment) throw new NotFoundException('الدفعة غير موجودة');
     return payment;
   }
 
-  async update(id: number, dto: UpdatePaymentDto) {
-    const current = await this.findOne(id);
+  async update(orgId: number, id: number, dto: UpdatePaymentDto) {
+    const current = await this.findOne(orgId, id);
+    if (dto.studentId !== undefined) {
+      await this.ensureStudentBelongsToOrg(orgId, dto.studentId);
+    }
     const data: any = { ...dto };
 
     if (dto.dueDate) data.dueDate = new Date(dto.dueDate);
@@ -160,6 +166,7 @@ export class PaymentsService {
     if (dto.status === 'paid' && current.status !== 'paid') {
       if (updated.student.parent?.userId) {
         const balance = await this.tuitionFeesService.getStudentBalance(
+          orgId,
           updated.studentId,
           updated.academicYear,
         );
@@ -177,20 +184,22 @@ export class PaymentsService {
     return updated;
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(orgId: number, id: number) {
+    await this.findOne(orgId, id);
     await this.prisma.payment.delete({ where: { id } });
     return { message: 'تم حذف الدفعة بنجاح' };
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────────────
 
-  private async getStudentOrgId(studentId: number): Promise<number> {
-    const student = await this.prisma.student.findUnique({
-      where: { id: studentId },
-      select: { organizationId: true },
+  private async ensureStudentBelongsToOrg(
+    orgId: number,
+    studentId: number,
+  ): Promise<void> {
+    const student = await this.prisma.student.findFirst({
+      where: { id: studentId, organizationId: orgId },
+      select: { id: true },
     });
     if (!student) throw new NotFoundException('الطالب غير موجود');
-    return student.organizationId;
   }
 }

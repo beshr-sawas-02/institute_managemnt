@@ -13,9 +13,9 @@ export declare class ExpensesService {
     } & {
         description: string;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -31,9 +31,9 @@ export declare class ExpensesService {
     } & {
         description: string;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -59,9 +59,9 @@ export declare class ExpensesService {
     } & {
         description: string;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;
@@ -77,9 +77,9 @@ export declare class ExpensesService {
     } & {
         description: string;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         createdBy: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         receiptNumber: string | null;

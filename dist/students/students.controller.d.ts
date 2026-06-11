@@ -15,17 +15,17 @@ export declare class StudentsController {
                 name: string;
                 description: string | null;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
             name: string;
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -33,14 +33,14 @@ export declare class StudentsController {
         }) | null;
     } & {
         id: number;
-        address: string | null;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
+        status: import(".prisma/client").$Enums.StudentStatus;
+        address: string | null;
         userId: number | null;
         firstName: string;
         lastName: string;
-        status: import(".prisma/client").$Enums.StudentStatus;
         parentId: number | null;
         sectionId: number | null;
         dateOfBirth: Date;
@@ -64,17 +64,17 @@ export declare class StudentsController {
                 name: string;
                 description: string | null;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
             name: string;
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -82,14 +82,14 @@ export declare class StudentsController {
         }) | null;
     } & {
         id: number;
-        address: string | null;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
+        status: import(".prisma/client").$Enums.StudentStatus;
+        address: string | null;
         userId: number | null;
         firstName: string;
         lastName: string;
-        status: import(".prisma/client").$Enums.StudentStatus;
         parentId: number | null;
         sectionId: number | null;
         dateOfBirth: Date;
@@ -106,14 +106,14 @@ export declare class StudentsController {
         } | null;
     } & {
         id: number;
-        address: string | null;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
+        status: import(".prisma/client").$Enums.StudentStatus;
+        address: string | null;
         userId: number | null;
         firstName: string;
         lastName: string;
-        status: import(".prisma/client").$Enums.StudentStatus;
         parentId: number | null;
         sectionId: number | null;
         dateOfBirth: Date;
@@ -127,17 +127,17 @@ export declare class StudentsController {
                 name: string;
                 description: string | null;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
             name: string;
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -145,14 +145,14 @@ export declare class StudentsController {
         }) | null;
     } & {
         id: number;
-        address: string | null;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
+        status: import(".prisma/client").$Enums.StudentStatus;
+        address: string | null;
         userId: number | null;
         firstName: string;
         lastName: string;
-        status: import(".prisma/client").$Enums.StudentStatus;
         parentId: number | null;
         sectionId: number | null;
         dateOfBirth: Date;
@@ -169,10 +169,10 @@ export declare class StudentsController {
             email: string | null;
             phone: string;
             id: number;
-            address: string | null;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
+            address: string | null;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -183,17 +183,17 @@ export declare class StudentsController {
                 name: string;
                 description: string | null;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
             name: string;
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -201,9 +201,9 @@ export declare class StudentsController {
         }) | null;
         payments: {
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.PaymentStatus;
             academicYear: string;
             dueDate: Date;
@@ -212,6 +212,7 @@ export declare class StudentsController {
             finalAmount: import("@prisma/client/runtime/library").Decimal | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
+            currency: string;
             paymentDate: Date | null;
             receiptNumber: string | null;
         }[];
@@ -221,9 +222,9 @@ export declare class StudentsController {
                     name: string;
                     description: string | null;
                     id: number;
+                    organizationId: number;
                     createdAt: Date;
                     updatedAt: Date;
-                    organizationId: number;
                 };
             } & {
                 id: number;
@@ -263,14 +264,14 @@ export declare class StudentsController {
         }[];
     } & {
         id: number;
-        address: string | null;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
+        status: import(".prisma/client").$Enums.StudentStatus;
+        address: string | null;
         userId: number | null;
         firstName: string;
         lastName: string;
-        status: import(".prisma/client").$Enums.StudentStatus;
         parentId: number | null;
         sectionId: number | null;
         dateOfBirth: Date;
@@ -289,17 +290,17 @@ export declare class StudentsController {
                 name: string;
                 description: string | null;
                 id: number;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
                 level: import(".prisma/client").$Enums.GradeLevel;
             };
         } & {
             name: string;
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.SectionStatus;
             academicYear: string;
             gradeId: number;
@@ -307,14 +308,14 @@ export declare class StudentsController {
         }) | null;
     } & {
         id: number;
-        address: string | null;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
+        status: import(".prisma/client").$Enums.StudentStatus;
+        address: string | null;
         userId: number | null;
         firstName: string;
         lastName: string;
-        status: import(".prisma/client").$Enums.StudentStatus;
         parentId: number | null;
         sectionId: number | null;
         dateOfBirth: Date;

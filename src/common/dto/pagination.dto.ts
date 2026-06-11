@@ -39,6 +39,10 @@ export class PaginationDto {
 
 export class PaginatedResult<T> {
   data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
   meta: {
     total: number;
     page: number;
@@ -49,11 +53,15 @@ export class PaginatedResult<T> {
 
   constructor(data: T[], total: number, page: number, limit: number) {
     this.data = data;
+    this.total = total;
+    this.page = page;
+    this.limit = limit;
+    this.totalPages = Math.ceil(total / limit);
     this.meta = {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: this.totalPages,
       hasNextPage: page < Math.ceil(total / limit),
     };
   }

@@ -26,8 +26,25 @@ export declare class NotificationsService {
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
+        data: import("@prisma/client/runtime/library").JsonValue | null;
+        userId: number;
+        relatedId: number | null;
+        relatedType: import(".prisma/client").$Enums.NotificationRelatedType | null;
+        channel: import(".prisma/client").$Enums.NotificationChannel;
+        isRead: boolean;
+        readAt: Date | null;
+        sent: boolean;
+        sentAt: Date | null;
+    }>;
+    createForOrganization(orgId: number, dto: CreateNotificationInput): Promise<{
+        type: import(".prisma/client").$Enums.NotificationType;
+        title: string;
+        message: string;
+        id: number;
+        organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -43,8 +60,8 @@ export declare class NotificationsService {
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -62,8 +79,8 @@ export declare class NotificationsService {
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -79,8 +96,8 @@ export declare class NotificationsService {
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -96,8 +113,8 @@ export declare class NotificationsService {
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -113,8 +130,8 @@ export declare class NotificationsService {
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -130,8 +147,8 @@ export declare class NotificationsService {
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -147,8 +164,8 @@ export declare class NotificationsService {
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -162,13 +179,13 @@ export declare class NotificationsService {
     getUnreadCount(userId: number): Promise<{
         unreadCount: number;
     }>;
-    markAsRead(id: number): Promise<{
+    markAsRead(userId: number, id: number): Promise<{
         type: import(".prisma/client").$Enums.NotificationType;
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -182,15 +199,16 @@ export declare class NotificationsService {
     markAllAsRead(userId: number): Promise<{
         message: string;
     }>;
-    remove(id: number): Promise<{
+    remove(userId: number, id: number): Promise<{
         message: string;
     }>;
-    sendBulkNotification(dto: BulkNotificationDto): Promise<{
+    sendBulkNotification(orgId: number, dto: BulkNotificationDto): Promise<{
         message: string;
         count: number;
     }>;
     private getUserPreferredLanguage;
     private getUserOrgId;
+    private ensureUserBelongsToOrg;
     private buildLocalizedContent;
     private normalizeLocalizedText;
     private resolveLocalizedText;

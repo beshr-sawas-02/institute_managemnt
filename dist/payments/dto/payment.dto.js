@@ -33,6 +33,12 @@ __decorate([
     __metadata("design:type", Number)
 ], CreatePaymentDto.prototype, "amount", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: ['SYP', 'USD'], default: 'SYP' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['SYP', 'USD']),
+    __metadata("design:type", String)
+], CreatePaymentDto.prototype, "currency", void 0);
+__decorate([
     (0, swagger_1.ApiPropertyOptional)({ example: 500 }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),

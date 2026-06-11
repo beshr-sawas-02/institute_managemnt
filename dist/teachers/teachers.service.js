@@ -18,6 +18,7 @@ let TeachersService = class TeachersService {
         this.prisma = prisma;
     }
     async create(orgId, createTeacherDto) {
+        await this.ensureUserBelongsToOrg(orgId, createTeacherDto.userId);
         const data = { ...createTeacherDto, organizationId: orgId };
         if (data.hireDate)
             data.hireDate = new Date(data.hireDate);
@@ -72,6 +73,7 @@ let TeachersService = class TeachersService {
     }
     async update(orgId, id, updateTeacherDto) {
         await this.findOne(orgId, id);
+        await this.ensureUserBelongsToOrg(orgId, updateTeacherDto.userId);
         const data = { ...updateTeacherDto };
         if (data.hireDate)
             data.hireDate = new Date(data.hireDate);
@@ -80,6 +82,16 @@ let TeachersService = class TeachersService {
             data,
             include: { user: { select: { id: true, email: true } } },
         });
+    }
+    async ensureUserBelongsToOrg(orgId, userId) {
+        if (userId === undefined)
+            return;
+        const user = await this.prisma.user.findFirst({
+            where: { id: userId, organizationId: orgId },
+            select: { id: true },
+        });
+        if (!user)
+            throw new common_1.NotFoundException('المستخدم غير موجود');
     }
     async remove(orgId, id) {
         await this.findOne(orgId, id);

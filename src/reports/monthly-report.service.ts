@@ -57,12 +57,13 @@ export class MonthlyReportService {
   ) {}
 
   async generateStudentMonthlyReport(
+    orgId: number,
     studentId: number,
     month: number,
     year: number,
   ): Promise<StudentMonthlyReport> {
-    const student = await this.prisma.student.findUnique({
-      where: { id: studentId },
+    const student = await this.prisma.student.findFirst({
+      where: { id: studentId, organizationId: orgId },
       include: {
         parent: { include: { user: true } },
         section: { include: { grade: true } },
@@ -135,26 +136,27 @@ export class MonthlyReportService {
   }
 
   async generateSectionMonthlyReports(
+    orgId: number,
     sectionId: number,
     month: number,
     year: number,
   ) {
-    const section = await this.prisma.section.findUnique({
-      where: { id: sectionId },
+    const section = await this.prisma.section.findFirst({
+      where: { id: sectionId, organizationId: orgId },
       include: { grade: true },
     });
 
     if (!section) throw new NotFoundException('الشعبة غير موجودة');
 
     const students = await this.prisma.student.findMany({
-      where: { sectionId, status: 'active' },
+      where: { sectionId, organizationId: orgId, status: 'active' },
       orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
     });
 
     const reports: StudentMonthlyReport[] = [];
     for (const student of students) {
       reports.push(
-        await this.generateStudentMonthlyReport(student.id, month, year),
+        await this.generateStudentMonthlyReport(orgId, student.id, month, year),
       );
     }
 
@@ -181,6 +183,7 @@ export class MonthlyReportService {
     }
 
     const sectionReports = await this.generateSectionMonthlyReports(
+      orgId,
       sectionId,
       month,
       year,
@@ -189,8 +192,8 @@ export class MonthlyReportService {
     const monthName = this.getArabicMonthName(month);
 
     for (const report of sectionReports.reports) {
-      const student = await this.prisma.student.findUnique({
-        where: { id: report.student.id },
+      const student = await this.prisma.student.findFirst({
+        where: { id: report.student.id, organizationId: orgId },
         include: { parent: { include: { user: true } } },
       });
 

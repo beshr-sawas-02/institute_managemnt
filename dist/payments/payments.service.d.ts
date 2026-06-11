@@ -8,7 +8,7 @@ export declare class PaymentsService {
     private notificationsService;
     private tuitionFeesService;
     constructor(prisma: PrismaService, notificationsService: NotificationsService, tuitionFeesService: TuitionFeesService);
-    create(dto: CreatePaymentDto): Promise<{
+    create(orgId: number, dto: CreatePaymentDto): Promise<{
         student: {
             parent: ({
                 user: {
@@ -18,20 +18,20 @@ export declare class PaymentsService {
                     phone: string | null;
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;
+                    organizationId: number;
                     isActive: boolean;
+                    lastLogin: Date | null;
                     createdAt: Date;
                     updatedAt: Date;
-                    organizationId: number;
-                    lastLogin: Date | null;
                 } | null;
             } & {
                 email: string | null;
                 phone: string;
                 id: number;
-                address: string | null;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
+                address: string | null;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -39,14 +39,14 @@ export declare class PaymentsService {
             }) | null;
         } & {
             id: number;
-            address: string | null;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
+            status: import(".prisma/client").$Enums.StudentStatus;
+            address: string | null;
             userId: number | null;
             firstName: string;
             lastName: string;
-            status: import(".prisma/client").$Enums.StudentStatus;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -56,9 +56,9 @@ export declare class PaymentsService {
         };
     } & {
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         status: import(".prisma/client").$Enums.PaymentStatus;
         academicYear: string;
         dueDate: Date;
@@ -67,6 +67,7 @@ export declare class PaymentsService {
         finalAmount: import("@prisma/client/runtime/library").Decimal | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         discount: import("@prisma/client/runtime/library").Decimal;
+        currency: string;
         paymentDate: Date | null;
         receiptNumber: string | null;
     }>;
@@ -78,9 +79,9 @@ export declare class PaymentsService {
         };
     } & {
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         status: import(".prisma/client").$Enums.PaymentStatus;
         academicYear: string;
         dueDate: Date;
@@ -89,15 +90,16 @@ export declare class PaymentsService {
         finalAmount: import("@prisma/client/runtime/library").Decimal | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         discount: import("@prisma/client/runtime/library").Decimal;
+        currency: string;
         paymentDate: Date | null;
         receiptNumber: string | null;
     }>>;
     findByStudent(orgId: number, studentId: number, academicYear?: string): Promise<{
         payments: {
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             status: import(".prisma/client").$Enums.PaymentStatus;
             academicYear: string;
             dueDate: Date;
@@ -106,6 +108,7 @@ export declare class PaymentsService {
             finalAmount: import("@prisma/client/runtime/library").Decimal | null;
             amount: import("@prisma/client/runtime/library").Decimal;
             discount: import("@prisma/client/runtime/library").Decimal;
+            currency: string;
             paymentDate: Date | null;
             receiptNumber: string | null;
         }[];
@@ -121,16 +124,16 @@ export declare class PaymentsService {
         totalPending: number | import("@prisma/client/runtime/library").Decimal;
         totalPartial: number | import("@prisma/client/runtime/library").Decimal;
     }>;
-    findOne(id: number): Promise<{
+    findOne(orgId: number, id: number): Promise<{
         student: {
             parent: {
                 email: string | null;
                 phone: string;
                 id: number;
-                address: string | null;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
+                address: string | null;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -138,14 +141,14 @@ export declare class PaymentsService {
             } | null;
         } & {
             id: number;
-            address: string | null;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
+            status: import(".prisma/client").$Enums.StudentStatus;
+            address: string | null;
             userId: number | null;
             firstName: string;
             lastName: string;
-            status: import(".prisma/client").$Enums.StudentStatus;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -155,9 +158,9 @@ export declare class PaymentsService {
         };
     } & {
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         status: import(".prisma/client").$Enums.PaymentStatus;
         academicYear: string;
         dueDate: Date;
@@ -166,10 +169,11 @@ export declare class PaymentsService {
         finalAmount: import("@prisma/client/runtime/library").Decimal | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         discount: import("@prisma/client/runtime/library").Decimal;
+        currency: string;
         paymentDate: Date | null;
         receiptNumber: string | null;
     }>;
-    update(id: number, dto: UpdatePaymentDto): Promise<{
+    update(orgId: number, id: number, dto: UpdatePaymentDto): Promise<{
         student: {
             parent: ({
                 user: {
@@ -179,20 +183,20 @@ export declare class PaymentsService {
                     phone: string | null;
                     role: import(".prisma/client").$Enums.UserRole;
                     id: number;
+                    organizationId: number;
                     isActive: boolean;
+                    lastLogin: Date | null;
                     createdAt: Date;
                     updatedAt: Date;
-                    organizationId: number;
-                    lastLogin: Date | null;
                 } | null;
             } & {
                 email: string | null;
                 phone: string;
                 id: number;
-                address: string | null;
+                organizationId: number;
                 createdAt: Date;
                 updatedAt: Date;
-                organizationId: number;
+                address: string | null;
                 userId: number | null;
                 firstName: string;
                 lastName: string;
@@ -200,14 +204,14 @@ export declare class PaymentsService {
             }) | null;
         } & {
             id: number;
-            address: string | null;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
+            status: import(".prisma/client").$Enums.StudentStatus;
+            address: string | null;
             userId: number | null;
             firstName: string;
             lastName: string;
-            status: import(".prisma/client").$Enums.StudentStatus;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -217,9 +221,9 @@ export declare class PaymentsService {
         };
     } & {
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         status: import(".prisma/client").$Enums.PaymentStatus;
         academicYear: string;
         dueDate: Date;
@@ -228,11 +232,12 @@ export declare class PaymentsService {
         finalAmount: import("@prisma/client/runtime/library").Decimal | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         discount: import("@prisma/client/runtime/library").Decimal;
+        currency: string;
         paymentDate: Date | null;
         receiptNumber: string | null;
     }>;
-    remove(id: number): Promise<{
+    remove(orgId: number, id: number): Promise<{
         message: string;
     }>;
-    private getStudentOrgId;
+    private ensureStudentBelongsToOrg;
 }

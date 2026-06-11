@@ -26,6 +26,7 @@ let AssessmentsService = class AssessmentsService {
         });
         if (!student)
             throw new common_1.NotFoundException('الطالب غير موجود');
+        await this.ensureGradeSubjectBelongsToOrg(orgId, dto.gradeSubjectId);
         let percentage = null;
         let grade = null;
         if (dto.score !== undefined && dto.score !== null) {
@@ -140,6 +141,17 @@ let AssessmentsService = class AssessmentsService {
     }
     async update(orgId, id, dto) {
         const existing = await this.findOne(orgId, id);
+        if (dto.studentId !== undefined) {
+            const student = await this.prisma.student.findFirst({
+                where: { id: dto.studentId, organizationId: orgId },
+                select: { id: true },
+            });
+            if (!student)
+                throw new common_1.NotFoundException('الطالب غير موجود');
+        }
+        if (dto.gradeSubjectId !== undefined) {
+            await this.ensureGradeSubjectBelongsToOrg(orgId, dto.gradeSubjectId);
+        }
         const data = { ...dto };
         if (dto.assessmentDate)
             data.assessmentDate = new Date(dto.assessmentDate);
@@ -200,6 +212,14 @@ let AssessmentsService = class AssessmentsService {
         await this.findOne(orgId, id);
         await this.prisma.assessment.delete({ where: { id } });
         return { message: 'تم حذف التقييم بنجاح' };
+    }
+    async ensureGradeSubjectBelongsToOrg(orgId, gradeSubjectId) {
+        const gradeSubject = await this.prisma.gradeSubject.findFirst({
+            where: { id: gradeSubjectId, grade: { organizationId: orgId } },
+            select: { id: true },
+        });
+        if (!gradeSubject)
+            throw new common_1.NotFoundException('مادة الصف غير موجودة');
     }
     calculateGrade(percentage) {
         if (percentage >= 90)

@@ -21,10 +21,13 @@ export class LoginDto {
   @MinLength(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' })
   password: string;
 
-  @ApiProperty({ description: 'Organization slug', example: 'default-org' })
+  @ApiPropertyOptional({
+    description: 'Organization slug (resolved automatically from email)',
+    example: 'default-org',
+  })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'معرف المؤسسة مطلوب' })
-  slug: string;
+  slug?: string;
 
   @ApiPropertyOptional({ enum: AppLanguage })
   @IsOptional()

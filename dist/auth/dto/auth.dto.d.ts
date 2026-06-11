@@ -2,7 +2,7 @@ import { AppLanguage, UserRole } from '@prisma/client';
 export declare class LoginDto {
     email: string;
     password: string;
-    slug: string;
+    slug?: string;
     preferredLanguage?: AppLanguage;
 }
 export declare class PlatformLoginDto {

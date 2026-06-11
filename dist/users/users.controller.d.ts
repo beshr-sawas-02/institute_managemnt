@@ -38,17 +38,17 @@ export declare class UsersController {
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
         isActive: boolean;
-        createdAt: Date;
         lastLogin: Date | null;
+        createdAt: Date;
     }>>;
     findOne(orgId: number, id: number): Promise<{
         reception: {
             email: string;
             phone: string;
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -57,10 +57,10 @@ export declare class UsersController {
             email: string | null;
             phone: string;
             id: number;
-            address: string | null;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
+            address: string | null;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -68,9 +68,10 @@ export declare class UsersController {
         } | null;
         teacher: {
             id: number;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
+            status: import(".prisma/client").$Enums.TeacherStatus;
             userId: number | null;
             firstName: string;
             lastName: string;
@@ -79,19 +80,18 @@ export declare class UsersController {
             experienceYears: number | null;
             bio: string | null;
             salary: import("@prisma/client/runtime/library").Decimal | null;
-            status: import(".prisma/client").$Enums.TeacherStatus;
             hireDate: Date | null;
         } | null;
         student: {
             id: number;
-            address: string | null;
+            organizationId: number;
             createdAt: Date;
             updatedAt: Date;
-            organizationId: number;
+            status: import(".prisma/client").$Enums.StudentStatus;
+            address: string | null;
             userId: number | null;
             firstName: string;
             lastName: string;
-            status: import(".prisma/client").$Enums.StudentStatus;
             parentId: number | null;
             sectionId: number | null;
             dateOfBirth: Date;
@@ -105,8 +105,8 @@ export declare class UsersController {
         role: import(".prisma/client").$Enums.UserRole;
         id: number;
         isActive: boolean;
-        createdAt: Date;
         lastLogin: Date | null;
+        createdAt: Date;
     }>;
     update(orgId: number, id: number, updateUserDto: UpdateUserDto): Promise<{
         email: string;

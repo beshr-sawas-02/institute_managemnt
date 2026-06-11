@@ -32,15 +32,21 @@ export class NotificationsController {
   @Post()
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'Create a notification' })
-  create(@Body() dto: CreateNotificationDto) {
-    return this.service.create(dto);
+  create(
+    @CurrentUser('orgId') orgId: number,
+    @Body() dto: CreateNotificationDto,
+  ) {
+    return this.service.createForOrganization(orgId, dto);
   }
 
   @Post('bulk')
   @Roles(UserRole.admin, UserRole.reception)
   @ApiOperation({ summary: 'Send a bulk notification' })
-  sendBulk(@Body() body: BulkNotificationDto) {
-    return this.service.sendBulkNotification(body);
+  sendBulk(
+    @CurrentUser('orgId') orgId: number,
+    @Body() body: BulkNotificationDto,
+  ) {
+    return this.service.sendBulkNotification(orgId, body);
   }
 
   @Get('my')
@@ -57,8 +63,11 @@ export class NotificationsController {
 
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark a notification as read' })
-  markAsRead(@Param('id', ParseIntPipe) id: number) {
-    return this.service.markAsRead(id);
+  markAsRead(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.markAsRead(userId, id);
   }
 
   @Patch('read-all')
@@ -69,7 +78,10 @@ export class NotificationsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a notification' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.service.remove(id);
+  remove(
+    @CurrentUser('id') userId: number,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.service.remove(userId, id);
   }
 }

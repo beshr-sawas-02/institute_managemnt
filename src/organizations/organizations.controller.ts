@@ -8,8 +8,15 @@ import {
   Delete,
   Query,
   UseGuards,
+  UseInterceptors,
   ParseIntPipe,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { mkdirSync } from 'fs';
 import {
   ApiTags,
   ApiOperation,
@@ -21,6 +28,7 @@ import {
 import { OrganizationsService } from './organizations.service';
 import {
   CreateOrganizationDto,
+  ResetOrganizationAdminPasswordDto,
   UpdateOrganizationDto,
 } from './dto/organization.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -69,6 +77,67 @@ export class OrganizationsController {
     @Body() dto: UpdateOrganizationDto,
   ) {
     return this.service.update(id, dto);
+  }
+
+  @Patch(':id/admin-password')
+  @PlatformRoles('super_admin')
+  @ApiOperation({ summary: 'Reset organization admin password' })
+  @ApiOkResponse({ description: 'Organization admin password reset' })
+  resetAdminPassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ResetOrganizationAdminPasswordDto,
+  ) {
+    return this.service.resetAdminPassword(id, dto.newPassword);
+  }
+
+  @Patch(':id/logo')
+  @PlatformRoles('super_admin', 'admin')
+  @UseInterceptors(
+    FileInterceptor('logo', {
+      storage: diskStorage({
+        destination: (req, _file, callback) => {
+          const directory = join(
+            process.cwd(),
+            'uploads',
+            'organizations',
+            req.params.id,
+          );
+          mkdirSync(directory, { recursive: true });
+          callback(null, directory);
+        },
+        filename: (_req, file, callback) => {
+          const extensions: Record<string, string> = {
+            'image/jpeg': '.jpg',
+            'image/png': '.png',
+            'image/webp': '.webp',
+          };
+          const extension =
+            extensions[file.mimetype] ||
+            extname(file.originalname).toLowerCase();
+          callback(null, `logo-${Date.now()}${extension}`);
+        },
+      }),
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (_req, file, callback) => {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        callback(null, allowedTypes.includes(file.mimetype));
+      },
+    }),
+  )
+  @ApiOperation({ summary: 'Upload organization logo' })
+  @ApiOkResponse({ description: 'Organization logo uploaded' })
+  uploadLogo(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file?: { filename: string },
+  ) {
+    if (!file) {
+      throw new BadRequestException('ملف الشعار مطلوب أو نوعه غير مدعوم');
+    }
+
+    return this.service.updateLogo(
+      id,
+      `/uploads/organizations/${id}/${file.filename}`,
+    );
   }
 
   @Delete(':id')

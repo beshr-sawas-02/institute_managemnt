@@ -23,6 +23,7 @@ import {
   CreateSubscriptionDto,
   UpdateSubscriptionDto,
   ExtendSubscriptionDto,
+  UpdateSubscriptionStatusDto,
 } from './dto/subscription.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -70,6 +71,17 @@ export class SubscriptionsController {
     @Body() dto: UpdateSubscriptionDto,
   ) {
     return this.subscriptionsService.update(id, dto);
+  }
+
+  @Patch(':id/status')
+  @PlatformRoles('super_admin', 'admin')
+  @ApiOperation({ summary: 'Update subscription status' })
+  @ApiOkResponse({ description: 'Subscription status updated' })
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSubscriptionStatusDto,
+  ) {
+    return this.subscriptionsService.updateStatus(id, dto);
   }
 
   @Patch(':id/extend')

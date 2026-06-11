@@ -21,6 +21,7 @@ export class AssessmentsService {
       where: { id: dto.studentId, organizationId: orgId },
     });
     if (!student) throw new NotFoundException('الطالب غير موجود');
+    await this.ensureGradeSubjectBelongsToOrg(orgId, dto.gradeSubjectId);
 
     let percentage: number | null = null;
     let grade: string | null = null;
@@ -152,6 +153,16 @@ export class AssessmentsService {
 
   async update(orgId: number, id: number, dto: UpdateAssessmentDto) {
     const existing = await this.findOne(orgId, id);
+    if (dto.studentId !== undefined) {
+      const student = await this.prisma.student.findFirst({
+        where: { id: dto.studentId, organizationId: orgId },
+        select: { id: true },
+      });
+      if (!student) throw new NotFoundException('الطالب غير موجود');
+    }
+    if (dto.gradeSubjectId !== undefined) {
+      await this.ensureGradeSubjectBelongsToOrg(orgId, dto.gradeSubjectId);
+    }
     const data: any = { ...dto };
 
     if (dto.assessmentDate) data.assessmentDate = new Date(dto.assessmentDate);
@@ -221,6 +232,17 @@ export class AssessmentsService {
     await this.findOne(orgId, id);
     await this.prisma.assessment.delete({ where: { id } });
     return { message: 'تم حذف التقييم بنجاح' };
+  }
+
+  private async ensureGradeSubjectBelongsToOrg(
+    orgId: number,
+    gradeSubjectId: number,
+  ) {
+    const gradeSubject = await this.prisma.gradeSubject.findFirst({
+      where: { id: gradeSubjectId, grade: { organizationId: orgId } },
+      select: { id: true },
+    });
+    if (!gradeSubject) throw new NotFoundException('مادة الصف غير موجودة');
   }
 
   private calculateGrade(percentage: number): string {

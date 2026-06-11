@@ -19,9 +19,9 @@ let MonthlyReportService = class MonthlyReportService {
         this.prisma = prisma;
         this.notificationsService = notificationsService;
     }
-    async generateStudentMonthlyReport(studentId, month, year) {
-        const student = await this.prisma.student.findUnique({
-            where: { id: studentId },
+    async generateStudentMonthlyReport(orgId, studentId, month, year) {
+        const student = await this.prisma.student.findFirst({
+            where: { id: studentId, organizationId: orgId },
             include: {
                 parent: { include: { user: true } },
                 section: { include: { grade: true } },
@@ -82,20 +82,20 @@ let MonthlyReportService = class MonthlyReportService {
             },
         };
     }
-    async generateSectionMonthlyReports(sectionId, month, year) {
-        const section = await this.prisma.section.findUnique({
-            where: { id: sectionId },
+    async generateSectionMonthlyReports(orgId, sectionId, month, year) {
+        const section = await this.prisma.section.findFirst({
+            where: { id: sectionId, organizationId: orgId },
             include: { grade: true },
         });
         if (!section)
             throw new common_1.NotFoundException('الشعبة غير موجودة');
         const students = await this.prisma.student.findMany({
-            where: { sectionId, status: 'active' },
+            where: { sectionId, organizationId: orgId, status: 'active' },
             orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
         });
         const reports = [];
         for (const student of students) {
-            reports.push(await this.generateStudentMonthlyReport(student.id, month, year));
+            reports.push(await this.generateStudentMonthlyReport(orgId, student.id, month, year));
         }
         return {
             section: {
@@ -111,12 +111,12 @@ let MonthlyReportService = class MonthlyReportService {
         if (month < 1 || month > 12) {
             throw new common_1.BadRequestException('الشهر يجب أن يكون بين 1 و 12');
         }
-        const sectionReports = await this.generateSectionMonthlyReports(sectionId, month, year);
+        const sectionReports = await this.generateSectionMonthlyReports(orgId, sectionId, month, year);
         let notifiedCount = 0;
         const monthName = this.getArabicMonthName(month);
         for (const report of sectionReports.reports) {
-            const student = await this.prisma.student.findUnique({
-                where: { id: report.student.id },
+            const student = await this.prisma.student.findFirst({
+                where: { id: report.student.id, organizationId: orgId },
                 include: { parent: { include: { user: true } } },
             });
             if (student?.parent?.user && report.assessments.length > 0) {

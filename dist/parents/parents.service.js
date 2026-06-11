@@ -18,6 +18,7 @@ let ParentsService = class ParentsService {
         this.prisma = prisma;
     }
     async create(orgId, createParentDto) {
+        await this.ensureUserBelongsToOrg(orgId, createParentDto.userId);
         return this.prisma.parent.create({
             data: { ...createParentDto, organizationId: orgId },
             include: { user: { select: { id: true, email: true, role: true } } },
@@ -65,11 +66,22 @@ let ParentsService = class ParentsService {
     }
     async update(orgId, id, updateParentDto) {
         await this.findOne(orgId, id);
+        await this.ensureUserBelongsToOrg(orgId, updateParentDto.userId);
         return this.prisma.parent.update({
             where: { id },
             data: updateParentDto,
             include: { user: { select: { id: true, email: true } } },
         });
+    }
+    async ensureUserBelongsToOrg(orgId, userId) {
+        if (userId === undefined)
+            return;
+        const user = await this.prisma.user.findFirst({
+            where: { id: userId, organizationId: orgId },
+            select: { id: true },
+        });
+        if (!user)
+            throw new common_1.NotFoundException('المستخدم غير موجود');
     }
     async remove(orgId, id) {
         await this.findOne(orgId, id);

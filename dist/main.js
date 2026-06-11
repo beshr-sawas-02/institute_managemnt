@@ -7,6 +7,8 @@ const swagger_1 = require("@nestjs/swagger");
 const app_module_1 = require("./app.module");
 const http_exception_filter_1 = require("./common/filters/http-exception.filter");
 const response_interceptor_1 = require("./common/interceptors/response.interceptor");
+const path_1 = require("path");
+const express_1 = require("express");
 let cachedServer;
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
@@ -21,6 +23,7 @@ async function bootstrap() {
         },
     }));
     app.enableCors();
+    app.use('/uploads', (0, express_1.static)((0, path_1.join)(process.cwd(), 'uploads')));
     const config = new swagger_1.DocumentBuilder()
         .setTitle('نظام إدارة المدرسة')
         .setDescription('واجهة برمجية لنظام إدارة المدرسة الشامل')
@@ -43,6 +46,7 @@ if (!process.env.VERCEL) {
             transform: true,
         }));
         app.enableCors();
+        app.use('/uploads', (0, express_1.static)((0, path_1.join)(process.cwd(), 'uploads')));
         await app.listen(3000);
         console.log('Server running on http://localhost:3000');
     });

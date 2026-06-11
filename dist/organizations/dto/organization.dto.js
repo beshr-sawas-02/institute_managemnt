@@ -9,22 +9,29 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateOrganizationDto = exports.CreateOrganizationDto = void 0;
+exports.ResetOrganizationAdminPasswordDto = exports.UpdateOrganizationDto = exports.CreateOrganizationDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class CreateOrganizationDto {
 }
 exports.CreateOrganizationDto = CreateOrganizationDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({ example: 'مدرسة القاهرة الدولية' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateOrganizationDto.prototype, "nameAr", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({ example: 'Cairo International School' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], CreateOrganizationDto.prototype, "name", void 0);
+], CreateOrganizationDto.prototype, "nameEn", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'school' }),
+    (0, swagger_1.ApiProperty)({ enum: ['school', 'institute'], example: 'school' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsIn)(['school', 'institute']),
     __metadata("design:type", String)
 ], CreateOrganizationDto.prototype, "type", void 0);
 __decorate([
@@ -58,7 +65,14 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateOrganizationDto.prototype, "logo", void 0);
-class UpdateOrganizationDto extends (0, swagger_1.PartialType)(CreateOrganizationDto) {
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'password123', minLength: 6 }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(6),
+    __metadata("design:type", String)
+], CreateOrganizationDto.prototype, "adminPassword", void 0);
+class UpdateOrganizationDto extends (0, swagger_1.PartialType)((0, swagger_1.OmitType)(CreateOrganizationDto, ['adminPassword'])) {
 }
 exports.UpdateOrganizationDto = UpdateOrganizationDto;
 __decorate([
@@ -67,4 +81,14 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], UpdateOrganizationDto.prototype, "isActive", void 0);
+class ResetOrganizationAdminPasswordDto {
+}
+exports.ResetOrganizationAdminPasswordDto = ResetOrganizationAdminPasswordDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'newPassword123', minLength: 6 }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MinLength)(6),
+    __metadata("design:type", String)
+], ResetOrganizationAdminPasswordDto.prototype, "newPassword", void 0);
 //# sourceMappingURL=organization.dto.js.map

@@ -51,11 +51,13 @@ export class ReportsController {
   @ApiQuery({ name: 'month', required: true })
   @ApiQuery({ name: 'year', required: true })
   getStudentMonthlyReport(
+    @CurrentUser('orgId') orgId: number,
     @Param('studentId', ParseIntPipe) studentId: number,
     @Query('month') month: number,
     @Query('year') year: number,
   ) {
     return this.monthlyReportService.generateStudentMonthlyReport(
+      orgId,
       studentId,
       Number(month),
       Number(year),
@@ -67,11 +69,13 @@ export class ReportsController {
   @ApiQuery({ name: 'month', required: true })
   @ApiQuery({ name: 'year', required: true })
   getSectionMonthlyReport(
+    @CurrentUser('orgId') orgId: number,
     @Param('sectionId', ParseIntPipe) sectionId: number,
     @Query('month') month: number,
     @Query('year') year: number,
   ) {
     return this.monthlyReportService.generateSectionMonthlyReports(
+      orgId,
       sectionId,
       Number(month),
       Number(year),

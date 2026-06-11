@@ -17,11 +17,7 @@ let SchedulesService = class SchedulesService {
         this.prisma = prisma;
     }
     async create(orgId, dto) {
-        const section = await this.prisma.section.findFirst({
-            where: { id: dto.sectionId, organizationId: orgId },
-        });
-        if (!section)
-            throw new common_1.NotFoundException('الشعبة غير موجودة');
+        await this.validateRelations(orgId, dto.sectionId, dto.gradeSubjectId);
         const startTime = new Date(`1970-01-01T${dto.startTime}:00`);
         const endTime = new Date(`1970-01-01T${dto.endTime}:00`);
         const sectionConflict = await this.prisma.schedule.findFirst({
@@ -120,6 +116,7 @@ let SchedulesService = class SchedulesService {
         const newDayOfWeek = dto.dayOfWeek || existing.dayOfWeek;
         const newGradeSubjectId = dto.gradeSubjectId || existing.gradeSubjectId;
         const newSectionId = dto.sectionId || existing.sectionId;
+        await this.validateRelations(orgId, newSectionId, newGradeSubjectId);
         const sectionConflict = await this.prisma.schedule.findFirst({
             where: {
                 id: { not: id },
@@ -169,6 +166,21 @@ let SchedulesService = class SchedulesService {
                 gradeSubject: { include: { subject: true, teacher: true } },
             },
         });
+    }
+    async validateRelations(orgId, sectionId, gradeSubjectId) {
+        const [section, gradeSubject] = await Promise.all([
+            this.prisma.section.findFirst({
+                where: { id: sectionId, organizationId: orgId },
+                select: { id: true },
+            }),
+            this.prisma.gradeSubject.findFirst({
+                where: { id: gradeSubjectId, grade: { organizationId: orgId } },
+                select: { id: true },
+            }),
+        ]);
+        if (!section || !gradeSubject) {
+            throw new common_1.NotFoundException('إحدى بيانات الجدول لا تتبع هذه المؤسسة');
+        }
     }
     async remove(orgId, id) {
         await this.findOne(orgId, id);

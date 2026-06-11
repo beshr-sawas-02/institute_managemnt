@@ -11,4 +11,7 @@ export declare class UpdateSubscriptionDto extends UpdateSubscriptionDto_base {
 export declare class ExtendSubscriptionDto {
     endDate: string;
 }
+export declare class UpdateSubscriptionStatusDto {
+    status: 'active' | 'paused';
+}
 export {};

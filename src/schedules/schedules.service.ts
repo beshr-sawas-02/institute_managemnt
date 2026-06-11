@@ -11,10 +11,7 @@ export class SchedulesService {
   constructor(private prisma: PrismaService) {}
 
   async create(orgId: number, dto: CreateScheduleDto) {
-    const section = await this.prisma.section.findFirst({
-      where: { id: dto.sectionId, organizationId: orgId },
-    });
-    if (!section) throw new NotFoundException('الشعبة غير موجودة');
+    await this.validateRelations(orgId, dto.sectionId, dto.gradeSubjectId);
 
     const startTime = new Date(`1970-01-01T${dto.startTime}:00`);
     const endTime = new Date(`1970-01-01T${dto.endTime}:00`);
@@ -127,6 +124,7 @@ export class SchedulesService {
     const newDayOfWeek = dto.dayOfWeek || existing.dayOfWeek;
     const newGradeSubjectId = dto.gradeSubjectId || existing.gradeSubjectId;
     const newSectionId = dto.sectionId || existing.sectionId;
+    await this.validateRelations(orgId, newSectionId, newGradeSubjectId);
 
     const sectionConflict = await this.prisma.schedule.findFirst({
       where: {
@@ -183,6 +181,27 @@ export class SchedulesService {
         gradeSubject: { include: { subject: true, teacher: true } },
       },
     });
+  }
+
+  private async validateRelations(
+    orgId: number,
+    sectionId: number,
+    gradeSubjectId: number,
+  ) {
+    const [section, gradeSubject] = await Promise.all([
+      this.prisma.section.findFirst({
+        where: { id: sectionId, organizationId: orgId },
+        select: { id: true },
+      }),
+      this.prisma.gradeSubject.findFirst({
+        where: { id: gradeSubjectId, grade: { organizationId: orgId } },
+        select: { id: true },
+      }),
+    ]);
+
+    if (!section || !gradeSubject) {
+      throw new NotFoundException('إحدى بيانات الجدول لا تتبع هذه المؤسسة');
+    }
   }
 
   async remove(orgId: number, id: number) {

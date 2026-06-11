@@ -29,27 +29,38 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { email, password, slug, preferredLanguage } = loginDto;
 
-    // Find org by slug
-    const organization = await this.prisma.organization.findUnique({
-      where: { slug },
-    });
-
-    if (!organization) {
-      throw new UnauthorizedException('المؤسسة غير موجودة');
-    }
-
-    if (!organization.isActive) {
-      throw new UnauthorizedException('المؤسسة غير مفعلة');
-    }
-
-    // Find user scoped to this org
-    const user = await this.prisma.user.findFirst({
-      where: { email, organizationId: organization.id },
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: {
+        organization: {
+          include: {
+            subscriptions: {
+              where: { status: 'active' },
+              select: { id: true },
+              take: 1,
+            },
+          },
+        },
+      },
     });
 
     if (!user) {
       throw new UnauthorizedException(
         'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+      );
+    }
+
+    const organization = user.organization;
+
+    if (slug && organization.slug !== slug) {
+      throw new UnauthorizedException(
+        'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+      );
+    }
+
+    if (!organization.isActive || organization.subscriptions.length === 0) {
+      throw new UnauthorizedException(
+        'المؤسسة غير مفعلة أو لا تملك اشتراكًا نشطًا',
       );
     }
 
@@ -86,6 +97,20 @@ export class AuthService {
         phone: updatedUser.phone,
         role: updatedUser.role,
         orgId: organization.id,
+        slug: organization.slug,
+        organization: {
+          id: organization.id,
+          name: organization.name,
+          nameAr: organization.nameAr,
+          nameEn: organization.nameEn,
+          type: organization.type,
+          typeAr: organization.typeAr,
+          typeEn: organization.typeEn,
+          slug: organization.slug,
+          logo: organization.logo,
+          isActive: organization.isActive,
+          hasActiveSubscription: organization.subscriptions.length > 0,
+        },
         preferredLanguage: updatedUser.preferredLanguage,
         source: 'org',
       },
@@ -265,6 +290,25 @@ export class AuthService {
         lastLogin: true,
         createdAt: true,
         organizationId: true,
+        organization: {
+          select: {
+            id: true,
+            name: true,
+            nameAr: true,
+            nameEn: true,
+            type: true,
+            typeAr: true,
+            typeEn: true,
+            slug: true,
+            logo: true,
+            isActive: true,
+            subscriptions: {
+              where: { status: 'active' },
+              select: { id: true, status: true, endDate: true },
+              take: 1,
+            },
+          },
+        },
         student: true,
         teacher: true,
         parent: true,
@@ -293,7 +337,18 @@ export class AuthService {
       lastName = user.student.lastName;
     }
 
-    return { ...user, firstName, lastName };
+    return {
+      ...user,
+      organization: user.organization
+        ? {
+            ...user.organization,
+            hasActiveSubscription:
+              user.organization.subscriptions.length > 0,
+          }
+        : null,
+      firstName,
+      lastName,
+    };
   }
 
   // ─── Token Generators ─────────────────────────────────────────────────────

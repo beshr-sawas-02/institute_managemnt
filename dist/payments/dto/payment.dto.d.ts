@@ -3,6 +3,7 @@ export declare class CreatePaymentDto {
     studentId: number;
     academicYear: string;
     amount: number;
+    currency?: 'SYP' | 'USD';
     discount?: number;
     status?: PaymentStatus;
     dueDate: string;

@@ -118,6 +118,11 @@ export class NotificationsService {
     return this.localizeNotification(notification, preferredLanguage);
   }
 
+  async createForOrganization(orgId: number, dto: CreateNotificationInput) {
+    await this.ensureUserBelongsToOrg(orgId, dto.userId);
+    return this.create(dto);
+  }
+
   async createLocalizedNotification(dto: CreateLocalizedNotificationInput) {
     return this.create({
       userId: dto.userId,
@@ -383,9 +388,9 @@ export class NotificationsService {
     return { unreadCount: count };
   }
 
-  async markAsRead(id: number) {
-    const notification = await this.prisma.notification.findUnique({
-      where: { id },
+  async markAsRead(userId: number, id: number) {
+    const notification = await this.prisma.notification.findFirst({
+      where: { id, userId },
     });
 
     if (!notification) throw new NotFoundException('الإشعار غير موجود');
@@ -409,9 +414,9 @@ export class NotificationsService {
     return { message: 'تم تحديد جميع الإشعارات كمقروءة' };
   }
 
-  async remove(id: number) {
-    const notification = await this.prisma.notification.findUnique({
-      where: { id },
+  async remove(userId: number, id: number) {
+    const notification = await this.prisma.notification.findFirst({
+      where: { id, userId },
     });
 
     if (!notification) throw new NotFoundException('الإشعار غير موجود');
@@ -420,9 +425,9 @@ export class NotificationsService {
     return { message: 'تم حذف الإشعار بنجاح' };
   }
 
-  async sendBulkNotification(dto: BulkNotificationDto) {
+  async sendBulkNotification(orgId: number, dto: BulkNotificationDto) {
     const users = await this.prisma.user.findMany({
-      where: { role: dto.role, isActive: true },
+      where: { organizationId: orgId, role: dto.role, isActive: true },
       select: { id: true, preferredLanguage: true },
     });
 
@@ -467,6 +472,17 @@ export class NotificationsService {
     });
     if (!user) throw new NotFoundException('المستخدم غير موجود');
     return user.organizationId;
+  }
+
+  private async ensureUserBelongsToOrg(
+    orgId: number,
+    userId: number,
+  ): Promise<void> {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, organizationId: orgId },
+      select: { id: true },
+    });
+    if (!user) throw new NotFoundException('المستخدم غير موجود');
   }
 
   private buildLocalizedContent(

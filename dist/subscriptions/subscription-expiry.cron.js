@@ -29,6 +29,13 @@ let SubscriptionExpiryCron = SubscriptionExpiryCron_1 = class SubscriptionExpiry
             },
             data: { status: 'expired' },
         });
+        await this.prisma.organization.updateMany({
+            where: {
+                isActive: true,
+                subscriptions: { none: { status: 'active' } },
+            },
+            data: { isActive: false },
+        });
         this.logger.log(`Marked ${result.count} subscription(s) as expired`);
     }
 };

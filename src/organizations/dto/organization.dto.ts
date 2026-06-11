@@ -5,19 +5,31 @@ import {
   IsBoolean,
   IsNotEmpty,
   MinLength,
+  IsIn,
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PartialType,
+} from '@nestjs/swagger';
 
 export class CreateOrganizationDto {
+  @ApiProperty({ example: 'مدرسة القاهرة الدولية' })
+  @IsString()
+  @IsNotEmpty()
+  nameAr: string;
+
   @ApiProperty({ example: 'Cairo International School' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  nameEn: string;
 
-  @ApiProperty({ example: 'school' })
+  @ApiProperty({ enum: ['school', 'institute'], example: 'school' })
   @IsString()
   @IsNotEmpty()
-  type: string;
+  @IsIn(['school', 'institute'])
+  type: 'school' | 'institute';
 
   @ApiProperty({ example: 'cairo-international-school' })
   @IsString()
@@ -44,11 +56,27 @@ export class CreateOrganizationDto {
   @IsOptional()
   @IsString()
   logo?: string;
+
+  @ApiProperty({ example: 'password123', minLength: 6 })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  adminPassword: string;
 }
 
-export class UpdateOrganizationDto extends PartialType(CreateOrganizationDto) {
+export class UpdateOrganizationDto extends PartialType(
+  OmitType(CreateOrganizationDto, ['adminPassword'] as const),
+) {
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+}
+
+export class ResetOrganizationAdminPasswordDto {
+  @ApiProperty({ example: 'newPassword123', minLength: 6 })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  newPassword: string;
 }

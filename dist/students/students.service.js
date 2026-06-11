@@ -20,6 +20,7 @@ let StudentsService = class StudentsService {
         this.notificationsService = notificationsService;
     }
     async create(orgId, createStudentDto) {
+        await this.validateRelations(orgId, createStudentDto);
         const data = { ...createStudentDto, organizationId: orgId };
         if (data.dateOfBirth)
             data.dateOfBirth = new Date(data.dateOfBirth);
@@ -102,6 +103,7 @@ let StudentsService = class StudentsService {
     }
     async update(orgId, id, updateStudentDto) {
         await this.findOne(orgId, id);
+        await this.validateRelations(orgId, updateStudentDto);
         const data = { ...updateStudentDto };
         if (data.dateOfBirth)
             data.dateOfBirth = new Date(data.dateOfBirth);
@@ -113,6 +115,31 @@ let StudentsService = class StudentsService {
                 section: { include: { grade: true } },
             },
         });
+    }
+    async validateRelations(orgId, dto) {
+        const checks = [];
+        if (dto.userId !== undefined) {
+            checks.push(this.prisma.user.findFirst({
+                where: { id: dto.userId, organizationId: orgId },
+                select: { id: true },
+            }));
+        }
+        if (dto.parentId !== undefined) {
+            checks.push(this.prisma.parent.findFirst({
+                where: { id: dto.parentId, organizationId: orgId },
+                select: { id: true },
+            }));
+        }
+        if (dto.sectionId !== undefined) {
+            checks.push(this.prisma.section.findFirst({
+                where: { id: dto.sectionId, organizationId: orgId },
+                select: { id: true },
+            }));
+        }
+        const results = await Promise.all(checks);
+        if (results.some((result) => !result)) {
+            throw new common_1.NotFoundException('إحدى البيانات المرتبطة لا تتبع هذه المؤسسة');
+        }
     }
     async remove(orgId, id) {
         await this.findOne(orgId, id);

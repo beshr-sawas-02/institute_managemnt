@@ -7,6 +7,10 @@ export declare class PaginationDto {
 }
 export declare class PaginatedResult<T> {
     data: T[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
     meta: {
         total: number;
         page: number;

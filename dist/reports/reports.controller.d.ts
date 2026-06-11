@@ -16,8 +16,8 @@ export declare class ReportsController {
         format: import(".prisma/client").$Enums.ReportFormat;
         title: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -26,8 +26,8 @@ export declare class ReportsController {
         generatedAt: Date;
         generatedBy: number | null;
     }>;
-    getStudentMonthlyReport(studentId: number, month: number, year: number): Promise<import("./monthly-report.service").StudentMonthlyReport>;
-    getSectionMonthlyReport(sectionId: number, month: number, year: number): Promise<{
+    getStudentMonthlyReport(orgId: number, studentId: number, month: number, year: number): Promise<import("./monthly-report.service").StudentMonthlyReport>;
+    getSectionMonthlyReport(orgId: number, sectionId: number, month: number, year: number): Promise<{
         section: {
             id: number;
             name: string;
@@ -59,8 +59,8 @@ export declare class ReportsController {
         format: import(".prisma/client").$Enums.ReportFormat;
         title: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -79,8 +79,8 @@ export declare class ReportsController {
         format: import(".prisma/client").$Enums.ReportFormat;
         title: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;

@@ -14,8 +14,8 @@ export declare class ReportsService {
         format: import(".prisma/client").$Enums.ReportFormat;
         title: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -38,8 +38,8 @@ export declare class ReportsService {
         format: import(".prisma/client").$Enums.ReportFormat;
         title: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;
@@ -58,8 +58,8 @@ export declare class ReportsService {
         format: import(".prisma/client").$Enums.ReportFormat;
         title: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         parameters: import("@prisma/client/runtime/library").JsonValue | null;
         periodStart: Date | null;

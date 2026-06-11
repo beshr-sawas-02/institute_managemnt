@@ -15,11 +15,10 @@ const client_1 = require("@prisma/client");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     constructor() {
         super({
-            log: ['query', 'info', 'warn', 'error'],
+            log: ['error'],
         });
     }
     async onModuleInit() {
-        console.log(process.env.DATABASE_URL);
         await this.$connect();
         console.log('✅ Connected');
         console.log('✅ تم الاتصال بقاعدة البيانات بنجاح');

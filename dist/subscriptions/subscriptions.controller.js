@@ -37,6 +37,9 @@ let SubscriptionsController = class SubscriptionsController {
     update(id, dto) {
         return this.subscriptionsService.update(id, dto);
     }
+    updateStatus(id, dto) {
+        return this.subscriptionsService.updateStatus(id, dto);
+    }
     extend(id, dto) {
         return this.subscriptionsService.extend(id, dto);
     }
@@ -90,6 +93,17 @@ __decorate([
     __metadata("design:paramtypes", [Number, subscription_dto_1.UpdateSubscriptionDto]),
     __metadata("design:returntype", void 0)
 ], SubscriptionsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Patch)(':id/status'),
+    (0, decorators_1.PlatformRoles)('super_admin', 'admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update subscription status' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Subscription status updated' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, subscription_dto_1.UpdateSubscriptionStatusDto]),
+    __metadata("design:returntype", void 0)
+], SubscriptionsController.prototype, "updateStatus", null);
 __decorate([
     (0, common_1.Patch)(':id/extend'),
     (0, decorators_1.PlatformRoles)('super_admin', 'admin'),

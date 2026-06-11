@@ -17,6 +17,7 @@ let TuitionFeesService = class TuitionFeesService {
         this.prisma = prisma;
     }
     async create(orgId, userId, dto) {
+        await this.ensureGradeBelongsToOrg(orgId, dto.gradeId);
         const existing = await this.prisma.tuitionFee.findFirst({
             where: {
                 gradeId: dto.gradeId,
@@ -71,6 +72,9 @@ let TuitionFeesService = class TuitionFeesService {
     }
     async update(orgId, id, dto) {
         const current = await this.findOne(orgId, id);
+        if (dto.gradeId !== undefined) {
+            await this.ensureGradeBelongsToOrg(orgId, dto.gradeId);
+        }
         if (dto.gradeId || dto.academicYear) {
             const gradeId = dto.gradeId ?? current.grade.id;
             const academicYear = dto.academicYear ?? current.academicYear;
@@ -97,9 +101,9 @@ let TuitionFeesService = class TuitionFeesService {
         await this.prisma.tuitionFee.delete({ where: { id } });
         return { message: 'تم حذف القسط بنجاح' };
     }
-    async getStudentBalance(studentId, academicYear) {
-        const student = await this.prisma.student.findUnique({
-            where: { id: studentId },
+    async getStudentBalance(orgId, studentId, academicYear) {
+        const student = await this.prisma.student.findFirst({
+            where: { id: studentId, organizationId: orgId },
             include: { section: { include: { grade: true } } },
         });
         if (!student?.section?.gradeId)
@@ -114,7 +118,7 @@ let TuitionFeesService = class TuitionFeesService {
         if (!tuitionFee)
             return null;
         const paidAggregate = await this.prisma.payment.aggregate({
-            where: { studentId, status: 'paid' },
+            where: { studentId, organizationId: orgId, status: 'paid' },
             _sum: { finalAmount: true },
         });
         const annualAmount = Number(tuitionFee.annualAmount);
@@ -126,6 +130,14 @@ let TuitionFeesService = class TuitionFeesService {
             remaining,
             gradeName: student.section.grade.name,
         };
+    }
+    async ensureGradeBelongsToOrg(orgId, gradeId) {
+        const grade = await this.prisma.grade.findFirst({
+            where: { id: gradeId, organizationId: orgId },
+            select: { id: true },
+        });
+        if (!grade)
+            throw new common_1.NotFoundException('الصف غير موجود');
     }
 };
 exports.TuitionFeesService = TuitionFeesService;

@@ -5,6 +5,7 @@ import {
   IsDateString,
   IsOptional,
   IsNumber,
+  IsIn,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
@@ -36,4 +37,10 @@ export class ExtendSubscriptionDto {
   @ApiProperty({ description: 'New end date' })
   @IsDateString()
   endDate: string;
+}
+
+export class UpdateSubscriptionStatusDto {
+  @ApiProperty({ enum: ['active', 'paused'] })
+  @IsIn(['active', 'paused'])
+  status: 'active' | 'paused';
 }

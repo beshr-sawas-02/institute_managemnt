@@ -3,13 +3,13 @@ import { NotificationsService } from './notifications.service';
 export declare class NotificationsController {
     private readonly service;
     constructor(service: NotificationsService);
-    create(dto: CreateNotificationDto): Promise<{
+    create(orgId: number, dto: CreateNotificationDto): Promise<{
         type: import(".prisma/client").$Enums.NotificationType;
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -20,7 +20,7 @@ export declare class NotificationsController {
         sent: boolean;
         sentAt: Date | null;
     }>;
-    sendBulk(body: BulkNotificationDto): Promise<{
+    sendBulk(orgId: number, body: BulkNotificationDto): Promise<{
         message: string;
         count: number;
     }>;
@@ -29,8 +29,8 @@ export declare class NotificationsController {
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -44,13 +44,13 @@ export declare class NotificationsController {
     getUnreadCount(userId: number): Promise<{
         unreadCount: number;
     }>;
-    markAsRead(id: number): Promise<{
+    markAsRead(userId: number, id: number): Promise<{
         type: import(".prisma/client").$Enums.NotificationType;
         title: string;
         message: string;
         id: number;
-        createdAt: Date;
         organizationId: number;
+        createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
         userId: number;
         relatedId: number | null;
@@ -64,7 +64,7 @@ export declare class NotificationsController {
     markAllAsRead(userId: number): Promise<{
         message: string;
     }>;
-    remove(id: number): Promise<{
+    remove(userId: number, id: number): Promise<{
         message: string;
     }>;
 }

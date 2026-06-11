@@ -34,8 +34,8 @@ let TuitionFeesController = class TuitionFeesController {
     findByGrade(orgId, gradeId, academicYear) {
         return this.service.findByGrade(orgId, gradeId, academicYear);
     }
-    getStudentBalance(studentId, academicYear) {
-        return this.service.getStudentBalance(studentId, academicYear);
+    getStudentBalance(orgId, studentId, academicYear) {
+        return this.service.getStudentBalance(orgId, studentId, academicYear);
     }
     findOne(orgId, id) {
         return this.service.findOne(orgId, id);
@@ -87,10 +87,11 @@ __decorate([
     (0, decorators_1.Roles)(client_1.UserRole.admin, client_1.UserRole.reception, client_1.UserRole.parent),
     (0, swagger_1.ApiOperation)({ summary: 'رصيد الطالب' }),
     (0, swagger_1.ApiQuery)({ name: 'academicYear', required: true }),
-    __param(0, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Query)('academicYear')),
+    __param(0, (0, decorators_1.CurrentUser)('orgId')),
+    __param(1, (0, common_1.Param)('studentId', common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Query)('academicYear')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, Number, String]),
     __metadata("design:returntype", void 0)
 ], TuitionFeesController.prototype, "getStudentBalance", null);
 __decorate([

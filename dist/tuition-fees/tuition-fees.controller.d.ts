@@ -16,9 +16,9 @@ export declare class TuitionFeesController {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
@@ -37,9 +37,9 @@ export declare class TuitionFeesController {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
@@ -54,15 +54,15 @@ export declare class TuitionFeesController {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
         createdBy: number | null;
     }>;
-    getStudentBalance(studentId: number, academicYear: string): Promise<{
+    getStudentBalance(orgId: number, studentId: number, academicYear: string): Promise<{
         annualAmount: number;
         totalPaid: number;
         remaining: number;
@@ -81,9 +81,9 @@ export declare class TuitionFeesController {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
@@ -98,9 +98,9 @@ export declare class TuitionFeesController {
     } & {
         description: string | null;
         id: number;
+        organizationId: number;
         createdAt: Date;
         updatedAt: Date;
-        organizationId: number;
         academicYear: string;
         gradeId: number;
         annualAmount: import("@prisma/client/runtime/library").Decimal;
